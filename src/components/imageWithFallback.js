@@ -1,22 +1,46 @@
-'use client'
-import { useState } from 'react';
+"use client";
+import { useState, useEffect } from "react";
+import { useLoading } from "./LoadingManager";
 
-export default function ImageWithFallback({ src, alt = '', className = '', ...props }) {
+export default function ImageWithFallback({
+  src,
+  alt = "",
+  className = "",
+  priority,
+  ...props
+}) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const { addLoadingImage, removeLoadingImage } = useLoading();
+
+  useEffect(() => {
+    if (src) {
+      addLoadingImage(src);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]); // Remove addLoadingImage from dependencies
+
+  const imgProps = { ...props };
+  delete imgProps.priority;
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <img
-        src={error ? '/placeholder.svg' : src}
+        src={error ? "/placeholder.svg" : src}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-700 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => {
+          setLoaded(true);
+          removeLoadingImage(src);
+        }}
         onError={() => {
           setError(true);
           setLoaded(true);
+          removeLoadingImage(src);
         }}
-        {...props}
+        {...imgProps}
       />
       {!loaded && (
         <img

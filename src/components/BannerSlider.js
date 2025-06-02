@@ -1,11 +1,11 @@
-'use client'
-import { useState, useEffect, useRef } from 'react';
-import ImageWithFallback from '@/components/imageWithFallback';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import ImageWithFallback from "@/components/ImageWithFallback";
 
 const slides = [
-  '/banners/banner1.jpg',
-  '/banners/banner2.jpg',
-  '/banners/banner3.jpg',
+  "/banners/banner1.jpg",
+  "/banners/banner2.jpg",
+  "/banners/banner3.jpg",
 ];
 
 export default function BannerSlider() {
@@ -13,7 +13,7 @@ export default function BannerSlider() {
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    const next = () => setIndex(prev => (prev + 1) % slides.length);
+    const next = () => setIndex((prev) => (prev + 1) % slides.length);
     timeoutRef.current = setTimeout(next, 4000);
     return () => clearTimeout(timeoutRef.current);
   }, [index]);
@@ -24,17 +24,17 @@ export default function BannerSlider() {
   };
 
   return (
-    <div className="relative w-full h-64 overflow-hidden">
+    <div className="relative w-full h-96 overflow-hidden">
       <div
-        className="flex transition-transform duration-700"
+        className="flex transition-transform duration-700 h-full"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {slides.map((src, i) => (
-          <div key={i} className="min-w-full h-64">
+          <div key={i} className="min-w-full h-full relative">
             <ImageWithFallback
               src={src}
               alt=""
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </div>
         ))}
@@ -45,7 +45,9 @@ export default function BannerSlider() {
         {slides.map((_, i) => (
           <button
             key={i}
-            className={`w-3 h-1 rounded-full ${index === i ? 'bg-white' : 'bg-gray-400'}`}
+            className={`w-3 h-1 rounded-full ${
+              index === i ? "bg-white" : "bg-gray-400"
+            }`}
             onClick={() => goToSlide(i)}
           />
         ))}

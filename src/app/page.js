@@ -1,14 +1,17 @@
-import BannerSlider from '@/components/BannerSlider';
-import CategoryGrid from '@/components/СategoryGrid';
+"use client";
+
+import BannerSlider from "@/components/BannerSlider";
+import CategoryGrid from "@/components/СategoryGrid";
+import PageTransition from "@/components/PageTransition";
 
 export default function HomePage() {
   return (
-    <>
-      <BannerSlider className="mx-0"/>
+    <PageTransition>
+      <BannerSlider className="mx-0" />
       <div className="container mx-auto px-4 py-6">
         <h2 className="text-2xl font-bold mb-4">Категорії</h2>
         <CategoryGrid />
       </div>
-    </>
+    </PageTransition>
   );
 }

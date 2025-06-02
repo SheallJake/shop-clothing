@@ -1,21 +1,48 @@
-import '@/styles/globals.css';
-import Header from '@/components/header';
-import Footer from '@/components/footer';
+import "@/styles/globals.css";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { Toaster } from "react-hot-toast";
+import ClientLayout from "@/components/ClientLayout";
+import { WishlistProvider } from "@/context/WishlistContext";
 
 export const metadata = {
-  title: 'Магазин одягу',
-  description: 'Next.js магазин',
+  title: "Магазин одягу",
+  description: "Next.js магазин",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="uk">
+    <html lang="uk" className="h-full">
       <body className="min-h-screen flex flex-col bg-black text-white">
         <Header />
-        <main className="flex-1 py-6">
-          {children}
-        </main>
-        <Footer />
+        <ClientLayout>
+          <WishlistProvider>
+            <div className="flex flex-col min-h-[calc(100vh-64px)]">
+              <main className="flex-1 py-6 relative">{children}</main>
+              <Footer />
+            </div>
+          </WishlistProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: "#333",
+                color: "#fff",
+              },
+              success: {
+                style: {
+                  background: "#22c55e",
+                },
+              },
+              error: {
+                style: {
+                  background: "#ef4444",
+                },
+              },
+            }}
+          />
+        </ClientLayout>
       </body>
     </html>
   );

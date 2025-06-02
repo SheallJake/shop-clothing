@@ -1,11 +1,20 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  const categories = ['Футболки', 'Джинси', 'Худі', 'Сорочки', 'Куртки', 'Сукні', 'Взуття', 'Аксесуари'];
+  const categories = [
+    "Футболки",
+    "Джинси",
+    "Худі",
+    "Сорочки",
+    "Куртки",
+    "Сукні",
+    "Взуття",
+    "Аксесуари",
+  ];
 
   await prisma.category.createMany({
-    data: categories.map(name => ({ name }))
+    data: categories.map((name) => ({ name })),
   });
 
   const allCategories = await prisma.category.findMany();
@@ -15,44 +24,47 @@ async function main() {
       {
         name: `${category.name} Basic`,
         description: `Базова модель ${category.name}`,
-        color: ['Чорний', 'Білий'],
-        size: 'M',
-        brand: 'Basic Brand',
+        color: ["Чорний", "Білий"],
+        size: "M",
+        brand: "Basic Brand",
         price: 299,
         stockQuantity: 10,
         image: `/products/${category.name.toLowerCase()}-basic.jpg`,
-        categoryId: category.id
+        categoryId: category.id,
       },
       {
         name: `${category.name} Premium`,
         description: `Преміум модель ${category.name}`,
-        color: ['Синій', 'Сірий'],
-        size: 'L',
-        brand: 'Premium Brand',
+        color: ["Синій", "Сірий"],
+        size: "L",
+        brand: "Premium Brand",
         price: 599,
         stockQuantity: 15,
         image: `/products/${category.name.toLowerCase()}-premium.jpg`,
-        categoryId: category.id
+        categoryId: category.id,
       },
       {
         name: `${category.name} Limited`,
         description: `Лімітована серія ${category.name}`,
-        color: ['Червоний', 'Зелений'],
-        size: 'S',
-        brand: 'Limited Brand',
+        color: ["Червоний", "Зелений"],
+        size: "S",
+        brand: "Limited Brand",
         price: 899,
         stockQuantity: 5,
         image: `/products/${category.name.toLowerCase()}-limited.jpg`,
-        categoryId: category.id
-      }
+        categoryId: category.id,
+      },
     ];
 
     await prisma.product.createMany({ data: products });
   }
 
-  console.log('✅ Seed успішно завершено');
+  console.log("✅ Seed успішно завершено");
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());

@@ -11,8 +11,7 @@ model User {
   id           Int      @id @default(autoincrement())
   name         String
   email        String   @unique
-  phoneNumber        String?
-  username     String   @unique
+  phoneNumber  String?
   passwordHash String
   role         String
   createdAt    DateTime @default(now())
@@ -21,6 +20,7 @@ model User {
   cart         Cart[]
   wishlists    Wishlist[]
 }
+
 
 model Category {
   id          Int       @id @default(autoincrement())
