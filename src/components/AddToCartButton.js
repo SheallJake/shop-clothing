@@ -1,5 +1,5 @@
 import { ShoppingCart, Plus } from "lucide-react";
-import { addToCart } from "@/util/cart";
+import { addToCart } from "@/utils/cart";
 
 export default function AddToCartButton({ product }) {
   const handleAddToCart = async (e) => {

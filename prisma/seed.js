@@ -13,9 +13,10 @@ async function main() {
     "Аксесуари",
   ];
 
-  await prisma.category.createMany({
-    data: categories.map((name) => ({ name })),
-  });
+  // Створюємо категорії через Prisma Client (вони не містять Unsupported полів)
+  await prisma.$transaction(
+    categories.map((name) => prisma.category.create({ data: { name } }))
+  );
 
   const allCategories = await prisma.category.findMany();
 
@@ -56,7 +57,22 @@ async function main() {
       },
     ];
 
-    await prisma.product.createMany({ data: products });
+    // Вставляємо продукти через Prisma Client замість raw SQL
+    for (const product of products) {
+      await prisma.product.create({
+        data: {
+          name: product.name,
+          description: product.description,
+          color: product.color,
+          size: product.size,
+          brand: product.brand,
+          price: product.price,
+          stockQuantity: product.stockQuantity,
+          image: product.image,
+          categoryId: product.categoryId,
+        },
+      });
+    }
   }
 
   console.log("✅ Seed успішно завершено");

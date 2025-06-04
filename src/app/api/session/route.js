@@ -1,49 +1,62 @@
-import { verifyJwt, isTokenExpired } from "@/util/jwt";
+import { verifyJwt, isTokenExpired } from "@/utils/jwt";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
+import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
-    const token = request.cookies.get("token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token");
+
+    console.log("[Session Debug] Token from cookie:", token?.value);
 
     if (!token) {
-      return NextResponse.json({ user: null });
+      console.log("[Session Debug] No token found");
+      return NextResponse.json({ user: null }, { status: 200 });
     }
 
-    // Check if token is expired
-    if (isTokenExpired(token)) {
-      // Clear the expired token
-      const response = NextResponse.json({ user: null });
-      response.cookies.delete("token");
-      return response;
+    const decoded = verifyJwt(token.value);
+    console.log("[Session Debug] Decoded token:", decoded);
+
+    if (!decoded || isTokenExpired(decoded)) {
+      console.log("[Session Debug] Token invalid or expired:", {
+        isValid: !!decoded,
+        isExpired: decoded ? isTokenExpired(decoded) : true,
+      });
+      return NextResponse.json({ user: null }, { status: 200 });
     }
 
-    const decoded = verifyJwt(token);
-    if (!decoded) {
-      return NextResponse.json({ user: null });
-    }
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+        },
+      });
 
-    const user = await db.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
+      console.log("[Session Debug] User from database:", user);
 
-    if (!user) {
+      if (!user) {
+        console.log("[Session Debug] No user found in database");
+        return NextResponse.json({ user: null }, { status: 200 });
+      }
+
+      return NextResponse.json({ user });
+    } catch (dbError) {
+      console.error("[Session API Database Error]:", dbError);
       return NextResponse.json(
-        { user: null, message: "Користувача не знайдено" },
-        { status: 404 }
+        { user: null, error: "Database error" },
+        { status: 500 }
       );
     }
-
-    return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
-    console.error("Session error:", error);
-    return NextResponse.json({ user: null });
+    console.error("[Session API Error]:", error);
+    return NextResponse.json(
+      { user: null, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

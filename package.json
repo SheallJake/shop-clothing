@@ -14,15 +14,18 @@
     "bcrypt": "^6.0.0",
     "framer-motion": "^12.15.0",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.511.0",
     "next": "^15.3.3",
+    "next-auth": "^4.24.11",
     "prisma": "^6.8.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
     "react-imask": "^7.6.1",
     "react-input-mask": "^2.0.4",
-    "react-input-mask-next": "^3.0.0-alpha.12"
+    "react-input-mask-next": "^3.0.0-alpha.12",
+    "react-range": "^1.10.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

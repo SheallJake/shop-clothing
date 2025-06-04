@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { signJwt } from "@/util/jwt";
+import { signJwt } from "@/utils/jwt";
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 

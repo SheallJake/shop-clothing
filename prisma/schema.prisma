@@ -8,19 +8,18 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   name         String
-  email        String   @unique
+  email        String     @unique
   phoneNumber  String?
   passwordHash String
   role         String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
+  cart         Cart[]
   orders       Order[]
   reviews      Review[]
-  cart         Cart[]
   wishlists    Wishlist[]
 }
-
 
 model Category {
   id          Int       @id @default(autoincrement())
@@ -30,108 +29,115 @@ model Category {
 }
 
 model Product {
-  id           Int       @id @default(autoincrement())
-  name         String
-  description  String?
-  color        String[]
-  size         String?
-  brand        String?
-  price        Float
+  id            Int         @id @default(autoincrement())
+  name          String
+  description   String?
+  color         String[]
+  size          String?
+  brand         String?
+  price         Float
   stockQuantity Int
-  image        String?
-  categoryId   Int
-  category     Category  @relation(fields: [categoryId], references: [id])
-  orderItems   OrderItem[]
-  reviews      Review[]
-  cart         Cart[]
-  wishlists    Wishlist[]
+  image         String?
+  categoryId    Int
+  averageRating Float       @default(0)
+  reviewCount   Int         @default(0)
+  cart          Cart[]
+  orderItems    OrderItem[]
+  category      Category    @relation(fields: [categoryId], references: [id])
+  reviews       Review[]
+  wishlists     Wishlist[]
+
+  searchVector Unsupported("TsVector")?
+  @@index([searchVector], type: Gin)
+  @@index([averageRating])
+  @@index([reviewCount])
 }
 
 model Order {
   id         Int         @id @default(autoincrement())
   userId     Int
-  user       User        @relation(fields: [userId], references: [id])
   createdAt  DateTime    @default(now())
   status     String
   totalPrice Float
   paymentId  Int?
-  payment    Payment?    @relation(fields: [paymentId], references: [id])
   deliveryId Int?
-  delivery   Delivery?   @relation(fields: [deliveryId], references: [id])
   promoId    Int?
+  delivery   Delivery?   @relation(fields: [deliveryId], references: [id])
+  payment    Payment?    @relation(fields: [paymentId], references: [id])
   promoCode  PromoCode?  @relation(fields: [promoId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
 }
 
 model OrderItem {
-  id        Int     @id @default(autoincrement())
-  orderId   Int
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
+  id           Int     @id @default(autoincrement())
+  orderId      Int
+  productId    Int
+  quantity     Int
   pricePerUnit Float
+  order        Order   @relation(fields: [orderId], references: [id])
+  product      Product @relation(fields: [productId], references: [id])
 }
 
 model Cart {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
-  user      User    @relation(fields: [userId], references: [id])
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Payment {
-  id           Int     @id @default(autoincrement())
-  method       String
+  id            Int      @id @default(autoincrement())
+  method        String
   transactionId String
-  amount       Float
-  paymentDate  DateTime
+  amount        Float
+  paymentDate   DateTime
   paymentStatus String
-  orders       Order[]
+  orders        Order[]
 }
 
 model Delivery {
-  id                  Int     @id @default(autoincrement())
-  serviceName         String
-  trackingNumber      String
-  deliveryStatus      String
-  address             String
-  city                String
-  region              String
-  postalCode          String
+  id                    Int      @id @default(autoincrement())
+  serviceName           String
+  trackingNumber        String
+  deliveryStatus        String
+  address               String
+  city                  String
+  region                String
+  postalCode            String
   estimatedDeliveryDate DateTime
-  orders              Order[]
+  orders                Order[]
 }
 
 model Review {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
   userId    Int
-  user      User    @relation(fields: [userId], references: [id])
   rating    Int
   comment   String?
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Wishlist {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   userId    Int
-  user      User    @relation(fields: [userId], references: [id])
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
   addedAt   DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model PromoCode {
-  id           Int     @id @default(autoincrement())
-  code         String  @unique
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
   discountPercent Float
-  expirationDate DateTime
-  isActive     Boolean
-  usageLimit   Int
-  orders       Order[]
+  expirationDate  DateTime
+  isActive        Boolean
+  usageLimit      Int
+  orders          Order[]
 }

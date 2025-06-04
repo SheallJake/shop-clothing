@@ -4,6 +4,7 @@ import { Menu, X, User, Heart, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthModal from "@/components/AuthModal";
+import SearchBar from "@/components/SearchBar";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -18,12 +19,24 @@ export default function Header() {
   const checkSession = useCallback(async () => {
     try {
       const res = await fetch("/api/session");
-      if (!res.ok) throw new Error("Session check failed");
       const data = await res.json();
+
+      if (!res.ok) {
+        console.error("[Header] Session check error:", data.error);
+        setUser(null);
+        return null;
+      }
+
+      if (data.error) {
+        console.error("[Header] Session check error:", data.error);
+        setUser(null);
+        return null;
+      }
+
       setUser(data.user);
       return data.user;
     } catch (err) {
-      console.error("Помилка перевірки сесії:", err);
+      console.error("[Header] Session check failed:", err);
       setUser(null);
       return null;
     }
@@ -71,7 +84,7 @@ export default function Header() {
   };
 
   const navigateToProfile = () => {
-    router.push("/profile");
+    router.push("/cabinet");
     setUserMenuOpen(false);
   };
 
@@ -101,7 +114,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full flex items-center justify-between p-4 border-b bg-white sticky top-0 z-50 text-black px-10">
+      <header className="w-full flex items-center justify-between p-4 border-b bg-white sticky top-0 z-50 text-black px-4 md:px-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setOpen(!open)}
@@ -117,12 +130,8 @@ export default function Header() {
           </Link>
         </div>
 
-        <div className="flex-1 max-w-md mx-4 hidden md:block">
-          <input
-            type="text"
-            placeholder="Пошук..."
-            className="w-full border rounded px-3 py-1 text-sm"
-          />
+        <div className="hidden md:block flex-1 max-w-2xl mx-4">
+          <SearchBar />
         </div>
 
         <div className="flex items-center gap-4 text-black relative">
@@ -172,30 +181,38 @@ export default function Header() {
         </div>
       </header>
 
+      {/* Mobile search bar */}
+      <div className="md:hidden px-4 py-2 border-b bg-white">
+        <SearchBar />
+      </div>
+
       {/* Бургер меню */}
-      {open && (
-        <div
-          ref={menuRef}
-          className="text-black absolute top-[60px] left-0 mt-1 bg-white border shadow-lg rounded-md 
-                  w-1/2 h-[405px] z-50 flex flex-col p-4 gap-3 transition-all duration-300"
+      <div
+        ref={menuRef}
+        className={`text-black fixed top-[60px] left-0 mt-1 bg-white border shadow-lg rounded-md 
+                w-1/2 h-[405px] z-50 flex flex-col p-4 gap-3 transition-all duration-300 transform origin-top-left
+                ${
+                  open
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-95 pointer-events-none"
+                }`}
+      >
+        <button
+          className="p-2 border rounded text-left hover:bg-gray-100 transition-colors"
+          onClick={navigateToProducts}
         >
-          <button
-            className="p-2 border rounded text-left hover:bg-gray-100 transition-colors"
-            onClick={navigateToProducts}
-          >
-            Каталог
-          </button>
-          <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
-            Заглушка 1
-          </button>
-          <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
-            Заглушка 2
-          </button>
-          <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
-            Заглушка 3
-          </button>
-        </div>
-      )}
+          Каталог
+        </button>
+        <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
+          Заглушка 1
+        </button>
+        <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
+          Заглушка 2
+        </button>
+        <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
+          Заглушка 3
+        </button>
+      </div>
 
       <AuthModal
         isOpen={showAuth}
