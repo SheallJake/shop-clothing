@@ -1,14 +1,37 @@
 import { NextResponse } from "next/server";
-import { verifyJwt } from "@/utils/jwt";
+import { verifyJwtEdge } from "@/utils/jwtEdge";
 
-export function middleware(request) {
-  const token = request.cookies.get("token")?.value;
-  const user = token && verifyJwt(token);
+export async function middleware(request) {
+  // Перевіряємо чи це адмін маршрут
+  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  console.log("[Middleware] Is admin route:", isAdminRoute);
 
-  // Можемо перевіряти захищені маршрути
-  // if (!user && request.nextUrl.pathname.startsWith('/cabinet')) {
-  //   return NextResponse.redirect(new URL('/login', request.url));
-  // }
+  if (isAdminRoute) {
+    // Отримуємо токен з кукі
+    const token = request.cookies.get("token");
+    console.log("[Middleware] Token exists:", !!token);
+
+    // Якщо токена немає - перенаправляємо
+    if (!token) {
+      console.log("[Middleware] No token found, redirecting to home");
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    // Перевіряємо токен
+    const decoded = await verifyJwtEdge(token.value);
+    console.log("[Middleware] Decoded token:", decoded);
+
+    if (!decoded || decoded.role !== "admin") {
+      console.log("[Middleware] Access denied - not an admin");
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    console.log("[Middleware] Access granted to admin route");
+  }
 
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};

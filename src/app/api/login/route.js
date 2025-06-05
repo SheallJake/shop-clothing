@@ -10,8 +10,11 @@ export async function POST(req) {
     const body = await req.json();
     const { email, password } = body;
 
+    console.log("[Login API] Login attempt for email:", email);
+
     if (!email || !password) {
-      return Response.json(
+      console.log("[Login API] Missing email or password");
+      return NextResponse.json(
         { error: "Введіть email та пароль" },
         { status: 400 }
       );
@@ -19,18 +22,34 @@ export async function POST(req) {
 
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        role: true,
+        name: true,
+      },
     });
 
+    console.log(
+      "[Login API] User found:",
+      user ? { ...user, passwordHash: "HIDDEN" } : null
+    );
+
     if (!user) {
-      return Response.json(
+      console.log("[Login API] User not found");
+      return NextResponse.json(
         { error: "Користувача не знайдено" },
         { status: 401 }
       );
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    console.log("[Login API] Password validation:", isPasswordValid);
+
     if (!isPasswordValid) {
-      return Response.json({ error: "Невірний пароль" }, { status: 401 });
+      console.log("[Login API] Invalid password");
+      return NextResponse.json({ error: "Невірний пароль" }, { status: 401 });
     }
 
     // Генеруємо токен
@@ -40,19 +59,30 @@ export async function POST(req) {
       role: user.role,
     });
 
+    console.log("[Login API] JWT token generated, user role:", user.role);
+
     // Ставимо токен в cookie
-    return new Response(
-      JSON.stringify({ message: "Авторизація успішна", token }),
-      {
-        status: 200,
-        headers: {
-          "Set-Cookie": `token=${token}; Path=/; SameSite=Strict; Max-Age=604800`, // cookie на 7 днів
-        },
-      }
+    const response = NextResponse.json(
+      { message: "Авторизація успішна" },
+      { status: 200 }
     );
+
+    // Встановлюємо cookie з правильними параметрами
+    response.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+    });
+
+    console.log("[Login API] Cookie set successfully");
+    return response;
   } catch (err) {
-    console.error(err);
-    return Response.json(
+    console.error("[Login API] Error:", err);
+    return NextResponse.json(
       { error: "Внутрішня помилка сервера" },
       { status: 500 }
     );

@@ -33,6 +33,7 @@ export default function Header() {
         return null;
       }
 
+      console.log("[Header] User data from session:", data.user);
       setUser(data.user);
       return data.user;
     } catch (err) {
@@ -170,6 +171,17 @@ export default function Header() {
               >
                 Особистий кабінет
               </button>
+              {user.role === "admin" && (
+                <button
+                  className="text-left p-2 hover:bg-gray-100 rounded transition-colors"
+                  onClick={() => {
+                    router.push("/admin");
+                    setUserMenuOpen(false);
+                  }}
+                >
+                  Адмін панель
+                </button>
+              )}
               <button
                 className="text-left p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
                 onClick={logout}

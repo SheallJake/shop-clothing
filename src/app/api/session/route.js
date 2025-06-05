@@ -8,18 +8,18 @@ export async function GET(request) {
     const cookieStore = await cookies();
     const token = cookieStore.get("token");
 
-    console.log("[Session Debug] Token from cookie:", token?.value);
+    console.log("[Session API] Token from cookie:", token?.value);
 
     if (!token) {
-      console.log("[Session Debug] No token found");
+      console.log("[Session API] No token found");
       return NextResponse.json({ user: null }, { status: 200 });
     }
 
     const decoded = verifyJwt(token.value);
-    console.log("[Session Debug] Decoded token:", decoded);
+    console.log("[Session API] Decoded token:", decoded);
 
     if (!decoded || isTokenExpired(decoded)) {
-      console.log("[Session Debug] Token invalid or expired:", {
+      console.log("[Session API] Token invalid or expired:", {
         isValid: !!decoded,
         isExpired: decoded ? isTokenExpired(decoded) : true,
       });
@@ -27,6 +27,7 @@ export async function GET(request) {
     }
 
     try {
+      console.log("[Session API] Looking up user with ID:", decoded.userId);
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
         select: {
@@ -37,10 +38,10 @@ export async function GET(request) {
         },
       });
 
-      console.log("[Session Debug] User from database:", user);
+      console.log("[Session API] User from database:", user);
 
       if (!user) {
-        console.log("[Session Debug] No user found in database");
+        console.log("[Session API] No user found in database");
         return NextResponse.json({ user: null }, { status: 200 });
       }
 
