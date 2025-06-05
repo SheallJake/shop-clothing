@@ -141,3 +141,12 @@ model PromoCode {
   usageLimit      Int
   orders          Order[]
 }
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  fromAdmin Boolean
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
