@@ -8,7 +8,7 @@ import { CartProvider } from "@/context/CartContext";
 import { LoadingProvider } from "@/components/LoadingManager";
 import { Inter } from "next/font/google";
 import UserChatWidget from "@/components/UserChatWidget";
-
+import { ChatProvider } from "@/context/ChatContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -26,8 +26,10 @@ export default function RootLayout({ children }) {
             <WishlistProvider>
               <ClientLayout>
                 <div className="flex flex-col min-h-[calc(100vh-64px)]">
-                  <main className="flex-1 py-6 relative">{children}</main>
-                  <UserChatWidget userName="Ruslan" />
+                  <ChatProvider>
+                    <main className="flex-1 py-6 relative">{children}</main>
+                    <UserChatWidget />
+                  </ChatProvider>
                   <Footer />
                 </div>
               </ClientLayout>
