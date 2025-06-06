@@ -95,6 +95,8 @@ export async function GET(request, { params }) {
           size: true,
           brand: true,
           stockQuantity: true,
+          isDiscountActive: true,
+          discountPrice: true,
           category: {
             select: {
               id: true,
@@ -144,6 +146,8 @@ export async function GET(request, { params }) {
             size: true,
             brand: true,
             stockQuantity: true,
+            isDiscountActive: true,
+            discountPrice: true,
             category: {
               select: {
                 id: true,

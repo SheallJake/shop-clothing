@@ -73,10 +73,13 @@ export default function OrderPage() {
   };
 
   const calculateTotal = () => {
-    const subtotal = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    const subtotal = cart.reduce((sum, item) => {
+      const itemPrice =
+        item.isDiscountActive && item.discountPrice
+          ? item.discountPrice
+          : item.price;
+      return sum + itemPrice * item.quantity;
+    }, 0);
     const discountAmount = (subtotal * discount) / 100;
     return subtotal - discountAmount;
   };

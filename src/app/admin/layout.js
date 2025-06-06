@@ -37,6 +37,11 @@ const menuItems = [
     href: "/admin/reviews",
   },
   {
+    title: "Промокоди",
+    icon: <Tags className="w-5 h-5" />,
+    href: "/admin/promocodes",
+  },
+  {
     title: "Статистика",
     icon: <BarChart2 className="w-5 h-5" />,
     href: "/admin/statistics",

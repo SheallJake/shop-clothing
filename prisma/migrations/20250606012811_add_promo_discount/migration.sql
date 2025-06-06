@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "discountPrice" DOUBLE PRECISION,
+ADD COLUMN     "isDiscountActive" BOOLEAN NOT NULL DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "PromoCode" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "usedCount" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "isActive" SET DEFAULT true;

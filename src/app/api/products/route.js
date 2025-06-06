@@ -41,6 +41,8 @@ export async function GET() {
       reviews: product.reviews,
       averageRating: product.averageRating,
       reviewCount: product.reviewCount,
+      isDiscountActive: product.isDiscountActive || false,
+      discountPrice: product.discountPrice || null,
     }));
 
     return Response.json(formattedProducts);
