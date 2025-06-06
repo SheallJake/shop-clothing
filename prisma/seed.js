@@ -1,7 +1,35 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create users
+  const users = [
+    {
+      name: "Test 1",
+      email: "123@gmail.com",
+      passwordHash: await bcrypt.hash("12345678F", 10),
+      role: "user",
+    },
+    {
+      name: "Test 2",
+      email: "123123@gmail.com",
+      passwordHash: await bcrypt.hash("12345678F", 10),
+      role: "user",
+    },
+    {
+      name: "Admin",
+      email: "admin@gmail.com",
+      passwordHash: await bcrypt.hash("12345678F", 10),
+      role: "admin",
+    },
+  ];
+
+  // Create users in database
+  await prisma.$transaction(
+    users.map((user) => prisma.user.create({ data: user }))
+  );
+
   const categories = [
     "Футболки",
     "Джинси",

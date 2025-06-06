@@ -34,7 +34,7 @@ CREATE TABLE "Product" (
     "categoryId" INTEGER NOT NULL,
     "averageRating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "reviewCount" INTEGER NOT NULL DEFAULT 0,
-    "searchVector" TsVector NOT NULL,
+    "searchVector" TsVector,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );

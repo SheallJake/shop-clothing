@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Package,
   ShoppingCart,
@@ -11,6 +11,8 @@ import {
   Tags,
   Menu,
   X,
+  ArrowLeft,
+  MessagesSquare,
 } from "lucide-react";
 
 const menuItems = [
@@ -39,11 +41,18 @@ const menuItems = [
     icon: <BarChart2 className="w-5 h-5" />,
     href: "/admin/statistics",
   },
+  {
+    title: "Чати",
+    icon: <MessagesSquare className="w-5 h-5" />,
+    href: "/admin/chat",
+  },
 ];
 
 export default function AdminLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+  const isNotAdminHome = pathname !== "/admin";
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -62,6 +71,17 @@ export default function AdminLayout({ children }) {
           <Menu className="w-6 h-6" />
         )}
       </button>
+
+      {/* Back button */}
+      {isNotAdminHome && (
+        <button
+          onClick={() => router.push("/admin")}
+          className="text-black fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md flex items-center gap-2 hover:bg-gray-50 transition-colors lg:left-72"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Назад до адмін-панелі</span>
+        </button>
+      )}
 
       {/* Sidebar */}
       <aside
@@ -99,7 +119,7 @@ export default function AdminLayout({ children }) {
       <main
         className={`transition-all ${
           isSidebarOpen ? "lg:ml-64" : ""
-        } p-4 lg:p-8`}
+        } p-4 lg:p-8 ${isNotAdminHome ? "pt-16" : ""}`}
       >
         {children}
       </main>

@@ -18,7 +18,7 @@ export default function CategoryGrid() {
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 border border-white-500">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 rounded-lg border border-white-500 p-4">
       {categories.map((cat) => (
         <button
           key={cat.id}
