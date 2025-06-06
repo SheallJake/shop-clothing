@@ -35,6 +35,8 @@ export async function GET(request) {
         p."stockQuantity",
         p.color,
         p.size,
+        p."isDiscountActive",
+        p."discountPrice",
         c.name as "categoryName"
       FROM "Product" p
       LEFT JOIN "Category" c ON p."categoryId" = c.id
@@ -67,6 +69,8 @@ export async function GET(request) {
       stockQuantity: product.stockQuantity,
       color: product.color,
       size: product.size,
+      isDiscountActive: product.isDiscountActive || false,
+      discountPrice: product.discountPrice || null,
       category: {
         name: product.categoryName,
       },

@@ -55,6 +55,18 @@ export default function AdminDashboard() {
       href: "/admin/statistics",
       description: "Аналітика та звіти",
     },
+    {
+      title: "Чат",
+      icon: MessageSquare,
+      href: "/admin/chat",
+      description: "Перегляд та обробка чатів",
+    },
+    {
+      title: "Промокоди",
+      icon: Tags,
+      href: "/admin/promocodes",
+      description: "Управління промокодами",
+    },
   ];
 
   return (

@@ -215,8 +215,14 @@ export default function Header() {
         >
           Каталог
         </button>
-        <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
-          Заглушка 1
+        <button
+          className="p-2 border rounded text-left hover:bg-gray-100 transition-colors"
+          onClick={() => {
+            router.push("/game");
+            setOpen(false);
+          }}
+        >
+          Отримати промокод
         </button>
         <button className="p-2 border rounded text-left hover:bg-gray-100 transition-colors">
           Заглушка 2

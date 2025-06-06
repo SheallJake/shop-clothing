@@ -46,6 +46,7 @@ export default function ProductCard({ product }) {
       ...product,
       selectedColor: selectedColor,
       selectedSize: product.size,
+      price: finalPrice,
     };
 
     const success = await addToCart(productToAdd);
@@ -75,6 +76,27 @@ export default function ProductCard({ product }) {
   // Ensure all text values are strings
   const productName = String(product.name || "");
   const productPrice = Number(product.price || 0);
+  const finalPrice =
+    product.isDiscountActive && product.discountPrice
+      ? product.discountPrice
+      : productPrice;
+
+  // Calculate discount percentage if applicable
+  const discountPercentage =
+    product.isDiscountActive && product.discountPrice
+      ? Math.round(
+          ((productPrice - product.discountPrice) / productPrice) * 100
+        )
+      : 0;
+
+  // Debug logging for discount properties
+  console.log("Discount properties:", {
+    isDiscountActive: product.isDiscountActive,
+    discountPrice: product.discountPrice,
+    originalPrice: productPrice,
+    finalPrice: finalPrice,
+  });
+
   const productImage = String(product.image || "");
   const productDescription = String(product.description || "");
   const productMaterial = String(product.material || "");
@@ -92,6 +114,7 @@ export default function ProductCard({ product }) {
     sizes,
     productName,
     productPrice,
+    finalPrice,
     productImage,
     productDescription,
     productMaterial,
@@ -114,6 +137,11 @@ export default function ProductCard({ product }) {
                 alt={productName}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
+              {product.isDiscountActive && product.discountPrice && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                  -{discountPercentage}%
+                </div>
+              )}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
             </div>
           </Link>
@@ -125,7 +153,12 @@ export default function ProductCard({ product }) {
                     {productName}
                   </h3>
                   <p className="text-sm font-semibold text-green-600 mb-3">
-                    {productPrice} UAH
+                    {finalPrice} UAH
+                    {product.isDiscountActive && product.discountPrice && (
+                      <span className="text-sm line-through text-red-400 ml-2">
+                        {productPrice} UAH
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 mb-2">

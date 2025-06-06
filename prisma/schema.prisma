@@ -19,6 +19,7 @@ model User {
   orders       Order[]
   reviews      Review[]
   wishlists    Wishlist[]
+  gameAttempts GameAttempt[]
 }
 
 model Category {
@@ -29,23 +30,25 @@ model Category {
 }
 
 model Product {
-  id            Int         @id @default(autoincrement())
-  name          String
-  description   String?
-  color         String[]
-  size          String?
-  brand         String?
-  price         Float
-  stockQuantity Int
-  image         String?
-  categoryId    Int
-  averageRating Float       @default(0)
-  reviewCount   Int         @default(0)
-  cart          Cart[]
-  orderItems    OrderItem[]
-  category      Category    @relation(fields: [categoryId], references: [id])
-  reviews       Review[]
-  wishlists     Wishlist[]
+  id              Int         @id @default(autoincrement())
+  name            String
+  description     String?
+  color           String[]
+  size            String?
+  brand           String?
+  price           Float
+  stockQuantity   Int
+  image           String?
+  categoryId      Int
+  averageRating   Float       @default(0)
+  reviewCount     Int         @default(0)
+  discountPrice   Float?
+  isDiscountActive Boolean    @default(false)
+  cart            Cart[]
+  orderItems      OrderItem[]
+  category        Category    @relation(fields: [categoryId], references: [id])
+  reviews         Review[]
+  wishlists       Wishlist[]
 
   searchVector Unsupported("TsVector")?
   @@index([searchVector], type: Gin)
@@ -137,7 +140,22 @@ model PromoCode {
   code            String   @unique
   discountPercent Float
   expirationDate  DateTime
-  isActive        Boolean
+  isActive        Boolean  @default(true)
   usageLimit      Int
+  usedCount       Int      @default(0)
+  createdAt       DateTime @default(now())
   orders          Order[]
+  gameAttempts    GameAttempt[]
+}
+
+model GameAttempt {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  promoCodeId Int
+  success     Boolean
+  createdAt   DateTime  @default(now())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
 }

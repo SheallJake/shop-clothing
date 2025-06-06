@@ -10,6 +10,9 @@ export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [promoCode, setPromoCode] = useState("");
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [promoError, setPromoError] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -46,11 +49,36 @@ export default function CartPage() {
 
   // Обчислення загальної суми з перевіркою
   const total = cart.reduce((sum, item) => {
-    const price = Number(item.price);
+    const itemPrice =
+      item.isDiscountActive && item.discountPrice
+        ? item.discountPrice
+        : item.price;
+    const price = Number(itemPrice);
     const quantity = Number(item.quantity);
     if (isNaN(price) || isNaN(quantity)) return sum;
     return sum + price * quantity;
   }, 0);
+
+  const discountedTotal = total * (1 - discountPercent / 100);
+
+  const validatePromo = async () => {
+    const res = await fetch("/api/promocode/validate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code: promoCode }),
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      setDiscountPercent(data.discount);
+      setPromoError("");
+    } else {
+      setPromoError("Промокод не дійсний");
+      setDiscountPercent(0);
+    }
+  };
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -170,9 +198,32 @@ export default function CartPage() {
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold">Загальна сума:</span>
                 <span className="text-xl font-bold">
-                  {formatPrice(total)} грн
+                  {formatPrice(discountedTotal)} грн
                 </span>
               </div>
+              {discountPercent > 0 && (
+                <div className="text-green-600 text-sm mt-1">
+                  Знижка: {discountPercent}%
+                </div>
+              )}
+              <div className="mt-4 flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Введіть промокод"
+                  className="flex-1 px-4 py-2 border rounded-md"
+                />
+                <button
+                  onClick={validatePromo}
+                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Застосувати
+                </button>
+              </div>
+              {promoError && (
+                <div className="text-red-500 text-sm mt-1">{promoError}</div>
+              )}
               <button
                 className="w-full mt-4 bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors"
                 onClick={handleCheckout}
