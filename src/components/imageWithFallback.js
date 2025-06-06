@@ -1,12 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useLoading } from "./LoadingManager";
+import Image from "next/image";
 
 export default function ImageWithFallback({
   src,
   alt = "",
   className = "",
   priority,
+  fill,
+  width,
+  height,
   ...props
 }) {
   const [loaded, setLoaded] = useState(false);
@@ -23,9 +27,42 @@ export default function ImageWithFallback({
   const imgProps = { ...props };
   delete imgProps.priority;
 
+  if (fill) {
+    return (
+      <div className={`relative overflow-hidden ${className}`}>
+        <Image
+          src={error ? "/placeholder.svg" : src}
+          alt={alt}
+          className={`w-full h-full object-cover transition-opacity duration-700 ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+          onLoad={() => {
+            setLoaded(true);
+            removeLoadingImage(src);
+          }}
+          onError={() => {
+            setError(true);
+            setLoaded(true);
+            removeLoadingImage(src);
+          }}
+          fill
+          {...imgProps}
+        />
+        {!loaded && (
+          <Image
+            src="/placeholder.svg"
+            alt="loading"
+            className="absolute inset-0 w-full h-full object-cover blur-sm scale-110"
+            fill
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <img
+      <Image
         src={error ? "/placeholder.svg" : src}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-700 ${
@@ -40,13 +77,17 @@ export default function ImageWithFallback({
           setLoaded(true);
           removeLoadingImage(src);
         }}
+        width={width || 500}
+        height={height || 500}
         {...imgProps}
       />
       {!loaded && (
-        <img
+        <Image
           src="/placeholder.svg"
           alt="loading"
           className="absolute inset-0 w-full h-full object-cover blur-sm scale-110"
+          width={width || 500}
+          height={height || 500}
         />
       )}
     </div>

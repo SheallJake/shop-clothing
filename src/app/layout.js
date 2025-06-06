@@ -9,6 +9,8 @@ import { LoadingProvider } from "@/components/LoadingManager";
 import { Inter } from "next/font/google";
 import { ChatProvider } from "@/context/ChatContext";
 import ChatWidget from "@/components/ChatWidget";
+import { ThemeProvider } from "@/context/ThemeContext";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -19,43 +21,50 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="uk" className="h-full">
-      <body className="min-h-screen flex flex-col bg-black text-white">
-        <LoadingProvider>
-          <Header />
-          <CartProvider>
-            <WishlistProvider>
-              <ClientLayout>
-                <div className="flex flex-col min-h-[calc(100vh-64px)]">
-                  <ChatProvider>
-                    <main className="flex-1 py-6 relative">{children}</main>
-                    <ChatWidget />
-                  </ChatProvider>
-                  <Footer />
-                </div>
-              </ClientLayout>
-            </WishlistProvider>
-          </CartProvider>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: "#333",
-                color: "#fff",
-              },
-              success: {
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <ThemeProvider>
+          <LoadingProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <ClientLayout>
+                  <div className="flex flex-col min-h-[calc(100vh-64px)]">
+                    <Header />
+                    <ChatProvider>
+                      <main className="flex-1 py-6 relative max-w-7xl mx-auto px-4 w-full mt-24">
+                        {children}
+                      </main>
+                      <ChatWidget />
+                    </ChatProvider>
+                    <Footer />
+                  </div>
+                </ClientLayout>
+              </WishlistProvider>
+            </CartProvider>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 3000,
                 style: {
-                  background: "#22c55e",
+                  background: "var(--card-bg)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--card-border)",
                 },
-              },
-              error: {
-                style: {
-                  background: "#ef4444",
+                success: {
+                  style: {
+                    background: "var(--card-bg)",
+                    border: "1px solid #22c55e",
+                  },
                 },
-              },
-            }}
-          />
-        </LoadingProvider>
+                error: {
+                  style: {
+                    background: "var(--card-bg)",
+                    border: "1px solid #ef4444",
+                  },
+                },
+              }}
+            />
+          </LoadingProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

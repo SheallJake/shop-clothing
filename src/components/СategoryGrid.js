@@ -18,12 +18,12 @@ export default function CategoryGrid() {
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 rounded-lg border border-white-500 p-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 rounded-lg shadow-[0_0_2px_var(--glow-color)] p-4 max-w-7xl mx-auto w-full">
       {categories.map((cat) => (
         <button
           key={cat.id}
           onClick={() => handleCategoryClick(cat.name)}
-          className="text-center border border-dashed border-gray-400 rounded-lg p-2 hover:border-black hover:shadow-md transition-all duration-200"
+          className="text-center shadow-[0_0_2px_var(--glow-color)] rounded-lg p-2 hover:border-black bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] hover:shadow-md transition-all duration-200"
         >
           <ImageWithFallback
             src={`/categories/${cat.name.toLowerCase()}.jpg`}

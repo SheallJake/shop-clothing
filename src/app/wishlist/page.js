@@ -36,21 +36,25 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--foreground)]"></div>
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-white">Список бажаного</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[var(--foreground)]">
+        Список бажаного
+      </h1>
 
       {wishlist.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-lg mb-4 text-white">Список бажаного порожній</p>
+          <p className="text-lg mb-4 text-[var(--foreground)]">
+            Список бажаного порожній
+          </p>
           <a
             href="/products"
-            className="inline-block bg-white text-black px-6 py-3 rounded-md hover:bg-gray-200 transition-colors"
+            className="btn bg-[var(--card-bg)] text-[var(--foreground)] hover:bg-[var(--hover-bg)]"
           >
             Перейти до товарів
           </a>

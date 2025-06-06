@@ -26,15 +26,15 @@ const containerVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.3,
-      staggerChildren: 0.05,
+      duration: 0.2,
+      staggerChildren: 0.03,
     },
   },
   exit: {
     opacity: 0,
     y: -20,
     transition: {
-      duration: 0.2,
+      duration: 0.15,
     },
   },
 };
@@ -311,7 +311,7 @@ export default function ProductsPage() {
 
           {/* Sorting and filtering block - now sticky with enhanced smooth transition */}
           <motion.div
-            className="sticky top-16 z-10 bg-black text-white"
+            className="sticky top-[80px] z-10 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_5px_var(--glow-color)]"
             initial={false}
             animate={{
               y: isSticky ? 0 : -10,
@@ -321,24 +321,25 @@ export default function ProductsPage() {
                 : "none",
             }}
             transition={{
-              duration: 0.4,
-              ease: [0.4, 0, 0.2, 1],
+              duration: 0.2,
+              ease: "easeOut",
             }}
             style={{
               transform: "translate3d(0,0,0)",
               backfaceVisibility: "hidden",
               WebkitFontSmoothing: "subpixel-antialiased",
+              willChange: "transform, opacity, box-shadow",
             }}
           >
-            <div className="flex justify-between items-center py-4 px-4 transition-all duration-500 ease-out">
+            <div className="flex justify-between items-center py-4 px-4">
               <div className="relative">
                 <motion.button
-                  className="border border-gray-600 px-4 py-2 rounded bg-black hover:bg-gray-900 text-white"
+                  className="border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{
-                    duration: 0.3,
-                    ease: [0.4, 0, 0.2, 1],
+                    duration: 0.15,
+                    ease: "easeOut",
                   }}
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
@@ -348,43 +349,43 @@ export default function ProductsPage() {
                 <AnimatePresence>
                   {dropdownOpen && (
                     <motion.div
-                      className="absolute top-full left-0 mt-1 bg-black border border-gray-600 rounded shadow-lg z-20 w-60"
+                      className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{
-                        duration: 0.3,
-                        ease: [0.4, 0, 0.2, 1],
+                        duration: 0.15,
+                        ease: "easeOut",
                       }}
                     >
                       <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-gray-900 text-white"
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
                         whileHover={{ x: 5 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.15 }}
                         onClick={() => sortProducts("price-asc")}
                       >
                         <ArrowUp size={16} /> За зростанням ціни
                       </motion.button>
                       <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-gray-900 text-white"
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
                         whileHover={{ x: 5 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.15 }}
                         onClick={() => sortProducts("price-desc")}
                       >
                         <ArrowDown size={16} /> За спаданням ціни
                       </motion.button>
                       <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-gray-900 text-white"
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
                         whileHover={{ x: 5 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.15 }}
                         onClick={() => sortProducts("reviews-desc")}
                       >
                         <Star size={16} /> За найвищими рейтингами
                       </motion.button>
                       <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-gray-900 text-white"
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
                         whileHover={{ x: 5 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.15 }}
                         onClick={() => sortProducts("reviews-asc")}
                       >
                         <Star size={16} /> За найнижчими рейтингами
@@ -395,12 +396,12 @@ export default function ProductsPage() {
               </div>
 
               <motion.button
-                className="border border-gray-600 px-4 py-2 rounded bg-black hover:bg-gray-900 text-white"
+                className="border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{
-                  duration: 0.3,
-                  ease: [0.4, 0, 0.2, 1],
+                  duration: 0.15,
+                  ease: "easeOut",
                 }}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
@@ -416,13 +417,17 @@ export default function ProductsPage() {
               filters.priceRange.min > 0 ||
               filters.priceRange.max < Infinity) && (
               <motion.div
-                className="flex flex-wrap gap-2 py-3 px-4 border-t border-gray-800"
+                className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)]"
                 layout
+                transition={{
+                  duration: 0.15,
+                  ease: "easeOut",
+                }}
               >
                 {filters.categories.map((category) => (
                   <motion.div
                     key={`category-${category}`}
-                    className="flex items-center gap-1 bg-gray-900 px-3 py-1 rounded-full text-sm text-white border border-gray-700"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
                     layout
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -441,7 +446,7 @@ export default function ProductsPage() {
                 {filters.colors.map((color) => (
                   <motion.div
                     key={`color-${color}`}
-                    className="flex items-center gap-1 bg-gray-900 px-3 py-1 rounded-full text-sm text-white border border-gray-700"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
                     layout
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -460,7 +465,7 @@ export default function ProductsPage() {
                 {filters.sizes.map((size) => (
                   <motion.div
                     key={`size-${size}`}
-                    className="flex items-center gap-1 bg-gray-900 px-3 py-1 rounded-full text-sm text-white border border-gray-700"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
                     layout
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -479,7 +484,7 @@ export default function ProductsPage() {
                 {filters.brands.map((brand) => (
                   <motion.div
                     key={`brand-${brand}`}
-                    className="flex items-center gap-1 bg-gray-900 px-3 py-1 rounded-full text-sm text-white border border-gray-700"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
                     layout
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -498,7 +503,7 @@ export default function ProductsPage() {
                 {(filters.priceRange.min > 0 ||
                   filters.priceRange.max < Infinity) && (
                   <motion.div
-                    className="flex items-center gap-1 bg-gray-900 px-3 py-1 rounded-full text-sm text-white border border-gray-700"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
                     layout
                   >
                     <span>
@@ -535,7 +540,7 @@ export default function ProductsPage() {
             </div>
           ) : isLoading ? (
             <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--card-border)]"></div>
             </div>
           ) : (
             <div className="flex gap-4">
@@ -564,10 +569,19 @@ export default function ProductsPage() {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
+                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                      style={{
+                        willChange: "transform, opacity",
+                      }}
                     >
                       {currentProducts.map((product) => (
-                        <motion.div key={product.id} variants={itemVariants}>
+                        <motion.div
+                          key={product.id}
+                          variants={itemVariants}
+                          style={{
+                            willChange: "transform, opacity",
+                          }}
+                        >
                           <ProductCard product={product} />
                         </motion.div>
                       ))}
@@ -581,12 +595,12 @@ export default function ProductsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && !isLoading && !error && (
-          <div className="px-6 py-2 bg-black border-t border-gray-800">
-            <div className="flex justify-center items-center gap-2">
+          <div className="px-6 py-2 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)]">
+            <div className="flex justify-center items-center gap-2 bg-[var(--card-bg)] dark:bg-black">
               <button
                 onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1 || isChangingPage}
-                className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border rounded hover:bg-[var(--hover-bg)] bg-[var(--card-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -600,8 +614,8 @@ export default function ProductsPage() {
                   disabled={page === "..." || isChangingPage}
                   className={`px-4 py-2 border rounded ${
                     page === currentPage
-                      ? "bg-black text-white"
-                      : "hover:bg-gray-100"
+                      ? "bg-[var(--background)] "
+                      : "hover:bg-[var(--hover-bg)]"
                   } ${page === "..." ? "cursor-default" : ""}`}
                 >
                   {page}
@@ -613,7 +627,7 @@ export default function ProductsPage() {
                   handlePageChange(Math.min(currentPage + 1, totalPages))
                 }
                 disabled={currentPage === totalPages || isChangingPage}
-                className="p-2 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border rounded hover:bg-[var(--hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={20} />
               </button>

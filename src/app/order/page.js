@@ -12,16 +12,19 @@ export default function OrderPage() {
   const { cart, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [deliveryInfo, setDeliveryInfo] = useState({
-    address: "",
-    city: "",
-    region: "",
-    postalCode: "",
-  });
+  const [cities, setCities] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedWarehouse, setSelectedWarehouse] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [isCityInputFocused, setIsCityInputFocused] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
+  const [selectedCityName, setSelectedCityName] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -42,13 +45,77 @@ export default function OrderPage() {
     }
   };
 
-  const handleDeliveryInfoChange = (e) => {
-    const { name, value } = e.target;
-    setDeliveryInfo((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  // Load cities after authentication
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadCities = async () => {
+      try {
+        setIsLoadingCities(true);
+        const res = await fetch(
+          `/api/nova/cities?search=${encodeURIComponent(citySearch)}`
+        );
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        if (!data || !data.data) {
+          throw new Error("Invalid response format");
+        }
+        setCities(data.data);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        toast.error("Помилка при завантаженні міст");
+        setCities([]);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      loadCities();
+    }, 800);
+
+    return () => clearTimeout(timeoutId);
+  }, [isAuthenticated, citySearch]);
+
+  // Load warehouses when city is selected
+  useEffect(() => {
+    if (!selectedCity) {
+      setWarehouses([]);
+      setSelectedWarehouse("");
+      return;
+    }
+
+    const loadWarehouses = async () => {
+      try {
+        setIsLoadingWarehouses(true);
+        const res = await fetch("/api/nova/warehouses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ cityRef: selectedCity }),
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        if (!data || !data.data) {
+          throw new Error("Invalid response format");
+        }
+        setWarehouses(data.data);
+      } catch (error) {
+        console.error("Error loading warehouses:", error);
+        toast.error("Помилка при завантаженні відділень");
+        setWarehouses([]);
+      } finally {
+        setIsLoadingWarehouses(false);
+      }
+    };
+
+    loadWarehouses();
+  }, [selectedCity]);
 
   const handlePromoCodeSubmit = async (e) => {
     e.preventDefault();
@@ -90,13 +157,8 @@ export default function OrderPage() {
       return false;
     }
 
-    if (
-      !deliveryInfo.address ||
-      !deliveryInfo.city ||
-      !deliveryInfo.region ||
-      !deliveryInfo.postalCode
-    ) {
-      toast.error("Будь ласка, заповніть всі поля доставки");
+    if (!selectedCity || !selectedWarehouse) {
+      toast.error("Будь ласка, оберіть місто та відділення Нової Пошти");
       return false;
     }
 
@@ -114,7 +176,6 @@ export default function OrderPage() {
     try {
       setIsProcessingPayment(true);
 
-      // Create payment first
       const paymentRes = await fetch("/api/payment/monobank", {
         method: "POST",
         headers: {
@@ -122,7 +183,10 @@ export default function OrderPage() {
         },
         body: JSON.stringify({
           amount: calculateTotal(),
-          deliveryInfo,
+          deliveryInfo: {
+            city: selectedCity,
+            warehouse: selectedWarehouse,
+          },
           items: cart,
           promoCode: promoCode || null,
         }),
@@ -142,7 +206,6 @@ export default function OrderPage() {
         throw new Error("Payment page URL is missing");
       }
 
-      // Redirect to Monobank payment page
       window.location.href = paymentData.pageUrl;
     } catch (error) {
       setPaymentError(error.message);
@@ -179,12 +242,13 @@ export default function OrderPage() {
             <div className="space-y-4">
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center gap-4">
-                  <div className="w-20 h-20 relative">
+                  <div className="w-20 h-20">
                     <ImageWithFallback
                       src={item.image}
                       alt={item.name}
-                      fill
-                      className="object-cover rounded-md"
+                      width={80}
+                      height={80}
+                      className="rounded-md"
                     />
                   </div>
                   <div className="flex-1">
@@ -230,59 +294,90 @@ export default function OrderPage() {
                 Інформація про доставку
               </h2>
               <form className="space-y-4">
-                <div>
+                <div className="my-4">
                   <label className="block text-sm font-medium mb-1 text-black">
-                    Адреса
+                    Місто
                   </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={deliveryInfo.address}
-                    onChange={handleDeliveryInfoChange}
-                    className="w-full p-2 border rounded-md text-black"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-black">
-                      Місто
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={deliveryInfo.city}
-                      onChange={handleDeliveryInfoChange}
-                      className="w-full p-2 border rounded-md text-black"
-                      required
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={citySearch}
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        onFocus={() => setIsCityInputFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setIsCityInputFocused(false), 200);
+                        }}
+                        placeholder={selectedCityName || "Введіть назву міста"}
+                        className={`w-full p-2 border rounded-md text-black appearance-none bg-white transition-all duration-300 ease-in-out hover:border-gray-400 focus:border-gray-400 focus:outline-none ${
+                          selectedCityName ? "border-green-500" : ""
+                        }`}
+                        disabled={isLoadingCities}
+                      />
+                      {cities.length > 0 &&
+                        !isLoadingCities &&
+                        isCityInputFocused &&
+                        citySearch.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                            {cities.map((city) => (
+                              <div
+                                key={city.Ref}
+                                className={`p-2 hover:bg-gray-100 cursor-pointer text-black ${
+                                  city.Ref === selectedCity ? "bg-green-50" : ""
+                                }`}
+                                onClick={() => {
+                                  setSelectedCity(city.Ref);
+                                  setSelectedCityName(city.Description);
+                                  setCitySearch("");
+                                  setIsCityInputFocused(false);
+                                }}
+                              >
+                                {city.Description}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                    {isLoadingCities && (
+                      <div className="flex-shrink-0">
+                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-900"></div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-black">
-                      Область
-                    </label>
-                    <input
-                      type="text"
-                      name="region"
-                      value={deliveryInfo.region}
-                      onChange={handleDeliveryInfoChange}
-                      className="w-full p-2 border rounded-md text-black"
-                      required
-                    />
-                  </div>
                 </div>
-                <div>
+
+                <div className="my-4">
                   <label className="block text-sm font-medium mb-1 text-black">
-                    Поштовий індекс
+                    Відділення
                   </label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    value={deliveryInfo.postalCode}
-                    onChange={handleDeliveryInfoChange}
-                    className="w-full p-2 border rounded-md text-black"
-                    required
-                  />
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedWarehouse}
+                      onChange={(e) => setSelectedWarehouse(e.target.value)}
+                      className="w-full p-2 border rounded-md text-black appearance-none bg-white transition-all duration-300 ease-in-out hover:border-gray-400 focus:border-gray-400 focus:outline-none"
+                      disabled={!selectedCity || isLoadingWarehouses}
+                      required
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 0.5rem center",
+                        backgroundSize: "1.5em 1.5em",
+                        paddingRight: "2.5rem",
+                      }}
+                    >
+                      <option value="">Оберіть відділення</option>
+                      {warehouses.map((warehouse) => (
+                        <option key={warehouse.Ref} value={warehouse.Ref}>
+                          {warehouse.Description}
+                        </option>
+                      ))}
+                    </select>
+                    {isLoadingWarehouses && (
+                      <div className="flex-shrink-0">
+                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-900"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </form>
             </div>

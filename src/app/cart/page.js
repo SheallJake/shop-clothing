@@ -106,7 +106,7 @@ export default function CartPage() {
             <p className="text-lg mb-4">Кошик порожній</p>
             <a
               href="/products"
-              className="inline-block bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition-colors"
+              className="btn bg-black text-white hover:bg-gray-800"
             >
               Перейти до товарів
             </a>
@@ -117,7 +117,7 @@ export default function CartPage() {
               {cart.map((item) => (
                 <div
                   key={`${item.id}-${item.selectedSize}-${item.selectedColor}`}
-                  className="flex gap-4 border p-4 rounded"
+                  className="card card-hover"
                 >
                   <ImageWithFallback
                     src={item.image}
@@ -129,16 +129,16 @@ export default function CartPage() {
                       <h2 className="font-bold text-xl">
                         {item.name || "Без назви"}
                       </h2>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[var(--muted)]">
                         {item.category || "Без категорії"}
                       </p>
                       {item.selectedSize && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[var(--muted)]">
                           Розмір: {item.selectedSize}
                         </p>
                       )}
                       {item.selectedColor && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-[var(--muted)]">
                           Колір: {item.selectedColor}
                         </p>
                       )}
@@ -158,7 +158,7 @@ export default function CartPage() {
                               Number(item.quantity) - 1
                             )
                           }
-                          className="px-2 py-1 border rounded hover:bg-gray-100"
+                          className="btn"
                         >
                           -
                         </button>
@@ -172,7 +172,7 @@ export default function CartPage() {
                               Number(item.quantity) + 1
                             )
                           }
-                          className="px-2 py-1 border rounded hover:bg-gray-100"
+                          className="btn"
                         >
                           +
                         </button>
@@ -194,7 +194,7 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-8 border-t pt-4">
+            <div className="mt-8 border-t border-[var(--card-border)] pt-4">
               <div className="flex justify-between items-center">
                 <span className="text-xl font-bold">Загальна сума:</span>
                 <span className="text-xl font-bold">
@@ -212,12 +212,9 @@ export default function CartPage() {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   placeholder="Введіть промокод"
-                  className="flex-1 px-4 py-2 border rounded-md"
+                  className="input flex-1"
                 />
-                <button
-                  onClick={validatePromo}
-                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                >
+                <button onClick={validatePromo} className="btn">
                   Застосувати
                 </button>
               </div>
@@ -225,7 +222,7 @@ export default function CartPage() {
                 <div className="text-red-500 text-sm mt-1">{promoError}</div>
               )}
               <button
-                className="w-full mt-4 bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors"
+                className="btn w-full mt-4 bg-black text-white hover:bg-gray-800"
                 onClick={handleCheckout}
               >
                 {isAuthenticated

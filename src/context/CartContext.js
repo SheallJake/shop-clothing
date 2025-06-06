@@ -29,7 +29,7 @@ export function CartProvider({ children }) {
             const normalizedCart = serverCart.map((item) => ({
               id: item.product.id,
               name: item.product.name || "Без назви",
-              image: item.product.image || "/placeholder.jpg",
+              image: item.product.image || "/placeholder.svg",
               price: Number(item.product.price) || 0,
               quantity: Number(item.quantity) || 1,
               category: item.product.category || "Без категорії",
@@ -52,7 +52,7 @@ export function CartProvider({ children }) {
             const normalizedCart = parsedCart.map((item) => ({
               id: item.id,
               name: item.name || "Без назви",
-              image: item.image || "/placeholder.jpg",
+              image: item.image || "/placeholder.svg",
               price: Number(item.price) || 0,
               quantity: Number(item.quantity) || 1,
               category: item.category || "Без категорії",
@@ -92,7 +92,7 @@ export function CartProvider({ children }) {
       const transformedProduct = {
         id: product.id,
         name: product.name || "Без назви",
-        image: product.image || "/placeholder.jpg",
+        image: product.image || "/placeholder.svg",
         price: Number(product.price) || 0,
         quantity: 1,
         category:
@@ -134,7 +134,7 @@ export function CartProvider({ children }) {
         const normalizedCart = serverCart.map((item) => ({
           id: item.product.id,
           name: item.product.name || "Без назви",
-          image: item.product.image || "/placeholder.jpg",
+          image: item.product.image || "/placeholder.svg",
           price: Number(item.product.price) || 0,
           quantity: Number(item.quantity) || 1,
           category: item.product.category || "Без категорії",
@@ -209,7 +209,7 @@ export function CartProvider({ children }) {
         const normalizedCart = serverCart.map((item) => ({
           id: item.product.id,
           name: item.product.name || "Без назви",
-          image: item.product.image || "/placeholder.jpg",
+          image: item.product.image || "/placeholder.svg",
           price: Number(item.product.price) || 0,
           quantity: Number(item.quantity) || 1,
           category: item.product.category || "Без категорії",
@@ -284,7 +284,7 @@ export function CartProvider({ children }) {
         const normalizedCart = serverCart.map((item) => ({
           id: item.product.id,
           name: item.product.name || "Без назви",
-          image: item.product.image || "/placeholder.jpg",
+          image: item.product.image || "/placeholder.svg",
           price: Number(item.product.price) || 0,
           quantity: Number(item.quantity) || 1,
           category: item.product.category || "Без категорії",

@@ -138,7 +138,7 @@ export default function ProductCard({ product }) {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               {product.isDiscountActive && product.discountPrice && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute top-2 right-2 bg-red-500  text-xs px-2 py-1 rounded">
                   -{discountPercentage}%
                 </div>
               )}
@@ -173,7 +173,7 @@ export default function ProductCard({ product }) {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-black text-white py-2 px-4 rounded border border-gray-500 hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-[var(--card-bg)] dark:bg-black p-2 shadow-[0_0_2px_var(--glow-color)]  py-2 px-4 rounded border border-gray-500 hover:bg-[var(--hover-bg)] transition-colors flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span className="text-xs">В кошик</span>
@@ -183,7 +183,7 @@ export default function ProductCard({ product }) {
                 className={`p-2 border rounded transition-colors ${
                   isInWishlist(product.id)
                     ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "shadow-[0_0_2px_var(--glow-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] border-gray-500"
                 }`}
               >
                 <Heart
@@ -196,27 +196,28 @@ export default function ProductCard({ product }) {
           </div>
         </div>
         <div
-          className={`absolute left-0 right-0 bg-black bg-opacity-95 border-x border-b border-gray-500 rounded-b transition-all duration-300 transform origin-top ${
+          className={`absolute left-0 right-0 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-b transition-all duration-300 transform origin-top ${
             showTooltip ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
           }`}
           style={{
             zIndex: -1,
             top: "calc(100% - 4px)",
+            boxShadow: "var(--border-glow)",
           }}
         >
           <div className="p-4">
-            <div className="text-sm text-white grid grid-cols-2 gap-4">
+            <div className="text-sm grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 {colors.length > 0 && (
                   <div>
-                    <p className="text-xs mb-1 text-gray-400">
+                    <p className="text-xs mb-1 text-[var(--muted)]">
                       Доступні кольори:
                     </p>
                     <div className="flex gap-1 flex-wrap">
                       {colors.map((color) => (
                         <div
                           key={color}
-                          className="w-4 h-4 rounded-full border border-gray-300"
+                          className="w-4 h-4 rounded-full border border-[var(--card-border)]"
                           style={{
                             backgroundColor:
                               colorMapping[color.toLowerCase()] ||
@@ -231,12 +232,12 @@ export default function ProductCard({ product }) {
 
                 {sizes.length > 0 && (
                   <div>
-                    <p className="text-xs mb-1 text-gray-400">Розміри:</p>
+                    <p className="text-xs mb-1 text-[var(--muted)]">Розміри:</p>
                     <div className="flex gap-1 flex-wrap">
                       {sizes.map((size) => (
                         <span
                           key={size}
-                          className="w-8 h-8 flex items-center justify-center text-xs border border-gray-500 rounded hover:border-white transition-colors"
+                          className="w-8 h-8 flex items-center justify-center text-xs border border-[var(--card-border)] rounded hover:border-[var(--foreground)] transition-colors"
                         >
                           {size}
                         </span>
@@ -248,7 +249,7 @@ export default function ProductCard({ product }) {
 
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs mb-1 text-gray-400">Рейтинг:</p>
+                  <p className="text-xs mb-1 text-[var(--muted)]">Рейтинг:</p>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
@@ -256,11 +257,11 @@ export default function ProductCard({ product }) {
                         className={`w-3 h-3 ${
                           star <= Math.round(averageRating)
                             ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-600"
+                            : "text-[var(--muted)]"
                         }`}
                       />
                     ))}
-                    <span className="text-xs text-gray-400 ml-1">
+                    <span className="text-xs text-[var(--muted)] ml-1">
                       ({product.reviews?.length || 0})
                     </span>
                   </div>
@@ -268,21 +269,25 @@ export default function ProductCard({ product }) {
 
                 {productDescription && (
                   <div>
-                    <p className="text-xs mb-1 text-gray-400">Опис:</p>
+                    <p className="text-xs mb-1 text-[var(--muted)]">Опис:</p>
                     <p className="text-xs">{productDescription}</p>
                   </div>
                 )}
 
                 {productMaterial && (
                   <div>
-                    <p className="text-xs mb-1 text-gray-400">Матеріал:</p>
+                    <p className="text-xs mb-1 text-[var(--muted)]">
+                      Матеріал:
+                    </p>
                     <p className="text-xs">{productMaterial}</p>
                   </div>
                 )}
 
                 {categoryName && (
                   <div>
-                    <p className="text-xs mb-1 text-gray-400">Категорія:</p>
+                    <p className="text-xs mb-1 text-[var(--muted)]">
+                      Категорія:
+                    </p>
                     <p className="text-xs">{categoryName}</p>
                   </div>
                 )}
