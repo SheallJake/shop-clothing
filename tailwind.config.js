@@ -39,11 +39,21 @@ module.exports = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        slideDown: {
+          "0%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
+        fadeIn: "fadeIn 0.3s ease-out",
+        slideDown: "slideDown 0.2s ease-out",
       },
     },
   },

@@ -12,37 +12,11 @@ import {
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
 import PageTransition from "@/components/PageTransition";
-import { motion, AnimatePresence } from "framer-motion";
 import ProductFilters from "@/components/ProductFilters";
 import { colorMapping } from "@/utils/colorMapping";
 import ProductCard from "@/components/ProductCard";
 
 const ITEMS_PER_PAGE = 20;
-
-// Animation variants for the products grid
-const containerVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.2,
-      staggerChildren: 0.03,
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -20,
-    transition: {
-      duration: 0.15,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -51,7 +25,7 @@ export default function ProductsPage() {
   const [sortType, setSortType] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isChangingPage, setIsChangingPage] = useState(false);
+  const [isCatalogVisible, setIsCatalogVisible] = useState(false);
   const [selectedColors, setSelectedColors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -89,6 +63,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setIsCatalogVisible(false);
       setError(null);
       try {
         let url = query
@@ -103,6 +78,7 @@ export default function ProductsPage() {
         }
 
         setProducts(query ? data.products || [] : data);
+        setIsCatalogVisible(true);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError(err.message);
@@ -230,13 +206,9 @@ export default function ProductsPage() {
     setCurrentPage(1);
   };
 
-  // Handle page change with animation
+  // Handle page change without animation
   const handlePageChange = (newPage) => {
-    setIsChangingPage(true);
-    setTimeout(() => {
-      setCurrentPage(newPage);
-      setIsChangingPage(false);
-    }, 300); // Match this with the animation duration
+    setCurrentPage(newPage);
   };
 
   // Generate page numbers for pagination
@@ -309,104 +281,62 @@ export default function ProductsPage() {
             </h1>
           )}
 
-          {/* Sorting and filtering block - now sticky with enhanced smooth transition */}
-          <motion.div
-            className="sticky top-[80px] z-10 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_5px_var(--glow-color)]"
-            initial={false}
-            animate={{
-              y: isSticky ? 0 : -10,
-              opacity: isSticky ? 1 : 0.95,
-              boxShadow: isSticky
-                ? "rgba(0, 0, 0, 0.1) 0px 4px 12px -1px, rgba(0, 0, 0, 0.06) 0px 2px 8px -1px"
-                : "none",
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-            style={{
-              transform: "translate3d(0,0,0)",
-              backfaceVisibility: "hidden",
-              WebkitFontSmoothing: "subpixel-antialiased",
-              willChange: "transform, opacity, box-shadow",
-            }}
+          {/* Sorting and filtering block - now sticky */}
+          <div
+            className={`sticky top-[80px] z-10 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_5px_var(--glow-color)] ${
+              isSticky ? "shadow-md" : ""
+            }`}
+            style={
+              {
+                /* Removed framer-motion styles */
+              }
+            }
           >
             <div className="flex justify-between items-center py-4 px-4">
               <div className="relative">
-                <motion.button
+                <button
                   className="border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{
-                    duration: 0.15,
-                    ease: "easeOut",
-                  }}
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
                   Сортувати за
-                </motion.button>
+                </button>
 
-                <AnimatePresence>
-                  {dropdownOpen && (
-                    <motion.div
-                      className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{
-                        duration: 0.15,
-                        ease: "easeOut",
-                      }}
+                {dropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60">
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
+                      onClick={() => sortProducts("price-asc")}
                     >
-                      <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                        whileHover={{ x: 5 }}
-                        transition={{ duration: 0.15 }}
-                        onClick={() => sortProducts("price-asc")}
-                      >
-                        <ArrowUp size={16} /> За зростанням ціни
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                        whileHover={{ x: 5 }}
-                        transition={{ duration: 0.15 }}
-                        onClick={() => sortProducts("price-desc")}
-                      >
-                        <ArrowDown size={16} /> За спаданням ціни
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                        whileHover={{ x: 5 }}
-                        transition={{ duration: 0.15 }}
-                        onClick={() => sortProducts("reviews-desc")}
-                      >
-                        <Star size={16} /> За найвищими рейтингами
-                      </motion.button>
-                      <motion.button
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                        whileHover={{ x: 5 }}
-                        transition={{ duration: 0.15 }}
-                        onClick={() => sortProducts("reviews-asc")}
-                      >
-                        <Star size={16} /> За найнижчими рейтингами
-                      </motion.button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      <ArrowUp size={16} /> За зростанням ціни
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
+                      onClick={() => sortProducts("price-desc")}
+                    >
+                      <ArrowDown size={16} /> За спаданням ціни
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
+                      onClick={() => sortProducts("reviews-desc")}
+                    >
+                      <Star size={16} /> За найвищими рейтингами
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
+                      onClick={() => sortProducts("reviews-asc")}
+                    >
+                      <Star size={16} /> За найнижчими рейтингами
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <motion.button
+              <button
                 className="border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{
-                  duration: 0.15,
-                  ease: "easeOut",
-                }}
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
                 Фільтрувати
-              </motion.button>
+              </button>
             </div>
 
             {/* Active filters */}
@@ -416,96 +346,66 @@ export default function ProductsPage() {
               filters.brands.length > 0 ||
               filters.priceRange.min > 0 ||
               filters.priceRange.max < Infinity) && (
-              <motion.div
-                className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)]"
-                layout
-                transition={{
-                  duration: 0.15,
-                  ease: "easeOut",
-                }}
-              >
+              <div className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)]">
                 {filters.categories.map((category) => (
-                  <motion.div
+                  <div
                     key={`category-${category}`}
                     className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
-                    layout
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <span>Категорія: {category}</span>
-                    <motion.button
+                    <button
                       onClick={() => handleFilterChange("categories", [])}
                       className="hover:text-red-400 text-gray-400 ml-1"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
                     >
                       ⨉
-                    </motion.button>
-                  </motion.div>
+                    </button>
+                  </div>
                 ))}
                 {filters.colors.map((color) => (
-                  <motion.div
+                  <div
                     key={`color-${color}`}
                     className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
-                    layout
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <span>Колір: {color}</span>
-                    <motion.button
+                    <button
                       onClick={() => handleFilterChange("colors", color)}
                       className="hover:text-red-400 text-gray-400 ml-1"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
                     >
                       ⨉
-                    </motion.button>
-                  </motion.div>
+                    </button>
+                  </div>
                 ))}
                 {filters.sizes.map((size) => (
-                  <motion.div
+                  <div
                     key={`size-${size}`}
                     className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
-                    layout
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <span>Розмір: {size}</span>
-                    <motion.button
+                    <button
                       onClick={() => handleFilterChange("sizes", size)}
                       className="hover:text-red-400 text-gray-400 ml-1"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
                     >
                       ⨉
-                    </motion.button>
-                  </motion.div>
+                    </button>
+                  </div>
                 ))}
                 {filters.brands.map((brand) => (
-                  <motion.div
+                  <div
                     key={`brand-${brand}`}
                     className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
-                    layout
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <span>Бренд: {brand}</span>
-                    <motion.button
+                    <button
                       onClick={() => handleFilterChange("brands", brand)}
                       className="hover:text-red-400 text-gray-400 ml-1"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
                     >
                       ⨉
-                    </motion.button>
-                  </motion.div>
+                    </button>
+                  </div>
                 ))}
                 {(filters.priceRange.min > 0 ||
                   filters.priceRange.max < Infinity) && (
-                  <motion.div
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
-                    layout
-                  >
+                  <div className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]">
                     <span>
                       Ціна:{" "}
                       {filters.priceRange.min > 0 &&
@@ -515,7 +415,7 @@ export default function ProductsPage() {
                         ? `Від ${filters.priceRange.min} грн`
                         : `До ${filters.priceRange.max} грн`}
                     </span>
-                    <motion.button
+                    <button
                       onClick={() =>
                         handleFilterChange("priceRange", {
                           min: 0,
@@ -523,16 +423,14 @@ export default function ProductsPage() {
                         })
                       }
                       className="hover:text-red-400 text-gray-400 ml-1"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
                     >
                       ⨉
-                    </motion.button>
-                  </motion.div>
+                    </button>
+                  </div>
                 )}
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
 
           {error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -543,7 +441,7 @@ export default function ProductsPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--card-border)]"></div>
             </div>
           ) : (
-            <div className="flex gap-4">
+            <div className="flex gap-4 mt-8">
               <ProductFilters
                 products={products}
                 filters={filters}
@@ -562,31 +460,21 @@ export default function ProductsPage() {
                       : "Товарів не знайдено"}
                   </p>
                 ) : (
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentPage}
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                      style={{
-                        willChange: "transform, opacity",
-                      }}
-                    >
-                      {currentProducts.map((product) => (
-                        <motion.div
-                          key={product.id}
-                          variants={itemVariants}
-                          style={{
-                            willChange: "transform, opacity",
-                          }}
-                        >
-                          <ProductCard product={product} />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  </AnimatePresence>
+                  <div
+                    key={currentPage}
+                    className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ${
+                      isCatalogVisible
+                        ? "catalog-grid-visible"
+                        : "catalog-grid-hidden"
+                    }`}
+                    style={{ position: "relative", zIndex: 2 }}
+                  >
+                    {currentProducts.map((product, index) => (
+                      <div key={product.id} style={{}}>
+                        <ProductCard product={product} index={index} />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -595,12 +483,15 @@ export default function ProductsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && !isLoading && !error && (
-          <div className="px-6 py-2 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)]">
+          <div
+            className="px-6 py-2 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] relative"
+            style={{ zIndex: 1 }}
+          >
             <div className="flex justify-center items-center gap-2 bg-[var(--card-bg)] dark:bg-black">
               <button
                 onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-                disabled={currentPage === 1 || isChangingPage}
-                className="p-2 border rounded hover:bg-[var(--hover-bg)] bg-[var(--card-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === 1}
+                className="p-2 border rounded hover:bg-[var(--hover-bg)] bg-[var(--card-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -611,12 +502,14 @@ export default function ProductsPage() {
                   onClick={() =>
                     typeof page === "number" && handlePageChange(page)
                   }
-                  disabled={page === "..." || isChangingPage}
+                  disabled={page === "..."}
                   className={`px-4 py-2 border rounded ${
                     page === currentPage
-                      ? "bg-[var(--background)] "
+                      ? "bg-[var(--background)] shadow-[0_0_10px_var(--glow-color)]"
                       : "hover:bg-[var(--hover-bg)]"
-                  } ${page === "..." ? "cursor-default" : ""}`}
+                  } ${
+                    page === "..." ? "cursor-default" : ""
+                  } transition-colors`}
                 >
                   {page}
                 </button>
@@ -626,8 +519,8 @@ export default function ProductsPage() {
                 onClick={() =>
                   handlePageChange(Math.min(currentPage + 1, totalPages))
                 }
-                disabled={currentPage === totalPages || isChangingPage}
-                className="p-2 border rounded hover:bg-[var(--hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === totalPages}
+                className="p-2 border rounded hover:bg-[var(--hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={20} />
               </button>

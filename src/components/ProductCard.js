@@ -8,6 +8,10 @@ import { useCart } from "@/context/CartContext";
 import { addToCart } from "@/utils/cart";
 
 export default function ProductCard({ product }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart: addToCartContext } = useCart();
+
   useEffect(() => {
     console.log("Product data:", JSON.stringify(product, null, 2));
   }, [product]);
@@ -20,9 +24,6 @@ export default function ProductCard({ product }) {
   const [selectedColor, setSelectedColor] = useState(
     product.color?.[0] || null
   );
-  const [showTooltip, setShowTooltip] = useState(false);
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const { addToCart: addToCartContext } = useCart();
 
   const handleColorSelect = (color) => {
     setSelectedColor(color);
@@ -123,10 +124,10 @@ export default function ProductCard({ product }) {
 
   return (
     <div
-      className="group border border-gray-500 rounded px-2 py-2 relative"
+      className="group border border-gray-500 dark:border-white rounded px-2 py-2 relative card animate-fadeIn hover:shadow-[0_0_8px_var(--glow-color)] transition-all duration-300"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
-      style={{ zIndex: showTooltip ? 2 : 1 }}
+      style={{ zIndex: showTooltip ? 20 : 2 }}
     >
       <div className="relative w-full">
         <div>
@@ -138,7 +139,7 @@ export default function ProductCard({ product }) {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               {product.isDiscountActive && product.discountPrice && (
-                <div className="absolute top-2 right-2 bg-red-500  text-xs px-2 py-1 rounded">
+                <div className="absolute top-2 right-2 bg-red-500 text-xs px-2 py-1 rounded">
                   -{discountPercentage}%
                 </div>
               )}
@@ -170,20 +171,23 @@ export default function ProductCard({ product }) {
               </div>
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 relative"
+              style={{ zIndex: 40 }}
+            >
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-[var(--card-bg)] dark:bg-black p-2 shadow-[0_0_2px_var(--glow-color)]  py-2 px-4 rounded border border-gray-500 hover:bg-[var(--hover-bg)] transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-[var(--card-bg)] dark:bg-black p-2 py-2 px-4 rounded border border-gray-500 dark:border-white hover:shadow-[0_0_4px_var(--glow-color)] hover:bg-[var(--hover-bg)] transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span className="text-xs">В кошик</span>
               </button>
               <button
                 onClick={handleAddToWishlist}
-                className={`p-2 border rounded transition-colors ${
+                className={`p-2 border rounded transition-all duration-300 ${
                   isInWishlist(product.id)
                     ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
-                    : "shadow-[0_0_2px_var(--glow-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] border-gray-500"
+                    : "bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] border-gray-500 dark:border-white hover:shadow-[0_0_4px_var(--glow-color)]"
                 }`}
               >
                 <Heart
@@ -195,106 +199,110 @@ export default function ProductCard({ product }) {
             </div>
           </div>
         </div>
-        <div
-          className={`absolute left-0 right-0 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-b transition-all duration-300 transform origin-top ${
-            showTooltip ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
-          }`}
-          style={{
-            zIndex: -1,
-            top: "calc(100% - 4px)",
-            boxShadow: "var(--border-glow)",
-          }}
-        >
-          <div className="p-4">
-            <div className="text-sm grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                {colors.length > 0 && (
-                  <div>
-                    <p className="text-xs mb-1 text-[var(--muted)]">
-                      Доступні кольори:
-                    </p>
-                    <div className="flex gap-1 flex-wrap">
-                      {colors.map((color) => (
-                        <div
-                          key={color}
-                          className="w-4 h-4 rounded-full border border-[var(--card-border)]"
-                          style={{
-                            backgroundColor:
-                              colorMapping[color.toLowerCase()] ||
-                              color.toLowerCase(),
-                          }}
-                          title={color}
-                        />
-                      ))}
+        {showTooltip && (
+          <div
+            className={`absolute left-0 right-0 bg-[var(--card-bg)] border border-[var(--card-border)] dark:border-white rounded-b transition-all duration-300 transform origin-top hover:shadow-[0_0_8px_var(--glow-color)] animate-slideDown ${
+              showTooltip ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
+            }`}
+            style={{
+              zIndex: 20,
+              top: "100%",
+              marginTop: "-8px",
+            }}
+          >
+            <div className="p-4">
+              <div className="text-sm grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  {colors.length > 0 && (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--muted)]">
+                        Доступні кольори:
+                      </p>
+                      <div className="flex gap-1 flex-wrap">
+                        {colors.map((color) => (
+                          <div
+                            key={color}
+                            className="w-4 h-4 rounded-full border border-[var(--card-border)]"
+                            style={{
+                              backgroundColor:
+                                colorMapping[color.toLowerCase()] ||
+                                color.toLowerCase(),
+                            }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {sizes.length > 0 && (
-                  <div>
-                    <p className="text-xs mb-1 text-[var(--muted)]">Розміри:</p>
-                    <div className="flex gap-1 flex-wrap">
-                      {sizes.map((size) => (
-                        <span
-                          key={size}
-                          className="w-8 h-8 flex items-center justify-center text-xs border border-[var(--card-border)] rounded hover:border-[var(--foreground)] transition-colors"
-                        >
-                          {size}
-                        </span>
-                      ))}
+                  {sizes.length > 0 && (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--muted)]">
+                        Розміри:
+                      </p>
+                      <div className="flex gap-1 flex-wrap">
+                        {sizes.map((size) => (
+                          <span
+                            key={size}
+                            className="w-8 h-8 flex items-center justify-center text-xs border border-[var(--card-border)] rounded hover:border-[var(--foreground)] transition-colors"
+                          >
+                            {size}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs mb-1 text-[var(--muted)]">Рейтинг:</p>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-3 h-3 ${
-                          star <= Math.round(averageRating)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-[var(--muted)]"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-xs text-[var(--muted)] ml-1">
-                      ({product.reviews?.length || 0})
-                    </span>
-                  </div>
+                  )}
                 </div>
 
-                {productDescription && (
+                <div className="space-y-4">
                   <div>
-                    <p className="text-xs mb-1 text-[var(--muted)]">Опис:</p>
-                    <p className="text-xs">{productDescription}</p>
+                    <p className="text-xs mb-1 text-[var(--muted)]">Рейтинг:</p>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-3 h-3 ${
+                            star <= Math.round(averageRating)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-[var(--muted)]"
+                          }`}
+                        />
+                      ))}
+                      <span className="text-xs text-[var(--muted)] ml-1">
+                        ({product.reviews?.length || 0})
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                {productMaterial && (
-                  <div>
-                    <p className="text-xs mb-1 text-[var(--muted)]">
-                      Матеріал:
-                    </p>
-                    <p className="text-xs">{productMaterial}</p>
-                  </div>
-                )}
+                  {productDescription && (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--muted)]">Опис:</p>
+                      <p className="text-xs">{productDescription}</p>
+                    </div>
+                  )}
 
-                {categoryName && (
-                  <div>
-                    <p className="text-xs mb-1 text-[var(--muted)]">
-                      Категорія:
-                    </p>
-                    <p className="text-xs">{categoryName}</p>
-                  </div>
-                )}
+                  {productMaterial && (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--muted)]">
+                        Матеріал:
+                      </p>
+                      <p className="text-xs">{productMaterial}</p>
+                    </div>
+                  )}
+
+                  {categoryName && (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--muted)]">
+                        Категорія:
+                      </p>
+                      <p className="text-xs">{categoryName}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

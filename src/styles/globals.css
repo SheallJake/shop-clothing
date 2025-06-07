@@ -46,8 +46,21 @@
 @layer components {
   .card {
     @apply border-[0.1px] border-[var(--card-border)] bg-[var(--card-bg)] rounded-lg p-4;
-    will-change: background-color, border-color;
-    transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+    transition-delay: 0ms; /* Default delay, will be overridden by inline styles */
+  }
+
+  .card-lazy {
+    @apply card;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease, background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+    transition-delay: 0ms;
+  }
+
+  .card-lazy.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .card-hover {
@@ -57,32 +70,42 @@
 
   .nav-link {
     @apply border-[0.1px] border-transparent hover:border-[var(--card-border)] px-4 py-2 rounded-md;
-    will-change: border-color;
-    transition: border-color 0.2s ease-out;
+    transition: border-color 0.5s ease;
   }
 
   .btn {
     @apply border-[0.1px] border-[var(--card-border)] px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--card-border)] focus:ring-opacity-50;
-    will-change: background-color, border-color;
-    transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
   }
 
   .input {
     @apply border-[0.1px] border-[var(--card-border)] bg-[var(--card-bg)] rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--card-border)] focus:ring-opacity-50;
-    will-change: background-color, border-color;
-    transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
   }
+
+  .catalog-grid-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .catalog-grid-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+}
+
+html {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
 }
 
 body {
   @apply bg-[var(--background)] text-[var(--foreground)] font-sans antialiased;
   background-image: var(--background);
   background-attachment: fixed;
-  will-change: background-color, color;
-  transition: background-color 0.2s ease-out, color 0.2s ease-out;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
 }
 
 * {
-  will-change: background-color, border-color, color;
-  transition: background-color 0.2s ease-out, border-color 0.2s ease-out, color 0.2s ease-out;
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
 }
