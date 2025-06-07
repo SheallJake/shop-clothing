@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function PromoGamePage() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [promo, setPromo] = useState(null);
   const [discount, setDiscount] = useState(null);
@@ -155,8 +157,8 @@ export default function PromoGamePage() {
 
   if (initialLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8">
-        <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8">
+        <div className="max-w-md w-full bg-[var(--card-bg)] backdrop-blur-lg rounded-2xl p-8 shadow-2xl text-center border border-[var(--card-border)]">
           <p className="text-lg">Завантаження...</p>
         </div>
       </div>
@@ -164,19 +166,19 @@ export default function PromoGamePage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-8">
-      <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8">
+      <div className="max-w-md w-full bg-[var(--card-bg)] backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-[var(--card-border)]">
         <h1 className="text-3xl font-bold mb-6 text-center">
           🎁 Мiнi-гра: Виграй знижку!
         </h1>
 
         {error && (
-          <div className="bg-red-500/20 text-white p-4 rounded-lg mb-6 text-center">
+          <div className="bg-red-500/20 text-[var(--foreground)] p-4 rounded-lg mb-6 text-center border border-[var(--card-border)]">
             {error}
             {error.includes("увійдіть в систему") && (
               <button
                 onClick={() => router.push("/login")}
-                className="block w-full mt-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition"
+                className="block w-full mt-2 px-4 py-2 bg-[var(--card-bg)] text-[var(--foreground)] rounded-lg hover:bg-[var(--hover-bg)] transition border border-[var(--card-border)]"
               >
                 Увійти
               </button>
@@ -185,7 +187,7 @@ export default function PromoGamePage() {
         )}
 
         {nextAttemptTime && timeLeft && (
-          <div className="bg-blue-500/20 p-4 rounded-lg mb-6 text-center">
+          <div className="bg-[var(--card-bg)] p-4 rounded-lg mb-6 text-center border border-[var(--card-border)]">
             <p className="text-sm mb-2">Наступна спроба буде доступна через:</p>
             <p className="font-mono text-xl">
               {Math.floor(timeLeft / 3600)}:
@@ -199,7 +201,7 @@ export default function PromoGamePage() {
 
         {promo ? (
           <div className="text-center">
-            <div className="bg-white text-blue-600 p-6 rounded-lg shadow-inner mb-4">
+            <div className="bg-[var(--card-bg)] text-[var(--foreground)] p-6 rounded-lg shadow-inner mb-4 border border-[var(--card-border)]">
               <p className="text-sm mb-2">Ваш промокод:</p>
               <p className="text-2xl font-mono font-bold tracking-wider">
                 {promo}
@@ -215,7 +217,7 @@ export default function PromoGamePage() {
                 setPromo(null);
                 setDiscount(null);
               }}
-              className="text-sm underline hover:text-blue-200 transition"
+              className="text-sm underline hover:text-[var(--muted)] transition"
             >
               Спробувати ще раз
             </button>
@@ -228,7 +230,7 @@ export default function PromoGamePage() {
             <button
               onClick={playGame}
               disabled={loading || attemptsLeft <= 0}
-              className="relative px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg shadow-lg text-lg transition transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+              className="relative px-8 py-4 bg-[var(--card-bg)] text-[var(--foreground)] font-semibold rounded-lg shadow-lg text-lg transition transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 border border-[var(--card-border)]"
               style={{
                 transform: loading ? `rotate(${rotation}deg)` : "none",
               }}

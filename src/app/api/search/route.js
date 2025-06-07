@@ -14,7 +14,7 @@ export async function GET(request) {
       return NextResponse.json({ products: [], nextCursor: null });
     }
 
-    // Prepare the search query
+    // Prepare the search query with prefix matching and word stemming
     const searchQuery = query
       .trim()
       .split(/\s+/)
@@ -23,27 +23,34 @@ export async function GET(request) {
 
     console.log("Processed search query:", searchQuery);
 
-    // Build the SQL query
+    // Build the SQL query with ranking and highlighting
     const sqlQuery = `
-      SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.brand,
-        p.price,
-        p."mainImage",
-        p."galleryImages",
-        p."stockQuantity",
-        p.color,
-        p.size,
-        p."isDiscountActive",
-        p."discountPrice",
-        c.name as "categoryName"
-      FROM "Product" p
-      LEFT JOIN "Category" c ON p."categoryId" = c.id
-      WHERE p."searchVector" @@ to_tsquery('english', $1)
-      ${cursor ? `AND p.id > ${parseInt(cursor)}` : ""}
-      ORDER BY ts_rank(p."searchVector", to_tsquery('english', $1)) DESC, p.id ASC
+      WITH search_results AS (
+        SELECT 
+          p.id,
+          p.name,
+          p.description,
+          p.brand,
+          p.price,
+          p."mainImage",
+          p."galleryImages",
+          p."stockQuantity",
+          p.color,
+          p.size,
+          p."isDiscountActive",
+          p."discountPrice",
+          c.name as "categoryName",
+          ts_rank_cd(p."searchVector", to_tsquery('russian', $1)) as rank,
+          ts_headline('russian', p.name, to_tsquery('russian', $1), 'StartSel=<mark>,StopSel=</mark>,MaxFragments=1,MaxWords=30') as name_highlight,
+          ts_headline('russian', p.description, to_tsquery('russian', $1), 'StartSel=<mark>,StopSel=</mark>,MaxFragments=1,MaxWords=30') as description_highlight
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."categoryId" = c.id
+        WHERE p."searchVector" @@ to_tsquery('russian', $1)
+        ${cursor ? `AND p.id > ${parseInt(cursor)}` : ""}
+      )
+      SELECT *
+      FROM search_results
+      ORDER BY rank DESC, id ASC
       LIMIT ${limit + 1}
     `;
 
@@ -63,7 +70,9 @@ export async function GET(request) {
     const formattedResults = results.map((product) => ({
       id: product.id,
       name: product.name,
+      nameHighlight: product.name_highlight,
       description: product.description,
+      descriptionHighlight: product.description_highlight,
       brand: product.brand,
       price: product.price,
       image: product.mainImage,
@@ -76,6 +85,7 @@ export async function GET(request) {
       category: {
         name: product.categoryName,
       },
+      rank: product.rank,
     }));
 
     return NextResponse.json({

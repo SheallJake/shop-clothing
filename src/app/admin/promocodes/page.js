@@ -194,7 +194,7 @@ export default function PromoCodesManagement() {
         );
       }
       const data = await response.json();
-      setPromoCodes(data.promos);
+      setPromoCodes(data);
     } catch (err) {
       console.error("Error fetching promo codes:", err);
       setError(err.message);

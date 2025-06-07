@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
-import { verifyJwt } from "@/utils/jwt";
+import { verifyJwtEdge } from "@/utils/jwtEdge";
 
 // Helper function to verify admin authentication
 async function verifyAdmin() {
@@ -12,8 +12,8 @@ async function verifyAdmin() {
     return { isAuthenticated: false };
   }
 
-  const decoded = verifyJwt(token.value);
-  if (!decoded || decoded.role !== "ADMIN") {
+  const decoded = await verifyJwtEdge(token.value);
+  if (!decoded || decoded.role !== "admin") {
     return { isAuthenticated: false };
   }
 

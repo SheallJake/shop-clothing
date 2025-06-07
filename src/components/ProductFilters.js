@@ -106,7 +106,7 @@ export default function ProductFilters({
         initial={{ x: "100%" }}
         animate={{ x: isFilterOpen ? 0 : "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed right-0 top-0 h-screen w-80 bg-[var(--card-bg)] dark:bg-black shadow-[0_0_5px_var(--glow-color)] z-50"
+        className="fixed right-0 top-0 h-screen w-80 bg-[var(--card-bg)] dark:bg-black shadow-[0_0_5px_var(--glow-color)] z-[100]"
       >
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-[var(--card-border)] sticky top-0 bg-[var(--card-bg)] dark:bg-black z-10">

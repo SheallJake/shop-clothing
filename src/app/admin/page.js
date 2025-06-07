@@ -19,7 +19,7 @@ const DashboardCard = ({ title, icon: Icon, href, description }) => (
       <h3 className="text-xl font-semibold text-[var(--foreground)]">
         {title}
       </h3>
-      <Icon className="w-8 h-8 text-[var(--accent)]" />
+      <Icon className="w-8 h-8 text-[var(--foreground)]" />
     </div>
     <p className="text-[var(--foreground)] opacity-70">{description}</p>
   </Link>
