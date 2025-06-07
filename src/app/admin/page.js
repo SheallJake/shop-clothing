@@ -77,7 +77,6 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold text-[var(--foreground)] mb-8">
           Ласкаво просимо до панелі адміністратора
         </h1>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dashboardItems.map((item) => (
             <DashboardCard key={item.href} {...item} />

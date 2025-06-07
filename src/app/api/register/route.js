@@ -11,7 +11,7 @@ export async function POST(req) {
     // Перевірка обов'язкових полів
     if (!name || !email || !password) {
       return Response.json(
-        { error: "Заповніть всі обов’язкові поля" },
+        { error: "Заповніть всі обов'язкові поля" },
         { status: 400 }
       );
     }
@@ -38,7 +38,7 @@ export async function POST(req) {
         email,
         phoneNumber,
         passwordHash,
-        role: "user", // default роль
+        role: "USER", // default роль
       },
     });
 

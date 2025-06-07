@@ -95,8 +95,17 @@ export async function POST(req) {
         name: data.name,
         description: data.description,
         price: parseFloat(data.price),
-        stock: parseInt(data.stock) || 0,
+        stockQuantity: parseInt(data.stockQuantity) || 0,
         categoryId: data.categoryId,
+        color: data.color || [],
+        size: data.size,
+        brand: data.brand,
+        mainImage: data.mainImage,
+        galleryImages: data.galleryImages || [],
+        discountPrice: data.discountPrice
+          ? parseFloat(data.discountPrice)
+          : null,
+        isDiscountActive: data.isDiscountActive || false,
       },
       include: {
         category: true,
@@ -142,8 +151,19 @@ export async function PATCH(req) {
         name: data.name,
         description: data.description,
         price: data.price ? parseFloat(data.price) : undefined,
-        stock: data.stock ? parseInt(data.stock) : undefined,
+        stockQuantity: data.stockQuantity
+          ? parseInt(data.stockQuantity)
+          : undefined,
         categoryId: data.categoryId,
+        color: data.color,
+        size: data.size,
+        brand: data.brand,
+        mainImage: data.mainImage,
+        galleryImages: data.galleryImages,
+        discountPrice: data.discountPrice
+          ? parseFloat(data.discountPrice)
+          : null,
+        isDiscountActive: data.isDiscountActive,
       },
       include: {
         category: true,

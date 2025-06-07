@@ -3,7 +3,7 @@ import { verifyJwt } from "@/utils/jwt";
 import prisma from "@/lib/prisma";
 
 export async function getServerSession() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
@@ -31,4 +31,17 @@ export async function getServerSession() {
     console.error("Auth error:", error);
     return null;
   }
+}
+
+export async function verifyAuth() {
+  const session = await getServerSession();
+
+  if (!session) {
+    return { isAuthenticated: false, isAdmin: false };
+  }
+
+  return {
+    isAuthenticated: true,
+    isAdmin: session.user.role === "ADMIN",
+  };
 }

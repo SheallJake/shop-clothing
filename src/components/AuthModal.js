@@ -148,21 +148,28 @@ export default function AuthModal({
 
       try {
         if (modalState.mode === "login") {
-          const signInResponse = await signIn("credentials", {
-            email: formData.email,
-            password: formData.password,
-            redirect: false,
+          const loginResponse = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+            }),
           });
 
-          if (signInResponse?.error) {
-            setErrors({ email: signInResponse.error });
+          const data = await loginResponse.json();
+
+          if (!loginResponse.ok) {
+            setErrors({ email: data.error });
             return;
           }
 
           toast.success("Успішний вхід!");
           onClose();
           setWasManuallyClosed(false);
-          router.refresh();
+          window.location.reload();
         } else {
           const registerResponse = await fetch("/api/register", {
             method: "POST",
@@ -186,6 +193,7 @@ export default function AuthModal({
           setModalState((prev) => ({ ...prev, mode: "login" }));
           setFormData(initialFormState);
           setWasManuallyClosed(false);
+          window.location.reload();
         }
       } catch (err) {
         toast.error(err.message || ERROR_MESSAGES.SERVER_ERROR);
@@ -194,7 +202,7 @@ export default function AuthModal({
         setIsLoading(false);
       }
     },
-    [modalState.mode, formData, validateForm, onClose, router]
+    [modalState.mode, formData, onClose]
   );
 
   if (!modalState.shouldRender) return null;

@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import { ShoppingCart, Users, Star, Banknote } from "lucide-react";
 
 const StatCard = ({ title, value, icon: Icon, trend }) => (
@@ -24,26 +27,90 @@ const StatCard = ({ title, value, icon: Icon, trend }) => (
   </div>
 );
 
-export default function Statistics() {
-  // Тут буде логіка для отримання статистичних даних
-  const stats = {
-    totalOrders: {
-      value: "156",
-      trend: 12,
-    },
-    totalCustomers: {
-      value: "2,451",
-      trend: 8,
-    },
-    averageRating: {
-      value: "4.8",
-      trend: 2,
-    },
-    revenue: {
-      value: "₴125,000",
-      trend: 15,
-    },
+export default function StatisticsPage() {
+  const [statistics, setStatistics] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    recentOrders: [],
+    topProducts: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const router = useRouter();
+  const hasShownToast = useRef(false);
+
+  const checkSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/session");
+      if (!res.ok) throw new Error("Session check failed");
+      const data = await res.json();
+
+      if (!data.user || data.user.role !== "admin") {
+        if (!hasShownToast.current) {
+          hasShownToast.current = true;
+          toast.error("Доступ заборонено");
+          router.push("/");
+        }
+        return;
+      }
+    } catch (err) {
+      console.error("Помилка перевірки сесії:", err);
+      if (!hasShownToast.current) {
+        hasShownToast.current = true;
+        toast.error("Помилка перевірки сесії");
+        router.push("/");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  const fetchStatistics = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/statistics");
+
+      if (response.status === 401) {
+        if (!hasShownToast.current) {
+          hasShownToast.current = true;
+          toast.error("Доступ заборонено");
+          router.push("/");
+        }
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
+      }
+      const data = await response.json();
+      setStatistics(data);
+    } catch (err) {
+      console.error("Error fetching statistics:", err);
+      setError(err.message);
+      if (err.message.includes("Unauthorized")) {
+        if (!hasShownToast.current) {
+          hasShownToast.current = true;
+          toast.error("Доступ заборонено");
+          router.push("/");
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchStatistics();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -55,27 +122,27 @@ export default function Statistics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Всього замовлень"
-          value={stats.totalOrders.value}
+          value={statistics.totalOrders.toString()}
           icon={ShoppingCart}
-          trend={stats.totalOrders.trend}
+          trend={statistics.totalOrdersTrend}
         />
         <StatCard
           title="Клієнтів"
-          value={stats.totalCustomers.value}
+          value={statistics.totalUsers.toString()}
           icon={Users}
-          trend={stats.totalCustomers.trend}
+          trend={statistics.totalUsersTrend}
         />
         <StatCard
           title="Середня оцінка"
-          value={stats.averageRating.value}
+          value={statistics.averageRating.toString()}
           icon={Star}
-          trend={stats.averageRating.trend}
+          trend={statistics.averageRatingTrend}
         />
         <StatCard
           title="Дохід"
-          value={stats.revenue.value}
+          value={statistics.totalRevenue.toString()}
           icon={Banknote}
-          trend={stats.revenue.trend}
+          trend={statistics.totalRevenueTrend}
         />
       </div>
 

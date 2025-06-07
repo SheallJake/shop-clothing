@@ -17,12 +17,15 @@ export default function ImageWithFallback({
   const [error, setError] = useState(false);
   const { addLoadingImage, removeLoadingImage } = useLoading();
 
+  // Validate src prop
+  const imageSrc = src && src.trim() !== "" ? src : "/placeholder.svg";
+
   useEffect(() => {
-    if (src) {
-      addLoadingImage(src);
+    if (imageSrc) {
+      addLoadingImage(imageSrc);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src]); // Remove addLoadingImage from dependencies
+  }, [imageSrc]); // Remove addLoadingImage from dependencies
 
   const imgProps = { ...props };
   delete imgProps.priority;
@@ -31,19 +34,19 @@ export default function ImageWithFallback({
     return (
       <div className={`relative overflow-hidden ${className}`}>
         <Image
-          src={error ? "/placeholder.svg" : src}
+          src={error ? "/placeholder.svg" : imageSrc}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-700 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           onLoad={() => {
             setLoaded(true);
-            removeLoadingImage(src);
+            removeLoadingImage(imageSrc);
           }}
           onError={() => {
             setError(true);
             setLoaded(true);
-            removeLoadingImage(src);
+            removeLoadingImage(imageSrc);
           }}
           fill
           {...imgProps}
@@ -63,19 +66,19 @@ export default function ImageWithFallback({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <Image
-        src={error ? "/placeholder.svg" : src}
+        src={error ? "/placeholder.svg" : imageSrc}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-700 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         onLoad={() => {
           setLoaded(true);
-          removeLoadingImage(src);
+          removeLoadingImage(imageSrc);
         }}
         onError={() => {
           setError(true);
           setLoaded(true);
-          removeLoadingImage(src);
+          removeLoadingImage(imageSrc);
         }}
         width={width || 500}
         height={height || 500}

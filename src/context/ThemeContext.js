@@ -8,42 +8,32 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("light");
 
   useEffect(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    // Check if theme is stored in localStorage
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme) {
+      setTheme(storedTheme);
     } else {
       // Check system preference
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)"
       ).matches;
       setTheme(prefersDark ? "dark" : "light");
-      document.documentElement.classList.toggle("dark", prefersDark);
     }
   }, []);
 
+  useEffect(() => {
+    // Update document class and localStorage when theme changes
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-
-    // Add transition class before changing theme
-    document.documentElement.classList.add("theme-transitioning");
-
-    // Use requestAnimationFrame for smooth transition
-    requestAnimationFrame(() => {
-      setTheme(newTheme);
-      document.documentElement.classList.toggle("dark");
-      localStorage.setItem("theme", newTheme);
-
-      // Remove transition class after animation completes
-      setTimeout(() => {
-        document.documentElement.classList.remove("theme-transitioning");
-      }, 200);
-    });
+    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

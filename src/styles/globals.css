@@ -4,29 +4,33 @@
 
 @layer base {
   :root {
-    --background: linear-gradient(to bottom right, #FFFFFF, #bebebe);
-    --foreground: #000000;
-    --card-bg: #F5F5F5;
-    --card-border: #BDBDBD;
-    /* обновлённая граница */
-    --hover-bg: #E0E0E0;
-    --muted: #BDBDBD;
-    --glow-color: rgba(0, 0, 0, 0.25);
-    /* усиленное свечение */
+    --background: linear-gradient(to bottom right, #FFFFFF, #cfcfcf);
+    --foreground: #1a1a1a;
+    --card-bg: #FFFFFF;
+    --card-border: #cfcfcf;
+    --hover-bg: #f5f5f5;
+    --muted: #666666;
+    --glow-color: rgba(0, 0, 0, 0.5);
     --border-glow: 0 0 8px var(--glow-color);
+    --accent: #000000;
+    --accent-hover: #2c2c2c;
+    --input-bg: #FFFFFF;
+    --border: #e0e0e0;
   }
 
   .dark {
     --background: linear-gradient(to bottom right, #000000, #2C2C2C);
     --foreground: #FFFFFF;
     --card-bg: #2C2C2C;
-    --card-border: #BDBDBD;
-    /* обновлённая граница */
+    --card-border: #404040;
     --hover-bg: #3A3A3A;
-    --muted: #4F4F4F;
-    --glow-color: rgb(255, 255, 255);
-    /* усиленное свечение */
+    --muted: #a0a0a0;
+    --glow-color: rgba(255, 255, 255, 0.5);
     --border-glow: 0 0 8px var(--glow-color);
+    --accent: #000000;
+    --accent-hover: #71717a;
+    --input-bg: #2C2C2C;
+    --border: #404040;
   }
 
   /* Theme transition styles */

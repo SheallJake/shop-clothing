@@ -13,7 +13,7 @@ async function verifyAdmin() {
   }
 
   const decoded = verifyJwt(token.value);
-  if (!decoded || decoded.role !== "admin") {
+  if (!decoded || decoded.role !== "ADMIN") {
     return { isAuthenticated: false };
   }
 

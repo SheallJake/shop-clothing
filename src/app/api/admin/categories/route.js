@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyAuth } from "@/lib/auth";
+import { verifyJwtEdge } from "@/utils/jwtEdge";
 
 export async function GET(request) {
   try {
+    const token = request.cookies.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = await verifyJwtEdge(token.value);
+    if (!decoded || decoded.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || "";
 
@@ -35,8 +46,14 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { isAuthenticated, isAdmin } = await verifyAuth();
-    if (!isAuthenticated || !isAdmin) {
+    const token = request.cookies.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = await verifyJwtEdge(token.value);
+    if (!decoded || decoded.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -60,20 +77,41 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   try {
-    const { isAuthenticated, isAdmin } = await verifyAuth();
-    if (!isAuthenticated || !isAdmin) {
+    const token = request.cookies.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = await verifyJwtEdge(token.value);
+    if (!decoded || decoded.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = parseInt(searchParams.get("id"));
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid category ID" },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
+
+    if (!data.name) {
+      return NextResponse.json(
+        { error: "Category name is required" },
+        { status: 400 }
+      );
+    }
 
     const category = await prisma.category.update({
       where: { id },
       data: {
         name: data.name,
-        description: data.description,
+        description: data.description || null,
       },
     });
 
@@ -89,8 +127,14 @@ export async function PATCH(request) {
 
 export async function DELETE(request) {
   try {
-    const { isAuthenticated, isAdmin } = await verifyAuth();
-    if (!isAuthenticated || !isAdmin) {
+    const token = request.cookies.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = await verifyJwtEdge(token.value);
+    if (!decoded || decoded.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

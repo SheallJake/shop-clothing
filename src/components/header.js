@@ -129,7 +129,7 @@ export default function Header() {
     if (!user) {
       openAuthModal("login");
     } else {
-      router.push("/cabinet");
+      setUserMenuOpen(!userMenuOpen);
     }
   };
 
