@@ -3,11 +3,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import ImageWithFallback from "@/components/ImageWithFallback";
+import { Pencil, Check, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CabinetPage() {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phoneNumber: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState({});
   const router = useRouter();
   const hasShownToast = useRef(false);
 
@@ -27,8 +38,14 @@ export default function CabinetPage() {
       }
 
       setUser(data.user);
+      setEditForm({
+        name: data.user.name,
+        phoneNumber: data.user.phoneNumber || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
 
-      // Fetch user's orders
       const ordersRes = await fetch("/api/orders/user");
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
@@ -50,92 +67,295 @@ export default function CabinetPage() {
     checkSession();
   }, [checkSession]);
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setErrors({});
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm({
+      name: user.name,
+      phoneNumber: user.phoneNumber || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!editForm.name.trim()) newErrors.name = "Ім'я обов'язкове";
+    if (editForm.phoneNumber && !/^[+]?\d{10,13}$/.test(editForm.phoneNumber))
+      newErrors.phoneNumber = "Невірний формат номеру телефону";
+    if (editForm.newPassword) {
+      if (!editForm.currentPassword)
+        newErrors.currentPassword = "Введіть поточний пароль";
+      if (editForm.newPassword.length < 6)
+        newErrors.newPassword = "Пароль повинен містити мінімум 6 символів";
+      if (editForm.newPassword !== editForm.confirmPassword)
+        newErrors.confirmPassword = "Паролі не співпадають";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    try {
+      const response = await fetch("/api/user/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name,
+          phoneNumber: editForm.phoneNumber,
+          currentPassword: editForm.currentPassword,
+          newPassword: editForm.newPassword,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Помилка оновлення профілю");
+      setUser(data.user);
+      setIsEditing(false);
+      toast.success("Профіль успішно оновлено");
+      setEditForm((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900 dark:border-white" />
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">Особистий кабінет</h1>
-
-        <div className="bg-gray-900 rounded-lg shadow-md p-6 mb-6 border border-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Особиста інформація</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-400">
-                Ім'я
-              </label>
-              <p className="mt-1 text-lg">{user.name}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400">
-                Email
-              </label>
-              <p className="mt-1 text-lg">{user.email}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 border border-gray-800">
-            <h2 className="text-xl font-semibold mb-4">Мої замовлення</h2>
-            {orders.length === 0 ? (
-              <p className="text-gray-400">У вас поки немає замовлень</p>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="border border-gray-800 rounded p-4"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="text-sm text-gray-400">
-                          Замовлення #{order.id}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          Статус: {order.status}
-                        </p>
-                      </div>
-                      <p className="font-semibold">{order.totalPrice} грн</p>
-                    </div>
-                    <div className="space-y-2">
-                      {order.orderItems.map((item) => (
-                        <div key={item.id} className="flex items-center gap-2">
-                          <ImageWithFallback
-                            src={item.product.image}
-                            alt={item.product.name}
-                            className="w-12 h-12 object-cover rounded"
-                          />
-                          <div>
-                            <p className="text-sm">{item.product.name}</p>
-                            <p className="text-xs text-gray-400">
-                              {item.quantity} шт. × {item.pricePerUnit} грн
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+    <div className="flex justify-center items-start py-6 px-4">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Profile Block */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="lg:col-span-2 bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700 relative"
+        >
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+              Особистий кабінет
+            </h1>
+            {!isEditing && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleEditClick}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+              >
+                <Pencil size={16} />
+                Редагувати
+              </motion.button>
             )}
           </div>
 
-          <div className="bg-gray-900 rounded-lg shadow-md p-6 border border-gray-800">
-            <h2 className="text-xl font-semibold mb-4">Обране</h2>
-            <p className="text-gray-400">У вас поки немає обраних товарів</p>
-          </div>
-        </div>
+          {isEditing ? (
+            <motion.form
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm font-medium">Ім'я</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    errors.name ? "border-red-500" : "border-zinc-300"
+                  }`}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Телефон</label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={editForm.phoneNumber}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 rounded-lg border ${
+                    errors.phoneNumber ? "border-red-500" : "border-zinc-300"
+                  }`}
+                />
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.phoneNumber}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <input
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-100"
+                />
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold mb-4">Зміна паролю</h3>
+                <div className="space-y-4">
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    placeholder="Поточний пароль"
+                    value={editForm.currentPassword}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                  />
+                  <input
+                    type="password"
+                    name="newPassword"
+                    placeholder="Новий пароль"
+                    value={editForm.newPassword}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                  />
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Підтвердження паролю"
+                    value={editForm.confirmPassword}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors duration-200 flex items-center gap-2"
+                >
+                  <Check size={16} />
+                  Зберегти
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200 flex items-center gap-2"
+                >
+                  <X size={16} />
+                  Скасувати
+                </motion.button>
+              </div>
+            </motion.form>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
+                  Ім'я:
+                </label>
+                <p className="text-zinc-900 dark:text-white">{user.name}</p>
+              </div>
+              <div>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
+                  Email:
+                </label>
+                <p className="text-zinc-900 dark:text-white">{user.email}</p>
+              </div>
+              <div>
+                <label className="font-medium text-zinc-700 dark:text-zinc-300">
+                  Телефон:
+                </label>
+                <p className="text-zinc-900 dark:text-white">
+                  {user.phoneNumber || "Не вказано"}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Orders Block */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6 border border-zinc-200 dark:border-zinc-700"
+        >
+          <h2 className="text-xl font-bold mb-4 text-zinc-900 dark:text-white">
+            Мої замовлення
+          </h2>
+          {orders.length === 0 ? (
+            <p className="text-zinc-500">У вас поки немає замовлень</p>
+          ) : (
+            <div className="space-y-4 overflow-y-auto max-h-[70vh] pr-2">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="border p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                >
+                  <div className="flex justify-between mb-2">
+                    <div>
+                      <p className="text-sm text-zinc-500">#{order.id}</p>
+                      <p className="text-sm text-zinc-500">
+                        Статус: {order.status}
+                      </p>
+                    </div>
+                    <p className="font-semibold">{order.totalPrice} грн</p>
+                  </div>
+                  <div className="space-y-2">
+                    {order.orderItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <ImageWithFallback
+                          src={item.product.mainImage}
+                          alt={item.product.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div>
+                          <p className="text-sm">{item.product.name}</p>
+                          <p className="text-xs text-zinc-500">
+                            {item.quantity} шт × {item.pricePerUnit} грн
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

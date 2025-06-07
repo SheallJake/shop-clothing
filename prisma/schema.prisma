@@ -20,6 +20,7 @@ model User {
   reviews      Review[]
   wishlists    Wishlist[]
   gameAttempts GameAttempt[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Category {
@@ -38,7 +39,8 @@ model Product {
   brand           String?
   price           Float
   stockQuantity   Int
-  image           String?
+  mainImage      String?   // Головна картинка
+  galleryImages  String[] // Масив шляхів до додаткових картинок
   categoryId      Int
   averageRating   Float       @default(0)
   reviewCount     Int         @default(0)
@@ -159,3 +161,14 @@ model GameAttempt {
 
   @@index([userId, createdAt])
 }
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+}
+

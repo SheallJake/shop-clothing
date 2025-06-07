@@ -13,13 +13,15 @@ import PageTransition from "@/components/PageTransition";
 const DashboardCard = ({ title, icon: Icon, href, description }) => (
   <Link
     href={href}
-    className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+    className="bg-[var(--card-bg)] p-6 rounded-lg shadow-[0_0_2px_var(--glow-color)] hover:shadow-[0_0_8px_var(--glow-color)] transition-all duration-300 hover:scale-[1.02]"
   >
     <div className="flex items-center justify-between mb-4">
-      <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-      <Icon className="w-8 h-8 text-blue-500" />
+      <h3 className="text-xl font-semibold text-[var(--foreground)]">
+        {title}
+      </h3>
+      <Icon className="w-8 h-8 text-[var(--accent)]" />
     </div>
-    <p className="text-gray-600">{description}</p>
+    <p className="text-[var(--foreground)] opacity-70">{description}</p>
   </Link>
 );
 
@@ -72,7 +74,7 @@ export default function AdminDashboard() {
   return (
     <PageTransition>
       <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+        <h1 className="text-3xl font-bold text-[var(--foreground)] mb-8">
           Ласкаво просимо до панелі адміністратора
         </h1>
 

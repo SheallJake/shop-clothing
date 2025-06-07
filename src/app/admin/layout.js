@@ -64,59 +64,61 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Mobile sidebar toggle */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md lg:hidden"
+        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-[var(--card-bg)] shadow-[0_0_2px_var(--glow-color)] lg:hidden"
         onClick={toggleSidebar}
       >
         {isSidebarOpen ? (
-          <X className="w-6 h-6" />
+          <X className="w-6 h-6 text-[var(--foreground)]" />
         ) : (
-          <Menu className="w-6 h-6" />
+          <Menu className="w-6 h-6 text-[var(--foreground)]" />
         )}
       </button>
-
-      {/* Back button */}
-      {isNotAdminHome && (
-        <button
-          onClick={() => router.push("/admin")}
-          className="text-black fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md flex items-center gap-2 hover:bg-gray-50 transition-colors lg:left-72"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Назад до адмін-панелі</span>
-        </button>
-      )}
 
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-40 h-screen transition-transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 w-64 bg-white shadow-lg`}
+        } lg:translate-x-0 w-64 bg-[var(--card-bg)] shadow-[0_0_2px_var(--glow-color)]`}
       >
-        <div className="h-full px-3 py-4">
-          <h1 className="text-2xl font-bold mb-8 px-3 text-gray-800">
-            Адмін панель
-          </h1>
-          <nav className="space-y-2">
-            {menuItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.title}</span>
-                </Link>
-              );
-            })}
-          </nav>
+        <div className="h-full px-3 py-4 flex flex-col">
+          <div>
+            <h1 className="text-2xl font-bold mb-8 px-3 text-[var(--foreground)]">
+              Адмін панель
+            </h1>
+            <nav className="space-y-2">
+              {menuItems.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-300 ${
+                      isActive
+                        ? "bg-[var(--accent)] text-[var(--background)] shadow-[0_0_2px_var(--glow-color)]"
+                        : "text-[var(--foreground)] hover:bg-[var(--hover-bg)] hover:scale-[1.02]"
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="ml-3">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Back button moved to bottom */}
+          {isNotAdminHome && (
+            <button
+              onClick={() => router.push("/admin")}
+              className="mt-auto mb-4 text-[var(--foreground)] p-3 rounded-lg bg-[var(--card-bg)] shadow-[0_0_2px_var(--glow-color)] flex items-center gap-2 hover:bg-[var(--hover-bg)] transition-all duration-300 hover:scale-[1.02]"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Назад до адмін-панелі</span>
+            </button>
+          )}
         </div>
       </aside>
 
@@ -124,7 +126,7 @@ export default function AdminLayout({ children }) {
       <main
         className={`transition-all ${
           isSidebarOpen ? "lg:ml-64" : ""
-        } p-4 lg:p-8 ${isNotAdminHome ? "pt-16" : ""}`}
+        } p-4 lg:p-8`}
       >
         {children}
       </main>

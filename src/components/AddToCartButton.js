@@ -1,22 +1,30 @@
 import { ShoppingCart, Plus } from "lucide-react";
 import { addToCart } from "@/utils/cart";
 
-export default function AddToCartButton({ product }) {
+export default function AddToCartButton({
+  product,
+  className = "",
+  selectedSize,
+  selectedColor,
+}) {
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await addToCart(product);
+    await addToCart({
+      ...product,
+      quantity: 1,
+      selectedSize: selectedSize,
+      selectedColor: selectedColor,
+    });
   };
 
   return (
     <button
       onClick={handleAddToCart}
-      className="relative bg-black text-white p-3 rounded-full hover:bg-gray-800 transition-colors"
+      className={`w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 ${className}`}
     >
-      <ShoppingCart size={20} />
-      <div className="absolute -top-[1px] -right-[1px] bg-red-500 text-white rounded-full p-1 flex items-center justify-center">
-        <Plus size={12} />
-      </div>
+      <ShoppingCart className="w-5 h-5" />
+      <span>Додати до кошика</span>
     </button>
   );
 }

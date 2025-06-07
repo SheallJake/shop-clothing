@@ -98,7 +98,9 @@ export default function ProductCard({ product }) {
     finalPrice: finalPrice,
   });
 
-  const productImage = String(product.image || "");
+  const productImage = product.image
+    ? String(product.image)
+    : "/placeholder.svg";
   const productDescription = String(product.description || "");
   const productMaterial = String(product.material || "");
 

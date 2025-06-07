@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { IMaskInput } from "react-imask";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 // Constants
 const ANIMATION_DURATION = 300; // Duration in milliseconds
@@ -24,13 +25,18 @@ const initialFormState = {
   phoneNumber: "",
 };
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+  theme,
+  initialMode = "login",
+}) {
   // Modal state
   const [modalState, setModalState] = useState({
     visible: false,
     shouldRender: false,
     formVisible: true,
-    mode: "register",
+    mode: initialMode,
   });
 
   // Form state
@@ -38,6 +44,15 @@ export default function AuthModal({ isOpen, onClose }) {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [wasManuallyClosed, setWasManuallyClosed] = useState(true);
+  const router = useRouter();
+
+  // Reset form when mode changes
+  useEffect(() => {
+    setModalState((prev) => ({ ...prev, mode: initialMode }));
+    setFormData(initialFormState);
+    setErrors({});
+  }, [initialMode]);
 
   // Improved animation effect
   useEffect(() => {
@@ -128,43 +143,50 @@ export default function AuthModal({ isOpen, onClose }) {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-
-      if (!validateForm()) return;
-
+      setErrors({});
       setIsLoading(true);
 
       try {
-        const endpoint =
-          modalState.mode === "register" ? "/api/register" : "/api/login";
-        const payload =
-          modalState.mode === "register"
-            ? {
-                ...formData,
-                phoneNumber: formData.phoneNumber.replace(/\D/g, ""),
-              }
-            : {
-                email: formData.email,
-                password: formData.password,
-              };
+        if (modalState.mode === "login") {
+          const signInResponse = await signIn("credentials", {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
 
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+          if (signInResponse?.error) {
+            setErrors({ email: signInResponse.error });
+            return;
+          }
 
-        const data = await res.json();
+          toast.success("Успішний вхід!");
+          onClose();
+          setWasManuallyClosed(false);
+          router.refresh();
+        } else {
+          const registerResponse = await fetch("/api/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: formData.name,
+              email: formData.email,
+              password: formData.password,
+            }),
+          });
 
-        if (!res.ok) {
-          throw new Error(data.error || ERROR_MESSAGES.SERVER_ERROR);
+          const data = await registerResponse.json();
+
+          if (!registerResponse.ok) {
+            throw new Error(data.message || "Помилка реєстрації");
+          }
+
+          toast.success("Реєстрація успішна! Будь ласка, увійдіть.");
+          setModalState((prev) => ({ ...prev, mode: "login" }));
+          setFormData(initialFormState);
+          setWasManuallyClosed(false);
         }
-
-        toast.success(
-          modalState.mode === "register"
-            ? "Реєстрація успішна!"
-            : "Успішний вхід!"
-        );
-        onClose();
       } catch (err) {
         toast.error(err.message || ERROR_MESSAGES.SERVER_ERROR);
         console.error(err);
@@ -172,7 +194,7 @@ export default function AuthModal({ isOpen, onClose }) {
         setIsLoading(false);
       }
     },
-    [modalState.mode, formData, validateForm, onClose]
+    [modalState.mode, formData, validateForm, onClose, router]
   );
 
   if (!modalState.shouldRender) return null;
@@ -187,13 +209,13 @@ export default function AuthModal({ isOpen, onClose }) {
       ></div>
 
       <div
-        className={`fixed bottom-0 left-1/2 translate-x-[-50%] z-50 bg-white rounded-t-lg shadow-lg p-8 w-full max-w-lg h-[80vh] flex flex-col justify-center transition-all duration-${ANIMATION_DURATION} ease-in-out ${
+        className={`fixed bottom-0 left-1/2 translate-x-[-50%] z-50 bg-[var(--card-bg)] rounded-t-lg shadow-lg p-8 w-full max-w-lg h-[80vh] flex flex-col justify-center transition-all duration-${ANIMATION_DURATION} ease-in-out ${
           modalState.visible
             ? "translate-y-0 opacity-100"
             : "translate-y-full opacity-0"
         }`}
       >
-        <div className="text-center text-black mb-6 pb-6">
+        <div className="text-center text-[var(--foreground)] mb-6 pb-6">
           <p className="text-5xl font-semibold mb-2">Вітання!</p>
           <p className="text-lg">
             Ласкаво просимо до <span className="font-bold">Крамничка</span>
@@ -201,7 +223,7 @@ export default function AuthModal({ isOpen, onClose }) {
         </div>
 
         <h2
-          className="text-2xl font-bold mb-6 text-center text-black transition-opacity duration-300"
+          className="text-2xl font-bold mb-6 text-center text-[var(--foreground)] transition-opacity duration-300"
           style={{ opacity: modalState.formVisible ? 1 : 0 }}
         >
           {modalState.mode === "register" ? "Реєстрація" : "Авторизація"}
@@ -209,7 +231,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
         <form
           onSubmit={handleSubmit}
-          className={`text-black flex flex-col gap-4 transition-opacity duration-300 ${
+          className={`text-[var(--foreground)] flex flex-col gap-4 transition-opacity duration-300 ${
             modalState.formVisible ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -217,7 +239,7 @@ export default function AuthModal({ isOpen, onClose }) {
             <>
               <div>
                 <input
-                  className={`border rounded px-4 py-3 w-full ${
+                  className={`border border-[var(--card-border)] rounded px-4 py-3 w-full bg-[var(--background)] ${
                     errors.name ? "border-red-500" : ""
                   }`}
                   placeholder="Ім'я"
@@ -238,7 +260,7 @@ export default function AuthModal({ isOpen, onClose }) {
                   onAccept={(value) => handleInputChange("phoneNumber", value)}
                   placeholder="Телефон"
                   type="tel"
-                  className={`border rounded px-4 py-3 w-full ${
+                  className={`border border-[var(--card-border)] rounded px-4 py-3 w-full bg-[var(--background)] ${
                     errors.phoneNumber ? "border-red-500" : ""
                   }`}
                   disabled={isLoading}
@@ -255,7 +277,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
           <div>
             <input
-              className={`border rounded px-4 py-3 w-full ${
+              className={`border border-[var(--card-border)] rounded px-4 py-3 w-full bg-[var(--background)] ${
                 errors.email ? "border-red-500" : ""
               }`}
               placeholder="Email"
@@ -272,7 +294,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
           <div className="relative">
             <input
-              className={`border rounded px-4 py-3 pr-10 w-full ${
+              className={`border border-[var(--card-border)] rounded px-4 py-3 pr-10 w-full bg-[var(--background)] ${
                 errors.password ? "border-red-500" : ""
               }`}
               placeholder="Пароль"
@@ -285,7 +307,7 @@ export default function AuthModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-black text-sm"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground)] text-sm"
               disabled={isLoading}
             >
               {showPassword ? "🙈" : "👁️"}
@@ -295,8 +317,29 @@ export default function AuthModal({ isOpen, onClose }) {
             )}
           </div>
 
+          {modalState.mode === "login" && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  window.location.href = "/forgot-password";
+                }}
+                className="text-sm text-[var(--primary)] hover:text-[var(--primary-hover)]"
+              >
+                Забули пароль?
+              </button>
+            </div>
+          )}
+
           <button
-            className={`bg-black text-white py-3 rounded hover:bg-gray-800 transition-colors ${
+            className={`${
+              theme === "light"
+                ? "bg-zinc-800 hover:bg-zinc-700"
+                : "bg-white hover:bg-zinc-100"
+            } ${
+              theme === "light" ? "text-white" : "text-zinc-800"
+            } py-3 rounded-md transition-all duration-300 shadow-[0_0_2px_var(--glow-color)] hover:shadow-[0_0_8px_var(--glow-color)] hover:scale-[1.02] active:scale-[0.98] ${
               isLoading ? "opacity-70 cursor-not-allowed" : ""
             }`}
             disabled={isLoading}
@@ -304,7 +347,9 @@ export default function AuthModal({ isOpen, onClose }) {
             {isLoading ? (
               <span className="flex items-center justify-center">
                 <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  className={`animate-spin -ml-1 mr-3 h-5 w-5 ${
+                    theme === "light" ? "text-white" : "text-zinc-800"
+                  }`}
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -334,7 +379,11 @@ export default function AuthModal({ isOpen, onClose }) {
         </form>
 
         <button
-          className={`mt-6 text-sm text-black hover:underline ${
+          className={`mt-6 text-sm ${
+            theme === "light"
+              ? "text-zinc-800 hover:text-zinc-600"
+              : "text-white hover:text-zinc-200"
+          } transition-all duration-300 hover:scale-105 active:scale-95 ${
             isLoading ? "opacity-70 cursor-not-allowed" : ""
           }`}
           onClick={() =>

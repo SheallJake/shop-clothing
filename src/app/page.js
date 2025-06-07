@@ -1,17 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import BannerSlider from "@/components/BannerSlider";
-import CategoryGrid from "@/components/СategoryGrid";
-import PageTransition from "@/components/PageTransition";
+import CategoryGrid from "@/components/CategoryGrid";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
+  const { openAuthModal } = useAuthModal();
+
+  useEffect(() => {
+    const auth = searchParams.get("auth");
+    if (auth === "login" || auth === "register") {
+      openAuthModal(auth);
+    }
+  }, [searchParams, openAuthModal]);
+
   return (
-    <PageTransition>
-      <BannerSlider className="mx-0" />
-      <div className="container mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold mb-4">Категорії</h2>
-        <CategoryGrid />
-      </div>
-    </PageTransition>
+    <div className="space-y-8">
+      <BannerSlider />
+      <CategoryGrid />
+    </div>
   );
 }

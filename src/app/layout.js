@@ -10,6 +10,7 @@ import { Inter } from "next/font/google";
 import { ChatProvider } from "@/context/ChatContext";
 import ChatWidget from "@/components/ChatWidget";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthModalProvider } from "@/context/AuthModalContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,18 +27,20 @@ export default function RootLayout({ children }) {
           <LoadingProvider>
             <CartProvider>
               <WishlistProvider>
-                <ClientLayout>
-                  <div className="flex flex-col min-h-[calc(100vh-64px)]">
-                    <Header />
-                    <ChatProvider>
-                      <main className="flex-1 py-6 relative max-w-7xl mx-auto px-4 w-full mt-24">
-                        {children}
-                      </main>
-                      <ChatWidget />
-                    </ChatProvider>
-                    <Footer />
-                  </div>
-                </ClientLayout>
+                <AuthModalProvider>
+                  <ClientLayout>
+                    <div className="flex flex-col min-h-[calc(100vh-64px)]">
+                      <Header />
+                      <ChatProvider>
+                        <main className="flex-1 py-6 relative max-w-7xl mx-auto px-4 w-full mt-24">
+                          {children}
+                        </main>
+                        <ChatWidget />
+                      </ChatProvider>
+                      <Footer />
+                    </div>
+                  </ClientLayout>
+                </AuthModalProvider>
               </WishlistProvider>
             </CartProvider>
             <Toaster
@@ -48,18 +51,6 @@ export default function RootLayout({ children }) {
                   background: "var(--card-bg)",
                   color: "var(--foreground)",
                   border: "1px solid var(--card-border)",
-                },
-                success: {
-                  style: {
-                    background: "var(--card-bg)",
-                    border: "1px solid #22c55e",
-                  },
-                },
-                error: {
-                  style: {
-                    background: "var(--card-bg)",
-                    border: "1px solid #ef4444",
-                  },
                 },
               }}
             />

@@ -16,6 +16,7 @@ import {
   FiUser,
   FiSearch,
 } from "react-icons/fi";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const searchRef = useRef(null);
+  const { openAuthModal } = useAuthModal();
 
   // Функція перевірки сесії
   const checkSession = useCallback(async () => {
@@ -116,6 +118,7 @@ export default function Header() {
       setUser(null);
       setUserMenuOpen(false);
       router.refresh();
+      window.location.reload();
     } catch (error) {
       console.error("Помилка при виході:", error);
     }
@@ -123,7 +126,11 @@ export default function Header() {
 
   // Обробка кліку по кнопці користувача
   const handleUserButtonClick = () => {
-    setUserMenuOpen(!userMenuOpen);
+    if (!user) {
+      openAuthModal("login");
+    } else {
+      router.push("/cabinet");
+    }
   };
 
   // Handle click outside user menu
@@ -338,16 +345,6 @@ export default function Header() {
           </nav>
         </div>
       </div>
-
-      <AuthModal
-        isOpen={showAuth}
-        onClose={() => {
-          setShowAuth(false);
-          if (!user) {
-            router.refresh();
-          }
-        }}
-      />
     </>
   );
 }

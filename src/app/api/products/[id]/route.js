@@ -21,13 +21,16 @@ export async function GET(request, { params }) {
         name: true,
         description: true,
         price: true,
-        image: true,
+        mainImage: true,
+        galleryImages: true,
         color: true,
         size: true,
         brand: true,
         stockQuantity: true,
         averageRating: true,
         reviewCount: true,
+        isDiscountActive: true,
+        discountPrice: true,
         category: {
           select: {
             id: true,
