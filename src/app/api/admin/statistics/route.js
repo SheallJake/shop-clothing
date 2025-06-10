@@ -13,7 +13,7 @@ export async function GET() {
     }
 
     const decoded = await verifyJwtEdge(token);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

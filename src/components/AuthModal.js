@@ -13,6 +13,7 @@ const ERROR_MESSAGES = {
   PASSWORD_LENGTH: "Пароль повинен містити щонайменше 8 символів.",
   PASSWORD_CHARS: "Пароль може містити лише латинські букви та цифри.",
   PASSWORD_LETTER: "Пароль повинен містити хоча б одну латинську букву.",
+  PASSWORD_MISMATCH: "Паролі не співпадають",
   INVALID_EMAIL: "Будь ласка, введіть коректну email адресу",
   REQUIRED_FIELD: "Це поле обов'язкове",
   SERVER_ERROR: "Помилка сервера. Спробуйте пізніше.",
@@ -22,6 +23,7 @@ const initialFormState = {
   name: "",
   email: "",
   password: "",
+  confirmPassword: "",
   phoneNumber: "",
 };
 
@@ -88,13 +90,19 @@ export default function AuthModal({
   // Form validation
   const validateForm = useCallback(() => {
     const newErrors = {};
-    const { email, password, name, phoneNumber } = formData;
+    const { email, password, confirmPassword, name, phoneNumber } = formData;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (modalState.mode === "register") {
       if (!name.trim()) newErrors.name = ERROR_MESSAGES.REQUIRED_FIELD;
       if (!phoneNumber.trim())
         newErrors.phoneNumber = ERROR_MESSAGES.REQUIRED_FIELD;
+
+      if (!confirmPassword) {
+        newErrors.confirmPassword = ERROR_MESSAGES.REQUIRED_FIELD;
+      } else if (password !== confirmPassword) {
+        newErrors.confirmPassword = ERROR_MESSAGES.PASSWORD_MISMATCH;
+      }
     }
 
     if (!email.trim()) {
@@ -180,6 +188,7 @@ export default function AuthModal({
               name: formData.name,
               email: formData.email,
               password: formData.password,
+              phoneNumber: formData.phoneNumber,
             }),
           });
 
@@ -189,9 +198,25 @@ export default function AuthModal({
             throw new Error(data.message || "Помилка реєстрації");
           }
 
-          toast.success("Реєстрація успішна! Будь ласка, увійдіть.");
-          setModalState((prev) => ({ ...prev, mode: "login" }));
-          setFormData(initialFormState);
+          // Automatically log in after successful registration
+          const loginResponse = await fetch("/api/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+            }),
+          });
+
+          if (!loginResponse.ok) {
+            throw new Error("Помилка автоматичного входу");
+          }
+
+          // Store success message in sessionStorage to show after reload
+          sessionStorage.setItem("registrationSuccess", "true");
+          onClose();
           setWasManuallyClosed(false);
           window.location.reload();
         }
@@ -204,6 +229,15 @@ export default function AuthModal({
     },
     [modalState.mode, formData, onClose]
   );
+
+  // Add useEffect to show success message after reload
+  useEffect(() => {
+    const showSuccessMessage = sessionStorage.getItem("registrationSuccess");
+    if (showSuccessMessage) {
+      toast.success("Реєстрація успішна!");
+      sessionStorage.removeItem("registrationSuccess");
+    }
+  }, []);
 
   if (!modalState.shouldRender) return null;
 
@@ -324,6 +358,29 @@ export default function AuthModal({
               <p className="text-red-500 text-sm mt-1">{errors.password}</p>
             )}
           </div>
+
+          {modalState.mode === "register" && (
+            <div className="relative">
+              <input
+                className={`border border-[var(--card-border)] rounded px-4 py-3 pr-10 w-full bg-[var(--background)] ${
+                  errors.confirmPassword ? "border-red-500" : ""
+                }`}
+                placeholder="Підтвердження паролю"
+                type={showPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  handleInputChange("confirmPassword", e.target.value)
+                }
+                disabled={isLoading}
+                required
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
+            </div>
+          )}
 
           {modalState.mode === "login" && (
             <div className="text-right">

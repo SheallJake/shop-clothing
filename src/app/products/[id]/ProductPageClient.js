@@ -94,10 +94,18 @@ export default function ProductPageClient({ id }) {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/products/${id}`);
+        const response = await fetch(`/api/products/${id}`, {
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
+          cache: "no-store",
+        });
+
         if (!response.ok) {
           throw new Error("Product not found");
         }
+
         const data = await response.json();
         setProduct(data);
         if (data.color && data.color.length > 0) {

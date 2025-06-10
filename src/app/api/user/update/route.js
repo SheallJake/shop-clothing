@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { verifyJwtEdge } from "@/utils/jwtEdge";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 
 export async function PATCH(request) {
   try {

@@ -169,3 +169,63 @@ export async function DELETE(request) {
     );
   }
 }
+
+// PUT /api/cart - Update cart item quantity
+export async function PUT(request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = verifyJwt(token.value);
+    if (!decoded) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    const { productId, quantity } = await request.json();
+
+    if (!productId || !quantity) {
+      return NextResponse.json(
+        { error: "Product ID and quantity are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if item exists in cart
+    const existingItem = await prisma.cart.findFirst({
+      where: {
+        userId: decoded.userId,
+        productId: parseInt(productId),
+      },
+    });
+
+    if (!existingItem) {
+      return NextResponse.json(
+        { error: "Item not found in cart" },
+        { status: 404 }
+      );
+    }
+
+    // Update quantity
+    const updatedItem = await prisma.cart.update({
+      where: { id: existingItem.id },
+      data: {
+        quantity: parseInt(quantity),
+      },
+      include: {
+        product: true,
+      },
+    });
+
+    return NextResponse.json(updatedItem);
+  } catch (error) {
+    console.error("[Cart API Error]:", error);
+    return NextResponse.json(
+      { error: "Failed to update cart" },
+      { status: 500 }
+    );
+  }
+}

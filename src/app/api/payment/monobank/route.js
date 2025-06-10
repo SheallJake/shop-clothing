@@ -33,10 +33,10 @@ export async function POST(request) {
     // Create delivery record
     const delivery = await prisma.delivery.create({
       data: {
-        address: deliveryInfo.address,
+        address: deliveryInfo.warehouse,
         city: deliveryInfo.city,
-        region: deliveryInfo.region,
-        postalCode: deliveryInfo.postalCode,
+        region: "Nova Poshta",
+        postalCode: "00000",
         serviceName: "Nova Poshta",
         trackingNumber: `NP${Date.now()}`,
         deliveryStatus: "Pending",
@@ -102,7 +102,7 @@ export async function POST(request) {
               sum: item.price * item.quantity * 100,
             })),
           },
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success`,
+          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?orderId=${order.id}`,
           webHookUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/monobank/webhook`,
           validity: 3600,
         }),

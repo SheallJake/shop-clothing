@@ -167,7 +167,7 @@ export function CartProvider({ children }) {
       }
 
       if (showToast) {
-        toast.success("Added to cart");
+        toast.success("Товар додано до кошика");
       }
     } catch (error) {
       console.error("Error adding to cart:", error);

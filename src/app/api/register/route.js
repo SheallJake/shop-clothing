@@ -38,7 +38,7 @@ export async function POST(req) {
         email,
         phoneNumber,
         passwordHash,
-        role: "USER", // default роль
+        role: "user", // default роль
       },
     });
 

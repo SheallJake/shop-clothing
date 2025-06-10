@@ -1,41 +1,51 @@
 "use client";
 
+import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
-import PageTransition from "@/components/PageTransition";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function NotFound() {
+  const { theme } = useTheme();
+  const router = useRouter();
+
   return (
-    <PageTransition>
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h1 className="text-7xl md:text-9xl font-bold text-gray-800">
-              404
-            </h1>
-            <h2 className="text-2xl md:text-3xl font-semibold text-gray-700 mt-4 mb-6">
-              Сторінку не знайдено
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Вибачте, але сторінку, яку ви шукаєте, не знайдено. Можливо, вона
-              була переміщена або видалена.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                href="/"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                На головну
-              </Link>
-              <Link
-                href="/products"
-                className="inline-block bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                До каталогу
-              </Link>
-            </div>
-          </div>
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 animate-fadeIn">
+      <div className="card p-8 max-w-md w-full mx-auto text-center bg-[var(--card)] border border-[var(--border)] animate-slideUp">
+        <div className="relative w-64 h-64 mx-auto mb-6 rounded-xl overflow-hidden border-2 border-[var(--border)] hover:scale-105 transition-transform duration-300 animate-float">
+          <Image
+            src="/404.gif"
+            alt="404 Animation"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+        <h1 className="text-9xl font-bold mb-4 text-[var(--foreground)] animate-bounce">
+          404
+        </h1>
+        <h2 className="text-2xl font-semibold mb-4 text-[var(--foreground)] animate-slideIn">
+          Сторінку не знайдено
+        </h2>
+        <p className="text-[var(--muted)] mb-8 animate-fadeIn">
+          Вибачте, але сторінку, яку ви шукаєте, не знайдено. Можливо, вона була
+          переміщена або видалена.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={() => router.back()}
+            className="btn flex-1 sm:flex-none bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)] transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+          >
+            Повернутися назад
+          </button>
+          <Link
+            href="/"
+            className="btn flex-1 sm:flex-none bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--secondary-hover)] transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+          >
+            На головну
+          </Link>
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 }

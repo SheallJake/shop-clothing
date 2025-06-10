@@ -146,7 +146,7 @@ export default function PromoCodesManagement() {
       if (!res.ok) throw new Error("Session check failed");
       const data = await res.json();
 
-      if (!data.user || data.user.role !== "admin") {
+      if (!data.user || data.user.role.toLowerCase() !== "admin") {
         if (!hasShownToast.current) {
           hasShownToast.current = true;
           toast.error("Доступ заборонено");

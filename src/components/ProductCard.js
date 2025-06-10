@@ -50,10 +50,7 @@ export default function ProductCard({ product }) {
       price: finalPrice,
     };
 
-    const success = await addToCart(productToAdd);
-    if (success) {
-      addToCartContext(productToAdd);
-    }
+    addToCartContext(productToAdd, true);
   };
 
   // Ensure we have a string for category name

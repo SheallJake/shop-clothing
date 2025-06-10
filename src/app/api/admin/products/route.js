@@ -14,7 +14,7 @@ export async function GET(req) {
 
     // Перевіряємо токен
     const decoded = await verifyJwtEdge(token.value);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -76,7 +76,7 @@ export async function POST(req) {
     }
 
     const decoded = await verifyJwtEdge(token.value);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -132,7 +132,7 @@ export async function PATCH(req) {
     }
 
     const decoded = await verifyJwtEdge(token.value);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -190,7 +190,7 @@ export async function DELETE(req) {
     }
 
     const decoded = await verifyJwtEdge(token.value);
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

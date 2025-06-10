@@ -39,7 +39,7 @@ export const ChatProvider = ({ children }) => {
     const sock = connectSocket();
     setSocket(sock);
 
-    if (user.userRole === "admin") {
+    if (user.userRole.toLowerCase() === "admin") {
       sock.emit("join-admin");
     } else {
       sock.emit("join-user", { userId: user.userId });

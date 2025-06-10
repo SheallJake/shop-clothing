@@ -192,7 +192,7 @@ export default function CabinetPage() {
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 rounded-lg border ${
                     errors.name ? "border-red-500" : "border-zinc-300"
-                  }`}
+                  } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500 mt-1">{errors.name}</p>
@@ -207,7 +207,7 @@ export default function CabinetPage() {
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 rounded-lg border ${
                     errors.phoneNumber ? "border-red-500" : "border-zinc-300"
-                  }`}
+                  } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
                 />
                 {errors.phoneNumber && (
                   <p className="text-sm text-red-500 mt-1">
@@ -221,7 +221,7 @@ export default function CabinetPage() {
                   type="email"
                   value={user.email}
                   disabled
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-100"
+                  className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white"
                 />
               </div>
               <div className="border-t pt-4">
@@ -233,7 +233,7 @@ export default function CabinetPage() {
                     placeholder="Поточний пароль"
                     value={editForm.currentPassword}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
                   />
                   <input
                     type="password"
@@ -241,7 +241,7 @@ export default function CabinetPage() {
                     placeholder="Новий пароль"
                     value={editForm.newPassword}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
                   />
                   <input
                     type="password"
@@ -249,7 +249,7 @@ export default function CabinetPage() {
                     placeholder="Підтвердження паролю"
                     value={editForm.confirmPassword}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300"
+                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
                   />
                 </div>
               </div>

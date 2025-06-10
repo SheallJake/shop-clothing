@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductPageClient from "./ProductPageClient";
+import prisma from "@/lib/prisma";
 
 // Validate product ID
 function isValidProductId(id) {
@@ -8,25 +9,34 @@ function isValidProductId(id) {
 }
 
 export async function generateMetadata({ params }) {
-  const { id } = await params;
+  const { id } = params;
+  console.log("[Metadata] Generating metadata for product ID:", id);
 
   if (!isValidProductId(id)) {
+    console.log("[Metadata] Invalid product ID:", id);
     return {
       title: "Товар не знайдено",
     };
   }
 
   try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const product = await fetch(`${baseUrl}/api/products/${id}`);
-    if (!product.ok) {
-      throw new Error("Product not found");
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+      select: {
+        name: true,
+      },
+    });
+
+    console.log("[Metadata] Found product:", product);
+
+    if (!product) {
+      return {
+        title: "Товар не знайдено",
+      };
     }
-    const data = await product.json();
 
     return {
-      title: data?.name || "Товар не знайдено",
+      title: product.name,
     };
   } catch (error) {
     console.error("[Metadata Error]:", error);
@@ -37,7 +47,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const { id } = await params;
+  const { id } = params;
 
   if (!isValidProductId(id)) {
     notFound();

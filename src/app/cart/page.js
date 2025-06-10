@@ -16,6 +16,15 @@ export default function CartPage() {
 
   useEffect(() => {
     checkAuth();
+    // Load promo code from localStorage
+    const savedPromoCode = localStorage.getItem("promoCode");
+    const savedDiscount = localStorage.getItem("discountPercent");
+    if (savedPromoCode) {
+      setPromoCode(savedPromoCode);
+    }
+    if (savedDiscount) {
+      setDiscountPercent(Number(savedDiscount));
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -44,7 +53,7 @@ export default function CartPage() {
   const formatPrice = (price) => {
     const numPrice = Number(price);
     if (isNaN(numPrice)) return "0";
-    return numPrice.toString();
+    return Math.round(numPrice).toString();
   };
 
   // Обчислення загальної суми з перевіркою
@@ -59,7 +68,7 @@ export default function CartPage() {
     return sum + price * quantity;
   }, 0);
 
-  const discountedTotal = total * (1 - discountPercent / 100);
+  const discountedTotal = Math.round(total * (1 - discountPercent / 100));
 
   const validatePromo = async () => {
     const res = await fetch("/api/promocode/validate", {
@@ -74,9 +83,15 @@ export default function CartPage() {
     if (data.valid) {
       setDiscountPercent(data.discount);
       setPromoError("");
+      // Save to localStorage
+      localStorage.setItem("promoCode", promoCode);
+      localStorage.setItem("discountPercent", data.discount);
     } else {
       setPromoError("Промокод не дійсний");
       setDiscountPercent(0);
+      // Clear from localStorage
+      localStorage.removeItem("promoCode");
+      localStorage.removeItem("discountPercent");
     }
   };
 

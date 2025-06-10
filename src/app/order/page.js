@@ -28,6 +28,15 @@ export default function OrderPage() {
 
   useEffect(() => {
     checkAuth();
+    // Load promo code from localStorage
+    const savedPromoCode = localStorage.getItem("promoCode");
+    const savedDiscount = localStorage.getItem("discountPercent");
+    if (savedPromoCode) {
+      setPromoCode(savedPromoCode);
+    }
+    if (savedDiscount) {
+      setDiscount(Number(savedDiscount));
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -130,9 +139,16 @@ export default function OrderPage() {
       const data = await res.json();
       if (data.valid) {
         setDiscount(data.discountPercent);
+        // Save to localStorage
+        localStorage.setItem("promoCode", promoCode);
+        localStorage.setItem("discountPercent", data.discountPercent);
         toast.success("Промокод успішно застосовано!");
       } else {
         toast.error("Недійсний промокод");
+        // Clear from localStorage
+        localStorage.removeItem("promoCode");
+        localStorage.removeItem("discountPercent");
+        setDiscount(0);
       }
     } catch (error) {
       toast.error("Помилка при перевірці промокоду");
@@ -148,7 +164,14 @@ export default function OrderPage() {
       return sum + itemPrice * item.quantity;
     }, 0);
     const discountAmount = (subtotal * discount) / 100;
-    return subtotal - discountAmount;
+    return Math.round(subtotal - discountAmount);
+  };
+
+  // Форматування ціни
+  const formatPrice = (price) => {
+    const numPrice = Number(price);
+    if (isNaN(numPrice)) return "0";
+    return Math.round(numPrice).toString();
   };
 
   const validateForm = () => {
@@ -281,7 +304,7 @@ export default function OrderPage() {
               )}
               <div className="flex justify-between font-bold text-lg text-black">
                 <span>Загальна сума:</span>
-                <span>{calculateTotal()} грн</span>
+                <span>{formatPrice(calculateTotal())} грн</span>
               </div>
             </div>
           </div>

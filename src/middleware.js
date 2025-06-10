@@ -21,7 +21,7 @@ export async function middleware(request) {
     const decoded = await verifyJwtEdge(token.value);
     console.log("[Middleware] Decoded token:", decoded);
 
-    if (!decoded || decoded.role !== "admin") {
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       console.log("[Middleware] Access denied - not an admin");
       return NextResponse.redirect(new URL("/", request.url));
     }

@@ -47,6 +47,18 @@ module.exports = {
           "0%": { opacity: "0", transform: "translateY(-10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        slideIn: {
+          "0%": { opacity: "0", transform: "translateX(-20px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         "slide-in-right": "slide-in-right 0.3s ease-out",
@@ -54,6 +66,9 @@ module.exports = {
         "fade-in": "fade-in 0.3s ease-out",
         fadeIn: "fadeIn 0.3s ease-out",
         slideDown: "slideDown 0.2s ease-out",
+        float: "float 3s ease-in-out infinite",
+        slideUp: "slideUp 0.5s ease-out",
+        slideIn: "slideIn 0.5s ease-out",
       },
     },
   },

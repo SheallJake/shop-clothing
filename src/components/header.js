@@ -93,11 +93,12 @@ export default function Header() {
 
   // Налаштування обробників кліків поза меню
   useEffect(() => {
-    const handleBurgerClick = (e) => handleClickOutside(e, menuRef, setOpen);
+    const handleBurgerClick = (e) =>
+      handleClickOutside(e, menuRef, setIsMenuOpen);
     const handleUserMenuClick = (e) =>
       handleClickOutside(e, userMenuRef, setUserMenuOpen);
 
-    if (open) document.addEventListener("mousedown", handleBurgerClick);
+    if (isMenuOpen) document.addEventListener("mousedown", handleBurgerClick);
     if (userMenuOpen)
       document.addEventListener("mousedown", handleUserMenuClick);
 
@@ -105,7 +106,7 @@ export default function Header() {
       document.removeEventListener("mousedown", handleBurgerClick);
       document.removeEventListener("mousedown", handleUserMenuClick);
     };
-  }, [open, userMenuOpen, handleClickOutside]);
+  }, [isMenuOpen, userMenuOpen, handleClickOutside]);
 
   // Навігація
   const navigateToProducts = () => {
@@ -257,12 +258,29 @@ export default function Header() {
     }
   };
 
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   return (
     <>
       <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-7xl">
         <div className="flex items-center justify-between h-12">
           {/* Left Side - Burger Menu and Logo */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4" ref={menuRef}>
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -520,7 +538,7 @@ export default function Header() {
                     >
                       Особистий кабінет
                     </Link>
-                    {user.role === "admin" && (
+                    {user.role.toLowerCase() === "admin" && (
                       <Link
                         href="/admin"
                         className="block px-4 py-2 hover:bg-[var(--hover-bg)] transition-colors"

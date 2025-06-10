@@ -23,6 +23,7 @@ export async function getServerSession() {
         email: true,
         name: true,
         role: true,
+        phoneNumber: true,
       },
     });
 
@@ -42,6 +43,6 @@ export async function verifyAuth() {
 
   return {
     isAuthenticated: true,
-    isAdmin: session.user.role === "ADMIN",
+    isAdmin: session.user.role.toLowerCase() === "admin",
   };
 }
