@@ -169,7 +169,7 @@ export default function PromoGamePage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--background)] text-[var(--foreground)] p-8">
       <div className="max-w-md w-full bg-[var(--card-bg)] backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-[var(--card-border)]">
         <h1 className="text-3xl font-bold mb-6 text-center">
-          🎁 Мiнi-гра: Виграй знижку!
+          🎁 Міні-гра: Виграй знижку!
         </h1>
 
         {error && (

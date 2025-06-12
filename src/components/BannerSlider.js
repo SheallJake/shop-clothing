@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ImageWithFallback from "@/components/ImageWithFallback";
 
 const slides = [
@@ -11,17 +11,36 @@ const slides = [
 export default function BannerSlider() {
   const [index, setIndex] = useState(0);
   const timeoutRef = useRef(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  const next = useCallback(() => {
+    setIndex((prev) => (prev + 1) % slides.length);
+  }, []);
 
   useEffect(() => {
-    const next = () => setIndex((prev) => (prev + 1) % slides.length);
-    timeoutRef.current = setTimeout(next, 4000);
-    return () => clearTimeout(timeoutRef.current);
-  }, [index]);
+    if (!isInitialized) {
+      setIsInitialized(true);
+      return;
+    }
 
-  const goToSlide = (i) => {
-    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(next, 4000);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [index, isInitialized, next]);
+
+  const goToSlide = useCallback((i) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     setIndex(i);
-  };
+  }, []);
+
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <div className="relative w-full h-96 overflow-hidden rounded-lg">
@@ -33,8 +52,9 @@ export default function BannerSlider() {
           <div key={i} className="min-w-full h-full relative">
             <ImageWithFallback
               src={src}
-              alt=""
+              alt={`Banner ${i + 1}`}
               className="absolute inset-0 w-full h-full object-cover"
+              priority={i === 0}
             />
           </div>
         ))}

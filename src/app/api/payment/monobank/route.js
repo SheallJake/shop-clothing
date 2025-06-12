@@ -66,9 +66,13 @@ export async function POST(request) {
         status: "Pending",
         orderItems: {
           create: items.map((item) => ({
-            productId: item.id,
+            product: {
+              connect: {
+                id: item.productId,
+              },
+            },
             quantity: item.quantity,
-            pricePerUnit: item.price,
+            pricePerUnit: item.pricePerUnit,
           })),
         },
         ...(promoCode && {
@@ -99,7 +103,7 @@ export async function POST(request) {
             basketOrder: items.map((item) => ({
               name: item.name,
               qty: item.quantity,
-              sum: item.price * item.quantity * 100,
+              sum: item.pricePerUnit * item.quantity * 100,
             })),
           },
           redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?orderId=${order.id}`,

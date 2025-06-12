@@ -25,6 +25,7 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import Spinner from "@/components/Spinner";
 
 export default function ProductPageClient({ id }) {
   const [product, setProduct] = useState(null);
@@ -93,6 +94,7 @@ export default function ProductPageClient({ id }) {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        console.log("[ProductPage] Starting to fetch product with ID:", id);
         setLoading(true);
         const response = await fetch(`/api/products/${id}`, {
           headers: {
@@ -102,11 +104,25 @@ export default function ProductPageClient({ id }) {
           cache: "no-store",
         });
 
+        console.log("[ProductPage] Response status:", response.status);
+
         if (!response.ok) {
+          console.error(
+            "[ProductPage] Response not OK:",
+            response.status,
+            response.statusText
+          );
           throw new Error("Product not found");
         }
 
         const data = await response.json();
+        console.log("[ProductPage] Received product data:", {
+          id: data.id,
+          name: data.name,
+          mainImage: data.mainImage,
+          galleryImages: data.galleryImages,
+        });
+
         setProduct(data);
         if (data.color && data.color.length > 0) {
           setSelectedColor(data.color[0]);
@@ -118,6 +134,7 @@ export default function ProductPageClient({ id }) {
         console.error("[ProductPage] Product Error:", error);
         setError("Не вдалося завантажити товар. Спробуйте пізніше.");
       } finally {
+        console.log("[ProductPage] Setting loading to false");
         setLoading(false);
       }
     };
@@ -134,12 +151,13 @@ export default function ProductPageClient({ id }) {
   };
 
   const handleAddToCart = (product) => {
-    addToCart({
-      ...product,
-      quantity: 1,
-      selectedSize: product.size?.[0] || null,
-      selectedColor: product.color?.[0] || null,
-    });
+    addToCart(
+      {
+        ...product,
+        quantity: 1,
+      },
+      true
+    );
   };
 
   const handleAddToWishlist = (product) => {
@@ -151,19 +169,20 @@ export default function ProductPageClient({ id }) {
   };
 
   const handleOrder = () => {
-    addToCart({
-      ...product,
-      quantity: 1,
-      selectedSize: selectedSize,
-      selectedColor: selectedColor,
-    });
+    addToCart(
+      {
+        ...product,
+        quantity: 1,
+      },
+      true
+    );
     window.location.href = "/checkout";
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900 dark:border-white"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -314,7 +333,7 @@ export default function ProductPageClient({ id }) {
 
               <p className="relative w-fit font-normal text-zinc-500 dark:text-zinc-400 text-[11px] tracking-normal leading-5 mt-2">
                 <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                  Article:{" "}
+                  Артикул:{" "}
                 </span>
                 <span className="font-light">{product.article || "N/A"}</span>
               </p>
@@ -362,8 +381,13 @@ export default function ProductPageClient({ id }) {
             {product.size && (
               <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
                 <div className="flex flex-col w-full items-start gap-3">
-                  <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
-                    SIZE
+                  <div className="flex justify-between items-center w-full">
+                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
+                      РОЗМІР
+                    </div>
+                    <button className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+                      Допомога з розміром
+                    </button>
                   </div>
                   <div className="flex gap-[5px]">
                     {(Array.isArray(product.size)
@@ -382,30 +406,16 @@ export default function ProductPageClient({ id }) {
               </div>
             )}
 
-            {/* Size Help Section */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
-              <div className="flex w-[99px] items-start relative">
-                <div className="absolute w-[99px] h-px top-[17px] left-0 bg-zinc-900 dark:bg-white" />
-                <button className="relative w-[99px] text-xs text-zinc-500 dark:text-zinc-400 text-center tracking-normal leading-5">
-                  Help About Size
-                </button>
-              </div>
-            </div>
-
-            {/* Add to Cart Section */}
+            {/* Product Actions */}
             <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
               <div className="flex flex-col gap-4">
-                <AddToCartButton
-                  product={product}
-                  selectedSize={selectedSize}
-                  selectedColor={selectedColor}
-                />
+                <AddToCartButton product={product} />
                 <button
-                  onClick={handleOrder}
+                  onClick={() => handleOrder()}
                   className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Package className="w-5 h-5" />
-                  <span>Замовити</span>
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Купити зараз</span>
                 </button>
               </div>
             </div>
@@ -420,7 +430,7 @@ export default function ProductPageClient({ id }) {
                     className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                   >
                     <span className="text-sm text-zinc-900 dark:text-white">
-                      Description
+                      Опис
                     </span>
                     <ChevronDown
                       className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
@@ -444,7 +454,7 @@ export default function ProductPageClient({ id }) {
                     className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                   >
                     <span className="text-sm text-zinc-900 dark:text-white">
-                      Structure
+                      Склад
                     </span>
                     <ChevronDown
                       className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
@@ -469,7 +479,7 @@ export default function ProductPageClient({ id }) {
                   <div className="flex items-center gap-2">
                     <Truck className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
                     <span className="text-sm text-zinc-900 dark:text-white">
-                      Delivery
+                      Доставка
                     </span>
                   </div>
                   <ChevronDown
@@ -480,7 +490,7 @@ export default function ProductPageClient({ id }) {
                 </button>
                 {expandedSections.delivery && (
                   <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    Free delivery for orders over 1000 UAH
+                    Безкоштовна доставка для замовлень від 1000 грн
                   </div>
                 )}
               </div>
@@ -494,7 +504,7 @@ export default function ProductPageClient({ id }) {
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
                     <span className="text-sm text-zinc-900 dark:text-white">
-                      Payment
+                      Оплата
                     </span>
                   </div>
                   <ChevronDown
@@ -505,7 +515,7 @@ export default function ProductPageClient({ id }) {
                 </button>
                 {expandedSections.payment && (
                   <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    We accept credit cards and PayPal
+                    Приймаємо банківські картки та PayPal
                   </div>
                 )}
               </div>
@@ -519,7 +529,7 @@ export default function ProductPageClient({ id }) {
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-6 h-6 text-zinc-500 dark:text-zinc-300" />
                     <span className="text-sm text-zinc-900 dark:text-white">
-                      Reviews
+                      Відгуки
                     </span>
                   </div>
                   <ChevronDown
@@ -541,11 +551,11 @@ export default function ProductPageClient({ id }) {
         {/* You May Also Like Section */}
         <div className="mt-24 bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
           <h2 className="text-3xl font-normal mb-12 text-center text-zinc-900 dark:text-white">
-            Вам також може сподобатись
+            Вам також може сподобатися
           </h2>
           {loadingRelated ? (
             <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900 dark:border-white"></div>
+              <Spinner size="md" />
             </div>
           ) : errorRelated ? (
             <div className="text-center py-16">

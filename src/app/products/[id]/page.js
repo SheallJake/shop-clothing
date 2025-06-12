@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import ProductPageClient from "./ProductPageClient";
 import prisma from "@/lib/prisma";
+import Spinner from "@/components/Spinner";
 
 // Validate product ID
 function isValidProductId(id) {
@@ -9,7 +10,13 @@ function isValidProductId(id) {
 }
 
 export async function generateMetadata({ params }) {
-  const { id } = params;
+  if (!params?.id) {
+    return {
+      title: "Товар не знайдено",
+    };
+  }
+
+  const id = params.id;
   console.log("[Metadata] Generating metadata for product ID:", id);
 
   if (!isValidProductId(id)) {
@@ -47,7 +54,11 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const { id } = params;
+  if (!params?.id) {
+    notFound();
+  }
+
+  const id = params.id;
 
   if (!isValidProductId(id)) {
     notFound();

@@ -5,13 +5,13 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
-import { addToCart } from "@/utils/cart";
 import ProductCard from "@/components/ProductCard";
+import Spinner from "@/components/Spinner";
 
 export default function WishlistPage() {
   const router = useRouter();
   const { wishlist, loading, removeFromWishlist } = useWishlist();
-  const { addToCart: addToCartContext } = useCart();
+  const { addToCart } = useCart();
 
   const handleAddToCart = async (product) => {
     try {
@@ -21,12 +21,8 @@ export default function WishlistPage() {
         selectedSize: product.size?.[0] || null,
       };
 
-      const success = await addToCart(productToAdd);
-      if (success) {
-        addToCartContext(productToAdd);
-        toast.success("Товар додано до кошика");
-        router.push("/cart");
-      }
+      await addToCart(productToAdd, true);
+      router.push("/cart");
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add item to cart");
@@ -36,7 +32,7 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--foreground)]"></div>
+        <Spinner size="md" />
       </div>
     );
   }

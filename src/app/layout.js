@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
                     <div className="flex flex-col min-h-[calc(100vh-64px)]">
                       <Header />
                       <ChatProvider>
-                        <main className="flex-1 py-6 relative max-w-7xl mx-auto px-4 w-full mt-24">
+                        <main className="flex-1 py-6 relative max-w-[80%] mx-auto px-4 w-full mt-24">
                           {children}
                         </main>
                         <ChatWidget />

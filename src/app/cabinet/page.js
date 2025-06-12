@@ -5,6 +5,11 @@ import { toast } from "react-hot-toast";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import { Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { IMaskInput } from "react-imask";
+
+// Constants
+const PHONE_MASK = "+38 (000) 000-00-00";
+const MIN_PASSWORD_LENGTH = 8;
 
 export default function CabinetPage() {
   const [user, setUser] = useState(null);
@@ -87,48 +92,69 @@ export default function CabinetPage() {
   const validateForm = () => {
     const newErrors = {};
     if (!editForm.name.trim()) newErrors.name = "Ім'я обов'язкове";
-    if (editForm.phoneNumber && !/^[+]?\d{10,13}$/.test(editForm.phoneNumber))
+    if (
+      editForm.phoneNumber &&
+      !/^\+38 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(editForm.phoneNumber)
+    )
       newErrors.phoneNumber = "Невірний формат номеру телефону";
-    if (editForm.newPassword) {
-      if (!editForm.currentPassword)
+
+    // Password validation
+    if (
+      editForm.newPassword ||
+      editForm.confirmPassword ||
+      editForm.currentPassword
+    ) {
+      if (!editForm.currentPassword) {
         newErrors.currentPassword = "Введіть поточний пароль";
-      if (editForm.newPassword.length < 6)
-        newErrors.newPassword = "Пароль повинен містити мінімум 6 символів";
-      if (editForm.newPassword !== editForm.confirmPassword)
+      }
+      if (!editForm.newPassword) {
+        newErrors.newPassword = "Введіть новий пароль";
+      } else if (editForm.newPassword.length < MIN_PASSWORD_LENGTH) {
+        newErrors.newPassword = "Пароль повинен містити мінімум 8 символів";
+      } else if (!/^[A-Za-z0-9]+$/.test(editForm.newPassword)) {
+        newErrors.newPassword =
+          "Пароль може містити лише латинські букви та цифри";
+      } else if (!/[A-Za-z]/.test(editForm.newPassword)) {
+        newErrors.newPassword =
+          "Пароль повинен містити хоча б одну латинську букву";
+      }
+      if (!editForm.confirmPassword) {
+        newErrors.confirmPassword = "Підтвердіть новий пароль";
+      } else if (editForm.newPassword !== editForm.confirmPassword) {
         newErrors.confirmPassword = "Паролі не співпадають";
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  const handleSaveProfile = async () => {
     try {
-      const response = await fetch("/api/user/update", {
+      setErrors({});
+      const response = await fetch("/api/user/profile", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editForm.name,
-          phoneNumber: editForm.phoneNumber,
-          currentPassword: editForm.currentPassword,
-          newPassword: editForm.newPassword,
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
       });
+
       const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Помилка оновлення профілю");
+
+      if (!response.ok) {
+        if (data.errors) {
+          setErrors(data.errors);
+          return;
+        }
+        throw new Error(data.error || "Не вдалося оновити профіль");
+      }
+
       setUser(data.user);
       setIsEditing(false);
       toast.success("Профіль успішно оновлено");
-      setEditForm((prev) => ({
-        ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      }));
-    } catch (error) {
-      toast.error(error.message);
+    } catch (err) {
+      console.error("Помилка оновлення профілю:", err);
+      toast.error(err.message || "Помилка при оновленні профілю");
     }
   };
 
@@ -139,14 +165,14 @@ export default function CabinetPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900 dark:border-white" />
-      </div>
-    );
+    return <div className="text-center py-4">Завантаження...</div>;
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="text-center py-4">Будь ласка, увійдіть до системи</div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-start py-6 px-4">
@@ -180,7 +206,7 @@ export default function CabinetPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              onSubmit={handleSubmit}
+              onSubmit={handleSaveProfile}
               className="space-y-4"
             >
               <div>
@@ -200,11 +226,14 @@ export default function CabinetPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Телефон</label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
+                <IMaskInput
+                  mask={PHONE_MASK}
                   value={editForm.phoneNumber}
-                  onChange={handleInputChange}
+                  onAccept={(value) =>
+                    handleInputChange({
+                      target: { name: "phoneNumber", value },
+                    })
+                  }
                   className={`w-full px-3 py-2 rounded-lg border ${
                     errors.phoneNumber ? "border-red-500" : "border-zinc-300"
                   } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
@@ -227,30 +256,63 @@ export default function CabinetPage() {
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold mb-4">Зміна паролю</h3>
                 <div className="space-y-4">
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    placeholder="Поточний пароль"
-                    value={editForm.currentPassword}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                  />
-                  <input
-                    type="password"
-                    name="newPassword"
-                    placeholder="Новий пароль"
-                    value={editForm.newPassword}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                  />
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Підтвердження паролю"
-                    value={editForm.confirmPassword}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                  />
+                  <div>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      placeholder="Поточний пароль"
+                      value={editForm.currentPassword}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        errors.currentPassword
+                          ? "border-red-500"
+                          : "border-zinc-300"
+                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                    />
+                    {errors.currentPassword && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.currentPassword}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="password"
+                      name="newPassword"
+                      placeholder="Новий пароль"
+                      value={editForm.newPassword}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        errors.newPassword
+                          ? "border-red-500"
+                          : "border-zinc-300"
+                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                    />
+                    {errors.newPassword && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.newPassword}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="Підтвердження паролю"
+                      value={editForm.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 rounded-lg border ${
+                        errors.confirmPassword
+                          ? "border-red-500"
+                          : "border-zinc-300"
+                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.confirmPassword}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-4">

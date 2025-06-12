@@ -31,7 +31,8 @@ export async function GET() {
       brand: product.brand || "",
       price: product.price,
       stockQuantity: product.stockQuantity,
-      image: product.image || "",
+      mainImage: product.mainImage || "",
+      galleryImages: product.galleryImages || [],
       category: product.category
         ? {
             id: product.category.id,

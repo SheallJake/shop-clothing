@@ -109,17 +109,17 @@ export default function TestSession() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success("Login successful");
+        toast.success("Успішний вхід");
         // Wait a bit for the cookie to be set
         setTimeout(checkSession, 500);
       } else {
-        setError(data.error || "Login failed");
-        toast.error(data.error || "Login failed");
+        setError(data.error || "Помилка входу");
+        toast.error(data.error || "Помилка входу");
       }
     } catch (error) {
       console.error("Login failed:", error);
-      setError("Login failed");
-      toast.error("Login failed");
+      setError("Помилка входу");
+      toast.error("Помилка входу");
     }
   };
 
@@ -131,18 +131,18 @@ export default function TestSession() {
       });
 
       if (response.ok) {
-        toast.success("Logout successful");
+        toast.success("Успішний вихід");
         setSession(null);
         setTokenDetails(null);
         setFullToken(null);
       } else {
-        setError("Logout failed");
-        toast.error("Logout failed");
+        setError("Помилка виходу");
+        toast.error("Помилка виходу");
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      setError("Logout failed");
-      toast.error("Logout failed");
+      setError("Помилка виходу");
+      toast.error("Помилка виходу");
     }
   };
 
@@ -153,14 +153,14 @@ export default function TestSession() {
   return (
     <PageTransition>
       <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">JWT Session Test</h1>
+        <h1 className="text-2xl font-bold mb-4">Тест JWT сесії</h1>
 
         {/* Current Session Token */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">Current Session Token:</h2>
+          <h2 className="text-xl font-semibold mb-2">Поточний токен сесії:</h2>
           {error && (
             <div className="mb-4 p-4 bg-red-900 rounded text-white">
-              Error: {error}
+              Помилка: {error}
             </div>
           )}
           {fullToken ? (
@@ -171,20 +171,20 @@ export default function TestSession() {
                 </p>
               </div>
               <div className="text-sm text-gray-400">
-                Token is present and valid
+                Токен присутній та дійсний
               </div>
             </div>
           ) : (
             <div className="space-y-2">
               <div className="bg-gray-900 p-4 rounded">
                 <p className="text-sm font-mono text-gray-500">
-                  No active session token
+                  Немає активного токену сесії
                 </p>
               </div>
               <div className="text-sm text-gray-400">
                 {session?.user
-                  ? "Session exists but token not found"
-                  : "Please log in to see your session token"}
+                  ? "Сесія існує, але токен не знайдено"
+                  : "Будь ласка, увійдіть, щоб побачити токен сесії"}
               </div>
             </div>
           )}

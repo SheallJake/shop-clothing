@@ -1,21 +1,19 @@
-import { ShoppingCart, Plus } from "lucide-react";
-import { addToCart } from "@/utils/cart";
+import { ShoppingCart } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
-export default function AddToCartButton({
-  product,
-  className = "",
-  selectedSize,
-  selectedColor,
-}) {
+export default function AddToCartButton({ product, className = "" }) {
+  const { addToCart } = useCart();
+
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await addToCart({
-      ...product,
-      quantity: 1,
-      selectedSize: selectedSize,
-      selectedColor: selectedColor,
-    });
+    await addToCart(
+      {
+        ...product,
+        quantity: 1,
+      },
+      true
+    );
   };
 
   return (

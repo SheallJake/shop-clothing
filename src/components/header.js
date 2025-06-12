@@ -15,9 +15,11 @@ import {
   FiHeart,
   FiUser,
   FiSearch,
+  FiShield,
 } from "react-icons/fi";
 import { useAuthModal } from "@/context/AuthModalContext";
 import ImageWithFallback from "@/components/ImageWithFallback";
+import Spinner from "./Spinner";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -158,7 +160,7 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "Головна" },
     { href: "/products", label: "Каталог" },
-    { href: "/game", label: "Промогра" },
+    { href: "/game", label: "Отримати промокод" },
   ];
 
   // Handle click outside search
@@ -277,14 +279,14 @@ export default function Header() {
 
   return (
     <>
-      <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-7xl">
-        <div className="flex items-center justify-between h-12">
+      <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[80%]">
+        <div className="flex items-center justify-between h-9">
           {/* Left Side - Burger Menu and Logo */}
           <div className="flex items-center space-x-4" ref={menuRef}>
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors"
+              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
               aria-label="Меню"
             >
               <div className="w-6 h-5 flex flex-col justify-between">
@@ -380,7 +382,7 @@ export default function Header() {
                       <div className="absolute top-[calc(100%+4px)] left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-[55] max-h-96 overflow-y-auto backdrop-blur-sm bg-opacity-95">
                         {isSearching ? (
                           <div className="p-4 text-center text-[var(--foreground)]">
-                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[var(--accent)] mx-auto"></div>
+                            <Spinner size="sm" className="mx-auto" />
                           </div>
                         ) : searchResults.length > 0 ? (
                           <div className="py-2 divide-y divide-[var(--card-border)]">
@@ -396,7 +398,7 @@ export default function Header() {
                               >
                                 <div className="relative w-14 h-14 flex-shrink-0">
                                   <ImageWithFallback
-                                    src={product.image}
+                                    src={product.mainImage}
                                     alt={product.name}
                                     className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
                                     width={56}
@@ -474,7 +476,7 @@ export default function Header() {
                       inputRef.current?.focus();
                     }
                   }}
-                  className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors z-10"
+                  className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out z-10"
                   aria-label="Пошук"
                 >
                   <FiSearch size={20} />
@@ -485,7 +487,7 @@ export default function Header() {
             {/* Cart */}
             <Link
               href="/cart"
-              className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors relative"
+              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out relative"
               aria-label="Кошик"
             >
               <FiShoppingCart size={20} />
@@ -499,7 +501,7 @@ export default function Header() {
             {/* Wishlist */}
             <Link
               href="/wishlist"
-              className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors relative"
+              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out relative"
               aria-label="Обрані"
             >
               <FiHeart size={20} />
@@ -514,7 +516,7 @@ export default function Header() {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={handleUserButtonClick}
-                className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors"
+                className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
                 aria-label="Профіль"
               >
                 <FiUser size={20} />
@@ -533,7 +535,7 @@ export default function Header() {
                     </div>
                     <Link
                       href="/cabinet"
-                      className="block px-4 py-2 hover:bg-[var(--hover-bg)] transition-colors"
+                      className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       Особистий кабінет
@@ -541,10 +543,15 @@ export default function Header() {
                     {user.role.toLowerCase() === "admin" && (
                       <Link
                         href="/admin"
-                        className="block px-4 py-2 hover:bg-[var(--hover-bg)] transition-colors"
+                        className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        Адмін панель
+                        <span className="flex items-center gap-2">
+                          <span className="text-[var(--foreground)]">
+                            Адмін панель
+                          </span>
+                          <FiShield className="w-4 h-4 text-[var(--foreground)]" />
+                        </span>
                       </Link>
                     )}
                     <button
@@ -552,7 +559,7 @@ export default function Header() {
                         logout();
                         setUserMenuOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-[var(--hover-bg)] transition-colors"
+                      className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
                     >
                       Вийти з аккаунту
                     </button>
@@ -565,7 +572,7 @@ export default function Header() {
             <div className="ml-4">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-md hover:bg-[var(--hover-bg)] transition-colors"
+                className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
                 aria-label="Змінити тему"
               >
                 {theme === "light" ? <FiMoon size={20} /> : <FiSun size={20} />}
@@ -586,7 +593,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-2 hover:bg-[var(--hover-bg)] rounded-md transition-colors ${
+                  className={`px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 rounded-md transition-all duration-500 ease-in-out ${
                     pathname === item.href ? "bg-[var(--hover-bg)]" : ""
                   }`}
                   onClick={() => setIsMenuOpen(false)}

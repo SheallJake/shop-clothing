@@ -25,7 +25,7 @@ export default function AddToWishlistButton({ product }) {
       }`}
     >
       <Heart className={`h-5 w-5 ${inWishlist ? "fill-current" : ""}`} />
-      {/* {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"} */}
+      {/* {inWishlist ? "Видалити з обраного" : "Додати до обраного"} */}
     </button>
   );
 }

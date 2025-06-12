@@ -15,6 +15,8 @@ import PageTransition from "@/components/PageTransition";
 import ProductFilters from "@/components/ProductFilters";
 import { colorMapping } from "@/utils/colorMapping";
 import ProductCard from "@/components/ProductCard";
+import { motion, AnimatePresence } from "framer-motion";
+import Spinner from "@/components/Spinner";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -209,6 +211,11 @@ export default function ProductsPage() {
   // Handle page change without animation
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+    // Scroll to the top of the page
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   // Generate page numbers for pagination
@@ -298,44 +305,56 @@ export default function ProductsPage() {
                   className="border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
-                  Сортувати за
+                  Сортувати
                 </button>
 
-                {dropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60">
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                      onClick={() => sortProducts("price-asc")}
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60"
                     >
-                      <ArrowUp size={16} /> За зростанням ціни
-                    </button>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                      onClick={() => sortProducts("price-desc")}
-                    >
-                      <ArrowDown size={16} /> За спаданням ціни
-                    </button>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                      onClick={() => sortProducts("reviews-desc")}
-                    >
-                      <Star size={16} /> За найвищими рейтингами
-                    </button>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-[var(--hover-bg)]"
-                      onClick={() => sortProducts("reviews-asc")}
-                    >
-                      <Star size={16} /> За найнижчими рейтингами
-                    </button>
-                  </div>
-                )}
+                      <motion.button
+                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
+                        onClick={() => sortProducts("price-asc")}
+                      >
+                        <ArrowUp size={16} /> За зростанням ціни
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
+                        onClick={() => sortProducts("price-desc")}
+                      >
+                        <ArrowDown size={16} /> За спаданням ціни
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
+                        onClick={() => sortProducts("reviews-desc")}
+                      >
+                        <Star size={16} /> За найвищими рейтингами
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
+                        onClick={() => sortProducts("reviews-asc")}
+                      >
+                        <Star size={16} /> За найнижчими рейтингами
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <button
                 className="border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)]"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
-                Фільтрувати
+                Фільтри
               </button>
             </div>
 
@@ -412,8 +431,8 @@ export default function ProductsPage() {
                       filters.priceRange.max < Infinity
                         ? `${filters.priceRange.min} - ${filters.priceRange.max} грн`
                         : filters.priceRange.min > 0
-                        ? `Від ${filters.priceRange.min} грн`
-                        : `До ${filters.priceRange.max} грн`}
+                          ? `Від ${filters.priceRange.min} грн`
+                          : `До ${filters.priceRange.max} грн`}
                     </span>
                     <button
                       onClick={() =>
@@ -437,8 +456,8 @@ export default function ProductsPage() {
               <p className="text-red-600">{error}</p>
             </div>
           ) : isLoading ? (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--card-border)]"></div>
+            <div className="min-h-screen flex items-center justify-center">
+              <Spinner size="md" />
             </div>
           ) : (
             <div className="flex gap-4 mt-8">

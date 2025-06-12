@@ -59,7 +59,12 @@ export async function PATCH(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = parseInt(searchParams.get("id"));
+
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
+
     const data = await request.json();
 
     const order = await prisma.order.update({
@@ -106,8 +111,18 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = parseInt(searchParams.get("id"));
 
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid order ID" }, { status: 400 });
+    }
+
+    // First delete all related orderItems
+    await prisma.orderItem.deleteMany({
+      where: { orderId: id },
+    });
+
+    // Then delete the order
     await prisma.order.delete({
       where: { id },
     });

@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import LoadingScreen from "./LoadingScreen";
 
 const LoadingContext = createContext();
@@ -11,15 +17,27 @@ export function LoadingProvider({ children }) {
     api: new Set(),
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [forceHide, setForceHide] = useState(false);
 
-  const addLoadingImage = (imageUrl) => {
+  // Force hide loading screen after 5 seconds
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setForceHide(true);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const addLoadingImage = useCallback((imageUrl) => {
+    if (!imageUrl) return;
     setLoadingStates((prev) => ({
       ...prev,
       images: new Set([...prev.images, imageUrl]),
     }));
-  };
+  }, []);
 
-  const removeLoadingImage = (imageUrl) => {
+  const removeLoadingImage = useCallback((imageUrl) => {
+    if (!imageUrl) return;
     setLoadingStates((prev) => {
       const newImages = new Set(prev.images);
       newImages.delete(imageUrl);
@@ -28,16 +46,18 @@ export function LoadingProvider({ children }) {
         images: newImages,
       };
     });
-  };
+  }, []);
 
-  const addLoadingApi = (apiUrl) => {
+  const addLoadingApi = useCallback((apiUrl) => {
+    if (!apiUrl) return;
     setLoadingStates((prev) => ({
       ...prev,
       api: new Set([...prev.api, apiUrl]),
     }));
-  };
+  }, []);
 
-  const removeLoadingApi = (apiUrl) => {
+  const removeLoadingApi = useCallback((apiUrl) => {
+    if (!apiUrl) return;
     setLoadingStates((prev) => {
       const newApi = new Set(prev.api);
       newApi.delete(apiUrl);
@@ -46,19 +66,24 @@ export function LoadingProvider({ children }) {
         api: newApi,
       };
     });
-  };
+  }, []);
 
   useEffect(() => {
+    if (forceHide) {
+      setIsLoading(false);
+      return;
+    }
+
     const allLoaded =
       loadingStates.images.size === 0 && loadingStates.api.size === 0;
+
     if (allLoaded) {
-      // Add a small delay to ensure smooth transition
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 500);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [loadingStates]);
+  }, [loadingStates, forceHide]);
 
   const contextValue = {
     addLoadingImage,
@@ -71,7 +96,7 @@ export function LoadingProvider({ children }) {
 
   return (
     <LoadingContext.Provider value={contextValue}>
-      {isLoading ? <LoadingScreen /> : children}
+      {isLoading && !forceHide ? <LoadingScreen /> : children}
     </LoadingContext.Provider>
   );
 }

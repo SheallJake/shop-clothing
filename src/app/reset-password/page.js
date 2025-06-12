@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import PageTransition from "@/components/PageTransition";
+import Spinner from "@/components/Spinner";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -46,7 +47,7 @@ export default function ResetPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to reset password");
+        throw new Error(data.error || "Не вдалося скинути пароль");
       }
 
       toast.success("Пароль успішно змінено");
@@ -137,26 +138,7 @@ export default function ResetPasswordPage() {
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <Spinner size="sm" className="mr-3" />
                     Обробка...
                   </span>
                 ) : (

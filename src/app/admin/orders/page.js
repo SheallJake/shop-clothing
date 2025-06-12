@@ -6,27 +6,30 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 const ORDER_STATUSES = {
-  PENDING: "PENDING",
-  PROCESSING: "PROCESSING",
-  SHIPPED: "SHIPPED",
-  DELIVERED: "DELIVERED",
-  CANCELLED: "CANCELLED",
+  Pending: "Pending",
+  Processing: "Processing",
+  Shipped: "Shipped",
+  Delivered: "Delivered",
+  Cancelled: "Cancelled",
+  "Payment Failed": "Payment Failed",
 };
 
 const STATUS_COLORS = {
-  PENDING: "bg-transparent text-yellow-400",
-  PROCESSING: "bg-transparent text-blue-400",
-  SHIPPED: "bg-transparent text-purple-400",
-  DELIVERED: "bg-transparent text-green-400",
-  CANCELLED: "bg-transparent text-red-400",
+  Pending: "bg-transparent text-yellow-400",
+  Processing: "bg-transparent text-blue-400",
+  Shipped: "bg-transparent text-purple-400",
+  Delivered: "bg-transparent text-green-400",
+  Cancelled: "bg-transparent text-red-400",
+  "Payment Failed": "bg-transparent text-red-400",
 };
 
 const STATUS_LABELS = {
-  PENDING: "В обробці",
-  PROCESSING: "Відправлено",
-  SHIPPED: "В дорозі",
-  DELIVERED: "Доставлено",
-  CANCELLED: "Скасовано",
+  Pending: "В обробці",
+  Processing: "Відправлено",
+  Shipped: "В дорозі",
+  Delivered: "Доставлено",
+  Cancelled: "Скасовано",
+  "Payment Failed": "Помилка оплати",
 };
 
 export default function OrdersManagement() {
@@ -196,7 +199,7 @@ export default function OrdersManagement() {
         >
           <option value="">Всі статуси</option>
           {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
+            <option key={value} value={value} className={STATUS_COLORS[value]}>
               {label}
             </option>
           ))}
@@ -272,29 +275,26 @@ export default function OrdersManagement() {
                   <td className="px-6 py-4 whitespace-nowrap text-[var(--foreground)]">
                     {calculateTotal(order.orderItems)} грн
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`rounded-full px-3 py-1 text-sm font-medium ${
-                          STATUS_COLORS[order.status]
-                        }`}
-                      >
-                        {STATUS_LABELS[order.status]}
-                      </div>
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          handleStatusChange(order.id, e.target.value)
-                        }
-                        className="border border-[var(--border)] rounded-lg px-2 py-1 text-sm bg-[var(--input-bg)] text-[var(--foreground)]"
-                      >
-                        {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${STATUS_COLORS[order.status]}`}
+                  >
+                    <select
+                      value={order.status}
+                      onChange={(e) =>
+                        handleStatusChange(order.id, e.target.value)
+                      }
+                      className={`border border-[var(--border)] rounded-lg px-3 py-1 text-sm font-medium bg-[var(--input-bg)] ${STATUS_COLORS[order.status]}`}
+                    >
+                      {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                        <option
+                          key={value}
+                          value={value}
+                          className={STATUS_COLORS[value]}
+                        >
+                          {label}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button

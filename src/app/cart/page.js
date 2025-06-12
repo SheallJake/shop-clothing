@@ -4,6 +4,8 @@ import ImageWithFallback from "@/components/ImageWithFallback";
 import PageTransition from "@/components/PageTransition";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import AuthModal from "@/components/AuthModal";
+import Spinner from "@/components/Spinner";
 
 export default function CartPage() {
   const router = useRouter();
@@ -13,6 +15,7 @@ export default function CartPage() {
   const [promoCode, setPromoCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [promoError, setPromoError] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -97,7 +100,7 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      router.push("/login");
+      setShowAuthModal(true);
     } else {
       router.push("/order");
     }
@@ -106,7 +109,7 @@ export default function CartPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -248,6 +251,12 @@ export default function CartPage() {
           </>
         )}
       </div>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        theme="light"
+        initialMode="login"
+      />
     </PageTransition>
   );
 }

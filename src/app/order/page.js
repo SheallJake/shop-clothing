@@ -1,30 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import PageTransition from "@/components/PageTransition";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import { toast } from "react-hot-toast";
+import { useTheme } from "@/context/ThemeContext";
+import Spinner from "@/components/Spinner";
 
 export default function OrderPage() {
   const router = useRouter();
   const { cart, clearCart } = useCart();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [cities, setCities] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
-  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCity, setSelectedCity] = useState(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState("");
   const [citySearch, setCitySearch] = useState("");
-  const [isCityInputFocused, setIsCityInputFocused] = useState(false);
+  const [showCityList, setShowCityList] = useState(false);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
+  const [selectedCityName, setSelectedCityName] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-  const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
-  const [selectedCityName, setSelectedCityName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const cityInputRef = useRef(null);
+  const cityListRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
+  const lastSearchRef = useRef("");
 
   useEffect(() => {
     checkAuth();
@@ -54,77 +63,144 @@ export default function OrderPage() {
     }
   };
 
-  // Load cities after authentication
-  useEffect(() => {
-    if (!isAuthenticated) return;
+  const loadCities = useCallback(async (search) => {
+    if (search === lastSearchRef.current) return;
+    lastSearchRef.current = search;
 
-    const loadCities = async () => {
-      try {
-        setIsLoadingCities(true);
-        const res = await fetch(
-          `/api/nova/cities?search=${encodeURIComponent(citySearch)}`
-        );
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const data = await res.json();
-        if (!data || !data.data) {
-          throw new Error("Invalid response format");
-        }
-        setCities(data.data);
-      } catch (error) {
-        console.error("Error loading cities:", error);
-        toast.error("Помилка при завантаженні міст");
-        setCities([]);
-      } finally {
-        setIsLoadingCities(false);
+    setIsLoadingCities(true);
+    try {
+      const response = await fetch(
+        `/api/nova/cities?search=${encodeURIComponent(search)}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
-
-    const timeoutId = setTimeout(() => {
-      loadCities();
-    }, 800);
-
-    return () => clearTimeout(timeoutId);
-  }, [isAuthenticated, citySearch]);
-
-  // Load warehouses when city is selected
-  useEffect(() => {
-    if (!selectedCity) {
-      setWarehouses([]);
-      setSelectedWarehouse("");
-      return;
+      const data = await response.json();
+      if (!data || !data.data) {
+        throw new Error("Invalid response format");
+      }
+      setCities(data.data);
+    } catch (error) {
+      console.error("Error loading cities:", error);
+      toast.error("Помилка при завантаженні міст");
+      setCities([]);
+    } finally {
+      setIsLoadingCities(false);
     }
+  }, []);
 
-    const loadWarehouses = async () => {
-      try {
-        setIsLoadingWarehouses(true);
-        const res = await fetch("/api/nova/warehouses", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ cityRef: selectedCity }),
-        });
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+  const handleCityInputChange = useCallback(
+    (e) => {
+      const value = e.target.value;
+      setCitySearch(value);
+      setShowCityList(true);
+
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+
+      searchTimeoutRef.current = setTimeout(() => {
+        if (value.length > 0) {
+          loadCities(value);
+        } else {
+          setCities([]);
         }
-        const data = await res.json();
-        if (!data || !data.data) {
-          throw new Error("Invalid response format");
+      }, 300);
+    },
+    [loadCities]
+  );
+
+  const loadWarehouses = useCallback(async (cityRef) => {
+    if (!cityRef) return;
+
+    setIsLoadingWarehouses(true);
+    try {
+      const res = await fetch("/api/nova/warehouses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cityRef }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (!data || !data.data) {
+        throw new Error("Invalid response format");
+      }
+
+      setWarehouses(data.data);
+    } catch (error) {
+      console.error("Error loading warehouses:", error);
+      toast.error("Помилка при завантаженні відділень");
+      setWarehouses([]);
+    } finally {
+      setIsLoadingWarehouses(false);
+    }
+  }, []);
+
+  const handleCitySelect = useCallback(
+    (city) => {
+      setSelectedCity(city.Ref);
+      setSelectedCityName(city.Description);
+      setCitySearch(city.Description);
+      setShowCityList(false);
+      lastSearchRef.current = city.Description;
+
+      // Reset warehouse selection when city changes
+      setSelectedWarehouse("");
+      setWarehouses([]);
+
+      // Load warehouses for the selected city
+      loadWarehouses(city.Ref);
+    },
+    [loadWarehouses]
+  );
+
+  const handleCityInputKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (citySearch.trim()) {
+          const exactMatch = cities.find(
+            (city) =>
+              city.Description.toLowerCase() === citySearch.toLowerCase()
+          );
+          if (exactMatch) {
+            handleCitySelect(exactMatch);
+          } else {
+            toast.error("Будь ласка, виберіть місто зі списку");
+          }
         }
-        setWarehouses(data.data);
-      } catch (error) {
-        console.error("Error loading warehouses:", error);
-        toast.error("Помилка при завантаженні відділень");
-        setWarehouses([]);
-      } finally {
-        setIsLoadingWarehouses(false);
+      }
+    },
+    [citySearch, cities, handleCitySelect]
+  );
+
+  const handleCityInputFocus = useCallback(() => {
+    setShowCityList(true);
+    if (citySearch.length > 0) {
+      loadCities(citySearch);
+    }
+  }, [citySearch, loadCities]);
+
+  const handleCityInputBlur = useCallback(() => {
+    setTimeout(() => {
+      setShowCityList(false);
+    }, 200);
+  }, []);
+
+  // Очистка таймаута при размонтировании
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
       }
     };
-
-    loadWarehouses();
-  }, [selectedCity]);
+  }, []);
 
   const handlePromoCodeSubmit = async (e) => {
     e.preventDefault();
@@ -188,59 +264,121 @@ export default function OrderPage() {
     return true;
   };
 
-  const handleOrderSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setPaymentError(null);
-
-    if (!validateForm()) {
+    if (!selectedCity || !selectedWarehouse) {
+      toast.error("Будь ласка, виберіть місто та відділення");
       return;
     }
 
-    try {
-      setIsProcessingPayment(true);
+    if (!cart || cart.length === 0) {
+      toast.error("Корзина порожня");
+      return;
+    }
 
-      const paymentRes = await fetch("/api/payment/monobank", {
+    setIsSubmitting(true);
+    try {
+      // Логуємо початкові дані корзини
+      console.log("Cart data:", cart);
+
+      // Перевіряємо кожен товар
+      const orderItems = cart.map((item) => {
+        console.log("Processing item:", item);
+
+        // Перевіряємо наявність всіх необхідних полів
+        if (!item.id) {
+          console.error("Missing product ID:", item);
+          throw new Error("Відсутній ID товару");
+        }
+        if (!item.quantity || item.quantity <= 0) {
+          console.error("Invalid quantity:", item);
+          throw new Error("Невірна кількість товару");
+        }
+        if (!item.price && !item.discountPrice) {
+          console.error("Missing price:", item);
+          throw new Error("Відсутня ціна товару");
+        }
+
+        const pricePerUnit = item.isDiscountActive
+          ? item.discountPrice
+          : item.price;
+        console.log("Calculated price per unit:", pricePerUnit);
+
+        return {
+          productId: item.id,
+          quantity: item.quantity,
+          pricePerUnit: pricePerUnit,
+          name: item.name || "Товар",
+          image: item.image || "",
+        };
+      });
+
+      // Логуємо підготовлені дані для відправки
+      const requestData = {
+        items: orderItems,
+        amount: calculateTotal(),
+        deliveryInfo: {
+          city: selectedCityName,
+          cityRef: selectedCity,
+          warehouse: selectedWarehouse,
+        },
+        promoCode: promoCode,
+      };
+      console.log("Request data:", requestData);
+
+      const response = await fetch("/api/payment/monobank", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          amount: calculateTotal(),
-          deliveryInfo: {
-            city: selectedCity,
-            warehouse: selectedWarehouse,
-          },
-          items: cart,
-          promoCode: promoCode || null,
-        }),
+        body: JSON.stringify(requestData),
       });
 
-      const paymentData = await paymentRes.json();
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
 
-      if (!paymentRes.ok) {
-        throw new Error(
-          paymentData.details?.error?.message ||
-            paymentData.error ||
-            "Failed to create payment"
-        );
+      if (!response.ok) {
+        throw new Error(responseData.error || "Failed to create payment");
       }
 
-      if (!paymentData.pageUrl) {
-        throw new Error("Payment page URL is missing");
+      if (responseData.pageUrl) {
+        window.location.href = responseData.pageUrl;
+      } else {
+        throw new Error("Payment URL is missing");
       }
-
-      window.location.href = paymentData.pageUrl;
     } catch (error) {
-      setPaymentError(error.message);
-      toast.error(`Помилка при створенні платежу: ${error.message}`);
-      setIsProcessingPayment(false);
+      console.error("Payment error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      toast.error(error.message || "Помилка при створенні платежу");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Додамо функцію для перевірки даних товару
+  const validateCartItem = (item) => {
+    const isValid =
+      item &&
+      typeof item.id === "string" &&
+      typeof item.quantity === "number" &&
+      item.quantity > 0 &&
+      (typeof item.price === "number" ||
+        typeof item.discountPrice === "number");
+
+    if (!isValid) {
+      console.error("Invalid cart item:", item);
+    }
+
+    return isValid;
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        <Spinner size="md" />
       </div>
     );
   }
@@ -252,14 +390,14 @@ export default function OrderPage() {
   return (
     <PageTransition>
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-black">
+        <h1 className="text-3xl font-bold mb-8 text-[var(--foreground)]">
           Оформлення замовлення
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Order Summary */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-black">
+          <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
+            <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
               Ваше замовлення
             </h2>
             <div className="space-y-4">
@@ -275,9 +413,13 @@ export default function OrderPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-black">{item.name}</h3>
-                    <p className="text-black">Кількість: {item.quantity}</p>
-                    <p className="text-black">
+                    <h3 className="font-medium text-[var(--foreground)]">
+                      {item.name}
+                    </h3>
+                    <p className="text-[var(--foreground)]">
+                      Кількість: {item.quantity}
+                    </p>
+                    <p className="text-[var(--foreground)]">
                       Ціна: {item.price * item.quantity} грн
                     </p>
                   </div>
@@ -286,7 +428,7 @@ export default function OrderPage() {
             </div>
 
             <div className="mt-6 space-y-2">
-              <div className="flex justify-between mb-2 text-black">
+              <div className="flex justify-between mb-2 text-[var(--foreground)]">
                 <span>Проміжний підсумок:</span>
                 <span>
                   {cart.reduce(
@@ -302,7 +444,7 @@ export default function OrderPage() {
                   <span>-{discount}%</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-lg text-black">
+              <div className="flex justify-between font-bold text-lg text-[var(--foreground)]">
                 <span>Загальна сума:</span>
                 <span>{formatPrice(calculateTotal())} грн</span>
               </div>
@@ -312,83 +454,78 @@ export default function OrderPage() {
           {/* Order Form */}
           <div className="space-y-6">
             {/* Delivery Information */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4 text-black">
+            <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
                 Інформація про доставку
               </h2>
               <form className="space-y-4">
                 <div className="my-4">
-                  <label className="block text-sm font-medium mb-1 text-black">
+                  <label className="block text-sm font-medium mb-1 text-[var(--foreground)]">
                     Місто
                   </label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        value={citySearch}
-                        onChange={(e) => setCitySearch(e.target.value)}
-                        onFocus={() => setIsCityInputFocused(true)}
-                        onBlur={() => {
-                          setTimeout(() => setIsCityInputFocused(false), 200);
-                        }}
-                        placeholder={selectedCityName || "Введіть назву міста"}
-                        className={`w-full p-2 border rounded-md text-black appearance-none bg-white transition-all duration-300 ease-in-out hover:border-gray-400 focus:border-gray-400 focus:outline-none ${
-                          selectedCityName ? "border-green-500" : ""
-                        }`}
-                        disabled={isLoadingCities}
-                      />
-                      {cities.length > 0 &&
-                        !isLoadingCities &&
-                        isCityInputFocused &&
-                        citySearch.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="relative">
+                    <input
+                      ref={cityInputRef}
+                      type="text"
+                      value={citySearch}
+                      onChange={handleCityInputChange}
+                      onKeyDown={handleCityInputKeyDown}
+                      onFocus={handleCityInputFocus}
+                      onBlur={handleCityInputBlur}
+                      placeholder="Введіть місто"
+                      className="w-full px-4 py-2 rounded-md bg-[var(--input-bg)] border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)]"
+                    />
+                    {showCityList && citySearch.length > 0 && (
+                      <div
+                        ref={cityListRef}
+                        className="absolute top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-50 max-h-60 overflow-y-auto"
+                      >
+                        {isLoadingCities ? (
+                          <div className="p-4 text-center">
+                            <Spinner size="sm" className="mx-auto" />
+                          </div>
+                        ) : cities.length > 0 ? (
+                          <div className="py-2">
                             {cities.map((city) => (
-                              <div
+                              <button
                                 key={city.Ref}
-                                className={`p-2 hover:bg-gray-100 cursor-pointer text-black ${
-                                  city.Ref === selectedCity ? "bg-green-50" : ""
-                                }`}
-                                onClick={() => {
-                                  setSelectedCity(city.Ref);
-                                  setSelectedCityName(city.Description);
-                                  setCitySearch("");
-                                  setIsCityInputFocused(false);
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  handleCitySelect(city);
                                 }}
+                                className="w-full px-4 py-2 text-left hover:bg-[var(--hover-bg)] transition-colors"
                               >
                                 {city.Description}
-                              </div>
+                              </button>
                             ))}
                           </div>
+                        ) : (
+                          <div className="p-4 text-center text-[var(--foreground)]">
+                            Місто не знайдено
+                          </div>
                         )}
-                    </div>
-                    {isLoadingCities && (
-                      <div className="flex-shrink-0">
-                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-900"></div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="my-4">
-                  <label className="block text-sm font-medium mb-1 text-black">
+                {/* Warehouse Selection */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="warehouse"
+                    className="block text-sm font-medium text-[var(--foreground)]"
+                  >
                     Відділення
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="relative">
                     <select
+                      id="warehouse"
                       value={selectedWarehouse}
                       onChange={(e) => setSelectedWarehouse(e.target.value)}
-                      className="w-full p-2 border rounded-md text-black appearance-none bg-white transition-all duration-300 ease-in-out hover:border-gray-400 focus:border-gray-400 focus:outline-none"
-                      disabled={!selectedCity || isLoadingWarehouses}
-                      required
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "right 0.5rem center",
-                        backgroundSize: "1.5em 1.5em",
-                        paddingRight: "2.5rem",
-                      }}
+                      disabled={isLoadingWarehouses || !selectedCity}
+                      className="w-full px-4 py-2 rounded-md bg-[var(--input-bg)] border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50"
                     >
-                      <option value="">Оберіть відділення</option>
+                      <option value="">Виберіть відділення</option>
                       {warehouses.map((warehouse) => (
                         <option key={warehouse.Ref} value={warehouse.Ref}>
                           {warehouse.Description}
@@ -396,8 +533,8 @@ export default function OrderPage() {
                       ))}
                     </select>
                     {isLoadingWarehouses && (
-                      <div className="flex-shrink-0">
-                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-900"></div>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Spinner size="sm" />
                       </div>
                     )}
                   </div>
@@ -406,8 +543,8 @@ export default function OrderPage() {
             </div>
 
             {/* Promo Code */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4 text-black">
+            <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
+              <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
                 Промокод
               </h2>
               <form onSubmit={handlePromoCodeSubmit} className="flex gap-2">
@@ -416,11 +553,11 @@ export default function OrderPage() {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   placeholder="Введіть промокод"
-                  className="flex-1 p-2 border rounded-md text-black"
+                  className="flex-1 p-2 border rounded-md text-[var(--foreground)] bg-[var(--input-bg)] border-[var(--border)]"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800"
+                  className="px-4 py-2 bg-[var(--accent)] text-white rounded-md hover:bg-[var(--accent-hover)]"
                 >
                   Застосувати
                 </button>
@@ -429,15 +566,15 @@ export default function OrderPage() {
 
             {/* Submit Order */}
             <button
-              onClick={handleOrderSubmit}
-              disabled={isProcessingPayment}
-              className={`w-full py-3 bg-black text-white rounded-md hover:bg-gray-800 transition-colors ${
-                isProcessingPayment ? "opacity-50 cursor-not-allowed" : ""
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className={`w-full py-3 bg-[var(--accent)] text-white rounded-md hover:bg-[var(--accent-hover)] transition-colors ${
+                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {isProcessingPayment ? (
+              {isSubmitting ? (
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  <Spinner size="sm" className="mr-2" />
                   Обробка платежу...
                 </div>
               ) : (

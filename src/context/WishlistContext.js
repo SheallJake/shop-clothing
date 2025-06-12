@@ -54,7 +54,7 @@ export function WishlistProvider({ children }) {
             localStorage.setItem("wishlist", JSON.stringify(serverWishlist));
           } else if (serverResponse.status === 401) {
             console.log("Session expired, redirecting to login...");
-            toast.error("Your session has expired. Please log in again.");
+            toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
             router.push("/login");
           }
         }
@@ -111,23 +111,25 @@ export function WishlistProvider({ children }) {
 
         if (!serverResponse.ok) {
           if (serverResponse.status === 401) {
-            toast.error("Your session has expired. Please log in again.");
+            toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
             router.push("/login");
             return;
           }
-          throw new Error(serverData.error || "Failed to add to wishlist");
+          throw new Error(
+            serverData.error || "Не вдалося додати до списку бажаного"
+          );
         }
       } else {
         console.log("User is not authenticated, only saving locally");
       }
 
-      toast.success("Added to wishlist");
+      toast.success("Додано до списку бажаного");
     } catch (error) {
       console.error("Error adding to wishlist:", error);
       // Revert local state on error
       setWishlist(wishlist);
       localStorage.setItem("wishlist", JSON.stringify(wishlist));
-      toast.error(error.message || "Failed to add to wishlist");
+      toast.error(error.message || "Не вдалося додати до списку бажаного");
     }
   };
 
@@ -161,23 +163,25 @@ export function WishlistProvider({ children }) {
 
         if (!serverResponse.ok) {
           if (serverResponse.status === 401) {
-            toast.error("Your session has expired. Please log in again.");
+            toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
             router.push("/login");
             return;
           }
           // Revert local state on error
           setWishlist(wishlist);
           localStorage.setItem("wishlist", JSON.stringify(wishlist));
-          throw new Error(serverData.error || "Failed to remove from wishlist");
+          throw new Error(
+            serverData.error || "Не вдалося видалити зі списку бажаного"
+          );
         }
       } else {
         console.log("User is not authenticated, only saving locally");
       }
 
-      toast.success("Removed from wishlist");
+      toast.success("Видалено зі списку бажаного");
     } catch (error) {
       console.error("Error removing from wishlist:", error);
-      toast.error(error.message || "Failed to remove from wishlist");
+      toast.error(error.message || "Не вдалося видалити зі списку бажаного");
     }
   };
 

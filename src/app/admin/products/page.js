@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ProductForm = ({ product, onSubmit, onCancel, categories }) => {
   const [formData, setFormData] = useState({
@@ -21,227 +22,598 @@ const ProductForm = ({ product, onSubmit, onCancel, categories }) => {
     isDiscountActive: product?.isDiscountActive || false,
   });
 
+  const [errors, setErrors] = useState({});
+  const [modalState, setModalState] = useState({
+    visible: true,
+    shouldRender: true,
+  });
+  const [uploading, setUploading] = useState(false);
+
+  const isValidUrl = (url) => {
+    if (!url) return false;
+
+    // Перевірка на локальний шлях до зображення
+    if (url.startsWith("/img/")) return true;
+
+    try {
+      const urlObj = new URL(url);
+      // Перевірка, чи це зображення (опціонально)
+      const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+      const hasImageExtension = imageExtensions.some((ext) =>
+        urlObj.pathname.toLowerCase().endsWith(ext)
+      );
+
+      // Якщо це не локальний шлях, перевіряємо розширення
+      if (!url.startsWith("/") && !hasImageExtension) {
+        return false;
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Назва товару обов'язкова";
+    } else if (formData.name.length > 100) {
+      newErrors.name = "Назва товару не може перевищувати 100 символів";
+    }
+
+    // Description validation
+    if (formData.description && formData.description.length > 1000) {
+      newErrors.description = "Опис не може перевищувати 1000 символів";
+    }
+
+    // Price validation
+    if (!formData.price || isNaN(formData.price) || formData.price <= 0) {
+      newErrors.price = "Введіть коректну ціну";
+    }
+
+    // Stock quantity validation
+    if (
+      !formData.stockQuantity ||
+      isNaN(formData.stockQuantity) ||
+      formData.stockQuantity < 0
+    ) {
+      newErrors.stockQuantity = "Введіть коректну кількість товару";
+    }
+
+    // Category validation
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Виберіть категорію";
+    }
+
+    // Color validation
+    if (formData.color.length === 0) {
+      newErrors.color = "Вкажіть хоча б один колір";
+    }
+
+    // Size validation
+    if (!formData.size) {
+      newErrors.size = "Вкажіть розмір";
+    }
+
+    // Brand validation
+    if (!formData.brand) {
+      newErrors.brand = "Вкажіть бренд";
+    }
+
+    // Main image validation
+    if (!formData.mainImage) {
+      newErrors.mainImage = "Додайте головне зображення";
+    } else if (!isValidUrl(formData.mainImage)) {
+      newErrors.mainImage =
+        "Введіть коректний URL зображення або завантажте файл";
+    }
+
+    // Gallery images validation
+    if (formData.galleryImages.length > 0) {
+      const invalidUrls = formData.galleryImages.filter(
+        (url) => !isValidUrl(url)
+      );
+      if (invalidUrls.length > 0) {
+        newErrors.galleryImages = "Всі URL зображень мають бути коректними";
+      }
+    }
+
+    // Discount price validation
+    if (formData.isDiscountActive) {
+      if (
+        !formData.discountPrice ||
+        isNaN(formData.discountPrice) ||
+        formData.discountPrice <= 0
+      ) {
+        newErrors.discountPrice = "Введіть коректну ціну зі знижкою";
+      } else if (
+        parseFloat(formData.discountPrice) >= parseFloat(formData.price)
+      ) {
+        newErrors.discountPrice =
+          "Ціна зі знижкою має бути меншою за звичайну ціну";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
   const handleColorChange = (e) => {
-    const colors = e.target.value.split(",").map((color) => color.trim());
+    const colors = e.target.value
+      .split(",")
+      .map((color) => color.trim())
+      .filter(Boolean);
     setFormData({ ...formData, color: colors });
   };
 
-  const handleGalleryImagesChange = (e) => {
-    const images = e.target.value.split(",").map((img) => img.trim());
-    setFormData({ ...formData, galleryImages: images });
+  const handleFileUpload = async (file, isMainImage = false) => {
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload file");
+      }
+
+      const data = await response.json();
+
+      if (isMainImage) {
+        setFormData((prev) => ({ ...prev, mainImage: data.path }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          galleryImages: [...prev.galleryImages, data.path],
+        }));
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
   };
 
+  const handleMainImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileUpload(file, true);
+    }
+  };
+
+  const handleGalleryImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach((file) => handleFileUpload(file, false));
+  };
+
+  const removeGalleryImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      galleryImages: prev.galleryImages.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleClose = () => {
+    setModalState((prev) => ({ ...prev, visible: false }));
+    setTimeout(() => {
+      onCancel();
+    }, 300); // Match with ANIMATION_DURATION
+  };
+
+  if (!modalState.shouldRender) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <div className="bg-[var(--card-bg)] rounded-lg p-6 max-w-md w-full shadow-[0_0_2px_var(--glow-color)]">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">
-            {product ? "Редагувати товар" : "Новий товар"}
-          </h2>
-          <button onClick={onCancel} className="text-[var(--foreground)]">
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Назва
-            </label>
-            <input
-              type="text"
-              required
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
+    <AnimatePresence mode="wait">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: modalState.visible ? 1 : 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center !p-0 !m-0 !pt-0"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 5, scale: 0.98 }}
+          animate={{
+            opacity: modalState.visible ? 1 : 0,
+            y: modalState.visible ? 0 : 5,
+            scale: modalState.visible ? 1 : 0.98,
+          }}
+          exit={{ opacity: 0, y: 5, scale: 0.98 }}
+          transition={{
+            duration: 0.3,
+            type: "spring",
+            stiffness: 500,
+            damping: 25,
+            mass: 0.8,
+          }}
+          className="bg-[var(--card-bg)] rounded-lg p-6 max-w-md w-full shadow-[0_0_2px_var(--glow-color)] mt-24"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <motion.h2
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -5 }}
+              transition={{ duration: 0.1 }}
+              className="text-xl font-semibold text-[var(--foreground)]"
+            >
+              {product ? "Редагувати товар" : "Новий товар"}
+            </motion.h2>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleClose}
+              className="text-[var(--foreground)]"
+            >
+              <X className="w-6 h-6" />
+            </motion.button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Опис
-            </label>
-            <textarea
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              rows="3"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.05 }}
+            >
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                Ціна
+                Назва
               </label>
-              <input
-                type="number"
+              <motion.input
+                whileFocus={{ scale: 1.01 }}
+                type="text"
                 required
-                min="0"
-                step="0.01"
-                className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-                value={formData.price}
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.name ? "border-red-500" : ""
+                }`}
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
+                  setFormData({ ...formData, name: e.target.value })
                 }
               />
-            </div>
-            <div>
+              {errors.name && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-sm text-red-500"
+                >
+                  {errors.name}
+                </motion.p>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.1 }}
+            >
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                Кількість
+                Опис
+              </label>
+              <textarea
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.description ? "border-red-500" : ""
+                }`}
+                rows="3"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.description}
+                </p>
+              )}
+            </motion.div>
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 3 }}
+                transition={{ duration: 0.1, delay: 0.2 }}
+              >
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  Ціна
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                    errors.price ? "border-red-500" : ""
+                  }`}
+                  value={formData.price}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
+                />
+                {errors.price && (
+                  <p className="mt-1 text-sm text-red-500">{errors.price}</p>
+                )}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 3 }}
+                transition={{ duration: 0.1, delay: 0.3 }}
+              >
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  Кількість
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                    errors.stockQuantity ? "border-red-500" : ""
+                  }`}
+                  value={formData.stockQuantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stockQuantity: e.target.value })
+                  }
+                />
+                {errors.stockQuantity && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.stockQuantity}
+                  </p>
+                )}
+              </motion.div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.4 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Кольори (через кому)
               </label>
               <input
-                type="number"
+                type="text"
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.color ? "border-red-500" : ""
+                }`}
+                value={formData.color.join(", ")}
+                onChange={handleColorChange}
+                placeholder="Наприклад: червоний, синій, зелений"
+              />
+              {errors.color && (
+                <p className="mt-1 text-sm text-red-500">{errors.color}</p>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.5 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Розмір
+              </label>
+              <input
+                type="text"
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.size ? "border-red-500" : ""
+                }`}
+                value={formData.size}
+                onChange={(e) =>
+                  setFormData({ ...formData, size: e.target.value })
+                }
+              />
+              {errors.size && (
+                <p className="mt-1 text-sm text-red-500">{errors.size}</p>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.6 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Бренд
+              </label>
+              <input
+                type="text"
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.brand ? "border-red-500" : ""
+                }`}
+                value={formData.brand}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
+                }
+              />
+              {errors.brand && (
+                <p className="mt-1 text-sm text-red-500">{errors.brand}</p>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.7 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Головне зображення
+              </label>
+              <div className="mt-1 flex items-center gap-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMainImageChange}
+                  className="block w-full text-sm text-[var(--foreground)] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent)] file:text-[var(--background)] hover:file:bg-[var(--accent-hover)]"
+                />
+                {formData.mainImage && (
+                  <img
+                    src={formData.mainImage}
+                    alt="Main product"
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
+                )}
+              </div>
+              {errors.mainImage && (
+                <p className="mt-1 text-sm text-red-500">{errors.mainImage}</p>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 0.8 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Галерея зображень
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleGalleryImagesChange}
+                className="mt-1 block w-full text-sm text-[var(--foreground)] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent)] file:text-[var(--background)] hover:file:bg-[var(--accent-hover)]"
+              />
+              <div className="mt-2 grid grid-cols-4 gap-2">
+                {formData.galleryImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={image}
+                      alt={`Gallery ${index + 1}`}
+                      className="w-16 h-16 object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {errors.galleryImages && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.galleryImages}
+                </p>
+              )}
+            </motion.div>
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 3 }}
+                transition={{ duration: 0.1, delay: 0.9 }}
+              >
+                <label className="block text-sm font-medium text-[var(--foreground)]">
+                  Ціна зі знижкою
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                    errors.discountPrice ? "border-red-500" : ""
+                  }`}
+                  value={formData.discountPrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, discountPrice: e.target.value })
+                  }
+                />
+                {errors.discountPrice && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.discountPrice}
+                  </p>
+                )}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 3 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 3 }}
+                transition={{ duration: 0.1, delay: 1 }}
+                className="flex items-center"
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 text-[var(--accent)] rounded border-[var(--border)]"
+                  checked={formData.isDiscountActive}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      isDiscountActive: e.target.checked,
+                    })
+                  }
+                />
+                <label className="ml-2 text-sm text-[var(--foreground)]">
+                  Активна знижка
+                </label>
+              </motion.div>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 3 }}
+              transition={{ duration: 0.1, delay: 1.1 }}
+            >
+              <label className="block text-sm font-medium text-[var(--foreground)]">
+                Категорія
+              </label>
+              <select
                 required
-                min="0"
-                className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-                value={formData.stockQuantity}
+                className={`mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)] ${
+                  errors.categoryId ? "border-red-500" : ""
+                }`}
+                value={formData.categoryId}
                 onChange={(e) =>
-                  setFormData({ ...formData, stockQuantity: e.target.value })
+                  setFormData({ ...formData, categoryId: e.target.value })
                 }
-              />
+              >
+                <option value="">Виберіть категорію</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId && (
+                <p className="mt-1 text-sm text-red-500">{errors.categoryId}</p>
+              )}
+            </motion.div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 border border-[var(--border)] rounded-md text-[var(--foreground)] hover:bg-[var(--hover-bg)]"
+              >
+                Скасувати
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                className="px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)]"
+              >
+                {product ? "Зберегти" : "Створити"}
+              </motion.button>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Кольори (через кому)
-            </label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.color.join(", ")}
-              onChange={handleColorChange}
-              placeholder="Наприклад: червоний, синій, зелений"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Розмір
-            </label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.size}
-              onChange={(e) =>
-                setFormData({ ...formData, size: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Бренд
-            </label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.brand}
-              onChange={(e) =>
-                setFormData({ ...formData, brand: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Головне зображення (URL)
-            </label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.mainImage}
-              onChange={(e) =>
-                setFormData({ ...formData, mainImage: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Галерея зображень (URL через кому)
-            </label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.galleryImages.join(", ")}
-              onChange={handleGalleryImagesChange}
-              placeholder="Наприклад: url1, url2, url3"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)]">
-                Ціна зі знижкою
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-                value={formData.discountPrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, discountPrice: e.target.value })
-                }
-              />
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-[var(--accent)] rounded border-[var(--border)]"
-                checked={formData.isDiscountActive}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    isDiscountActive: e.target.checked,
-                  })
-                }
-              />
-              <label className="ml-2 text-sm text-[var(--foreground)]">
-                Активна знижка
-              </label>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)]">
-              Категорія
-            </label>
-            <select
-              required
-              className="mt-1 block w-full rounded-md border-[var(--border)] bg-[var(--input-bg)] text-[var(--foreground)] shadow-sm focus:border-[var(--accent)] focus:ring-[var(--accent)]"
-              value={formData.categoryId}
-              onChange={(e) =>
-                setFormData({ ...formData, categoryId: e.target.value })
-              }
-            >
-              <option value="">Виберіть категорію</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end space-x-2 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 border border-[var(--border)] rounded-md text-[var(--foreground)] hover:bg-[var(--hover-bg)]"
-            >
-              Скасувати
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)]"
-            >
-              {product ? "Зберегти" : "Створити"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -368,7 +740,7 @@ export default function ProductsManagement() {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Product submission error:", errorData);
-        throw new Error(errorData.error || "Failed to save product");
+        throw new Error(errorData.error || "Не вдалося зберегти товар");
       }
 
       const savedProduct = await response.json();
@@ -393,16 +765,20 @@ export default function ProductsManagement() {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete product");
+      if (!response.ok) throw new Error("Не вдалося видалити товар");
 
       fetchProducts();
+      toast.success("Товар видалено");
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || "Помилка при видаленні товару");
     }
   };
 
   if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
+    return (
+      <div className="text-red-500 text-center py-4">Помилка: {error}</div>
+    );
   }
 
   return (
@@ -416,7 +792,7 @@ export default function ProductsManagement() {
             setEditingProduct(null);
             setShowForm(true);
           }}
-          className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--background)] px-4 py-2 rounded-lg flex items-center gap-2"
+          className="bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-[0_0_2px_var(--glow-color)] hover:shadow-[0_0_4px_var(--glow-color)]"
         >
           <Plus className="w-5 h-5" />
           <span>Додати товар</span>
@@ -531,22 +907,26 @@ export default function ProductsManagement() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <button
+                    <div className="flex space-x-3">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => {
                           setEditingProduct(product);
                           setShowForm(true);
                         }}
-                        className="text-[var(--accent)] hover:text-[var(--accent-hover)]"
+                        className="text-[var(--background)] hover:text-[var(--accent)] transition-colors"
                       >
                         <Pencil className="w-5 h-5" />
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => handleDelete(product.id)}
-                        className="text-red-500 hover:text-red-700"
+                        className="text-red-500 hover:text-red-700 transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
-                      </button>
+                      </motion.button>
                     </div>
                   </td>
                 </tr>

@@ -139,7 +139,43 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = parseInt(searchParams.get("id"));
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid category ID" },
+        { status: 400 }
+      );
+    }
+
+    // Check if category has associated products
+    const categoryWithProducts = await prisma.category.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            products: true,
+          },
+        },
+      },
+    });
+
+    if (!categoryWithProducts) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    if (categoryWithProducts._count.products > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Cannot delete category with associated products. Please delete or reassign the products first.",
+        },
+        { status: 400 }
+      );
+    }
 
     await prisma.category.delete({
       where: { id },

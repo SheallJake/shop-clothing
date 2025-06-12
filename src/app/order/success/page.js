@@ -26,7 +26,7 @@ export default function OrderSuccessPage() {
 
         const response = await fetch(`/api/orders/${orderId}`);
         if (!response.ok) {
-          throw new Error("Failed to fetch order status");
+          throw new Error("Не вдалося отримати статус замовлення");
         }
 
         const data = await response.json();

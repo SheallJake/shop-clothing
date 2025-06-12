@@ -126,7 +126,9 @@ export default function StatisticsPage() {
   }
 
   if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
+    return (
+      <div className="text-red-500 text-center py-4">Помилка: {error}</div>
+    );
   }
 
   return (

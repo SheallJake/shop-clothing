@@ -6,7 +6,6 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || "";
-    const status = searchParams.get("status");
 
     const where = {
       OR: [
@@ -14,7 +13,6 @@ export async function GET(request) {
         { product: { name: { contains: query, mode: "insensitive" } } },
         { comment: { contains: query, mode: "insensitive" } },
       ],
-      ...(status && { status }),
     };
 
     const reviews = await prisma.review.findMany({
@@ -58,11 +56,31 @@ export async function PATCH(request) {
     const id = searchParams.get("id");
     const data = await request.json();
 
+    if (!id) {
+      return NextResponse.json(
+        { error: "Review ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const reviewId = parseInt(id);
+    if (isNaN(reviewId)) {
+      return NextResponse.json({ error: "Invalid review ID" }, { status: 400 });
+    }
+
+    // Check if review exists
+    const existingReview = await prisma.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    if (!existingReview) {
+      return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    }
+
     const review = await prisma.review.update({
-      where: { id },
+      where: { id: reviewId },
       data: {
-        status: data.status,
-        adminResponse: data.adminResponse,
+        comment: data.comment,
       },
       include: {
         user: {
@@ -99,11 +117,23 @@ export async function DELETE(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
+    if (!id) {
+      return NextResponse.json(
+        { error: "Review ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const reviewId = parseInt(id);
+    if (isNaN(reviewId)) {
+      return NextResponse.json({ error: "Invalid review ID" }, { status: 400 });
+    }
+
     await prisma.review.delete({
-      where: { id },
+      where: { id: reviewId },
     });
 
-    return NextResponse.json({ message: "Review deleted successfully" });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting review:", error);
     return NextResponse.json(

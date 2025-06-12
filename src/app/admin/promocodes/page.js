@@ -229,7 +229,7 @@ export default function PromoCodesManagement() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to save promo code");
+      if (!response.ok) throw new Error("Не вдалося зберегти промокод");
 
       fetchPromoCodes();
       setShowForm(false);
@@ -249,7 +249,7 @@ export default function PromoCodesManagement() {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Failed to delete promo code");
+      if (!response.ok) throw new Error("Не вдалося видалити промокод");
 
       fetchPromoCodes();
       toast.success("Промокод видалено");

@@ -35,31 +35,25 @@
 
   /* Theme transition styles */
   .theme-transitioning * {
-    transition: background-color 0.2s ease-out, 
-                border-color 0.2s ease-out, 
-                color 0.2s ease-out,
-                box-shadow 0.2s ease-out !important;
+    transition: all 0.3s ease-out !important;
   }
 
   .theme-transitioning {
-    transition: background-color 0.2s ease-out,
-                color 0.2s ease-out !important;
+    transition: all 0.3s ease-out !important;
   }
 }
 
 @layer components {
   .card {
     @apply border-[0.1px] border-[var(--card-border)] bg-[var(--card-bg)] rounded-lg p-4;
-    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-    transition-delay: 0ms; /* Default delay, will be overridden by inline styles */
+    transition: all 0.3s ease-out;
   }
 
   .card-lazy {
     @apply card;
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.5s ease, transform 0.5s ease, background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-    transition-delay: 0ms;
+    transition: all 0.3s ease-out;
   }
 
   .card-lazy.visible {
@@ -74,17 +68,17 @@
 
   .nav-link {
     @apply border-[0.1px] border-transparent hover:border-[var(--card-border)] px-4 py-2 rounded-md;
-    transition: border-color 0.5s ease;
+    transition: all 0.3s ease-out;
   }
 
   .btn {
     @apply border-[0.1px] border-[var(--card-border)] px-4 py-2 rounded-md hover:bg-[var(--hover-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--card-border)] focus:ring-opacity-50;
-    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+    transition: all 0.3s ease-out;
   }
 
   .input {
     @apply border-[0.1px] border-[var(--card-border)] bg-[var(--card-bg)] rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--card-border)] focus:ring-opacity-50;
-    transition: background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+    transition: all 0.3s ease-out;
   }
 
   .catalog-grid-hidden {
@@ -95,21 +89,21 @@
   .catalog-grid-visible {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition: all 0.3s ease-out;
   }
 }
 
 html {
-  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  transition: all 0.3s ease-out;
 }
 
 body {
   @apply bg-[var(--background)] text-[var(--foreground)] font-sans antialiased;
   background-image: var(--background);
   background-attachment: fixed;
-  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  transition: all 0.3s ease-out;
 }
 
 * {
-  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+  transition: all 0.3s ease-out;
 }

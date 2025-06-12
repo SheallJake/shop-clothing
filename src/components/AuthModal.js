@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { IMaskInput } from "react-imask";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import Spinner from "./Spinner";
 
 // Constants
 const ANIMATION_DURATION = 300; // Duration in milliseconds
@@ -151,6 +152,12 @@ export default function AuthModal({
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
+
+      // Validate form before submission
+      if (!validateForm()) {
+        return;
+      }
+
       setErrors({});
       setIsLoading(true);
 
@@ -174,7 +181,8 @@ export default function AuthModal({
             return;
           }
 
-          toast.success("Успішний вхід!");
+          // Store success message in sessionStorage to show after reload
+          sessionStorage.setItem("loginSuccess", "true");
           onClose();
           setWasManuallyClosed(false);
           window.location.reload();
@@ -233,9 +241,16 @@ export default function AuthModal({
   // Add useEffect to show success message after reload
   useEffect(() => {
     const showSuccessMessage = sessionStorage.getItem("registrationSuccess");
+    const showLoginSuccess = sessionStorage.getItem("loginSuccess");
+
     if (showSuccessMessage) {
       toast.success("Реєстрація успішна!");
       sessionStorage.removeItem("registrationSuccess");
+    }
+
+    if (showLoginSuccess) {
+      toast.success("Успішний вхід!");
+      sessionStorage.removeItem("loginSuccess");
     }
   }, []);
 
@@ -411,28 +426,7 @@ export default function AuthModal({
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
-                <svg
-                  className={`animate-spin -ml-1 mr-3 h-5 w-5 ${
-                    theme === "light" ? "text-white" : "text-zinc-800"
-                  }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <Spinner size="sm" className="mr-3" />
                 Зачекайте...
               </span>
             ) : modalState.mode === "register" ? (
