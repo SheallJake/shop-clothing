@@ -17,24 +17,6 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Test database connection
-    try {
-      await prisma.$connect();
-      console.log("[Related Products API] Database connection successful");
-    } catch (dbError) {
-      console.error(
-        "[Related Products API] Database connection error:",
-        dbError
-      );
-      return NextResponse.json(
-        {
-          error: "Database connection failed",
-          details: dbError.message,
-        },
-        { status: 500 }
-      );
-    }
-
     // Get current product to determine category
     let currentProduct;
     try {
@@ -195,15 +177,5 @@ export async function GET(request, { params }) {
       },
       { status: 500 }
     );
-  } finally {
-    try {
-      await prisma.$disconnect();
-      console.log("[Related Products API] Database connection closed");
-    } catch (disconnectError) {
-      console.error(
-        "[Related Products API] Error disconnecting from database:",
-        disconnectError
-      );
-    }
   }
 }
