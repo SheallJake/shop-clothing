@@ -3,20 +3,13 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export function signJwt(payload, expiresIn = "7d") {
-  console.log("[JWT] Signing token with payload:", payload);
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn });
-  console.log("[JWT] Token signed successfully");
-  return token;
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
 export function verifyJwt(token) {
   try {
-    console.log("[JWT] Verifying token...");
-    const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("[JWT] Token verified successfully:", decoded);
-    return decoded;
+    return jwt.verify(token, JWT_SECRET);
   } catch (error) {
-    console.error("[JWT] Token verification failed:", error.message);
     return null;
   }
 }

@@ -11,6 +11,8 @@ export const ChatProvider = ({ children }) => {
   const [chatsList, setChatsList] = useState([]);
   const [chatHistories, setChatHistories] = useState({});
   const [currentChat, setCurrentChat] = useState(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -26,8 +28,10 @@ export const ChatProvider = ({ children }) => {
         } else {
           setUser(null);
         }
-      } catch {
+      } catch (error) {
+        console.error("Error fetching user:", error);
         setUser(null);
+        setError("Failed to fetch user data");
       }
     }
     fetchUser();
@@ -36,68 +40,96 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    const sock = connectSocket();
-    setSocket(sock);
+    let sock = null;
+    setIsConnecting(true);
+    setError(null);
 
-    if (user.userRole.toLowerCase() === "admin") {
-      sock.emit("join-admin");
-    } else {
-      sock.emit("join-user", { userId: user.userId });
+    try {
+      sock = connectSocket();
+      setSocket(sock);
+
+      if (user.userRole.toLowerCase() === "admin") {
+        sock.emit("join-admin");
+      } else {
+        sock.emit("join-user", { userId: user.userId });
+      }
+
+      sock.on("chats-list", (list) => {
+        setChatsList(list);
+      });
+
+      sock.on("chat-messages", (history) => {
+        setChatHistories((prev) => ({
+          ...prev,
+          [currentChat || user.userId]: history,
+        }));
+      });
+
+      sock.on("new-message", (message) => {
+        const chatId = message.userId;
+
+        setChatHistories((prev) => ({
+          ...prev,
+          [chatId]: [...(prev[chatId] || []), message],
+        }));
+
+        if (user.userRole === "admin") {
+          setChatsList((prev) => {
+            const exists = prev.some((chat) => chat.userId === chatId);
+            if (!exists) {
+              return [
+                ...prev,
+                { userId: chatId, userName: message.senderName || "User" },
+              ];
+            }
+            return prev;
+          });
+        }
+      });
+
+      sock.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        setError("Failed to connect to chat server");
+      });
+    } catch (error) {
+      console.error("Error setting up socket:", error);
+      setError("Failed to initialize chat connection");
+    } finally {
+      setIsConnecting(false);
     }
 
-    sock.on("chats-list", (list) => {
-      setChatsList(list);
-    });
-
-    sock.on("chat-messages", (history) => {
-      setChatHistories((prev) => ({
-        ...prev,
-        [currentChat || user.userId]: history,
-      }));
-    });
-
-    sock.on("new-message", (message) => {
-      const chatId = message.userId;
-
-      setChatHistories((prev) => ({
-        ...prev,
-        [chatId]: [...(prev[chatId] || []), message],
-      }));
-
-      if (user.userRole === "admin") {
-        setChatsList((prev) => {
-          const exists = prev.some((chat) => chat.userId === chatId);
-          if (!exists) {
-            return [
-              ...prev,
-              { userId: chatId, userName: message.senderName || "User" },
-            ];
-          }
-          return prev;
-        });
-      }
-    });
-
     return () => {
-      disconnectSocket();
+      if (sock) {
+        disconnectSocket();
+      }
     };
   }, [user, currentChat]);
 
   const loadChat = (userId) => {
     if (socket) {
-      socket.emit("load-chat", userId);
+      try {
+        socket.emit("load-chat", userId);
+        setCurrentChat(userId);
+      } catch (error) {
+        console.error("Error loading chat:", error);
+        setError("Failed to load chat");
+      }
     }
-    setCurrentChat(userId);
   };
 
   const sendMessage = (text) => {
     if (socket) {
-      socket.emit("send-message", {
-        userId: currentChat || user.userId,
-        text,
-        sender: user.userId,
-        senderName: user.userName,
-      });
+      try {
+        socket.emit("send-message", {
+          userId: currentChat || user.userId,
+          text,
+          sender: user.userId,
+          senderName: user.userName,
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+        setError("Failed to send message");
+      }
     }
   };
 
@@ -105,7 +137,16 @@ export const ChatProvider = ({ children }) => {
 
   return (
     <ChatContext.Provider
-      value={{ user, messages, sendMessage, chatsList, loadChat, currentChat }}
+      value={{
+        user,
+        messages,
+        sendMessage,
+        chatsList,
+        loadChat,
+        currentChat,
+        isConnecting,
+        error,
+      }}
     >
       {children}
     </ChatContext.Provider>

@@ -5,7 +5,6 @@ import PageTransition from "@/components/PageTransition";
 import AuthModal from "@/components/AuthModal";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useTheme } from "@/context/ThemeContext";
-import Aurora from "@/components/Aurora";
 
 export default function ClientLayout({ children }) {
   const { showAuthModal, authMode, closeAuthModal } = useAuthModal();

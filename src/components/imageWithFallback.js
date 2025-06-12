@@ -49,6 +49,7 @@ export default function ImageWithFallback({
       addLoadingImage(imageSrc);
     }
 
+    // Cleanup function to ensure loading state is removed on unmount
     return () => {
       if (hasAddedToLoading.current) {
         removeLoadingImage(imageSrc);

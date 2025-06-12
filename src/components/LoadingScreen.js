@@ -2,12 +2,20 @@
 
 import { motion } from "framer-motion";
 import { useLoading } from "./LoadingManager";
+import { useEffect, useState } from "react";
 
 export default function LoadingScreen() {
   const { loadingStates } = useLoading();
-  const totalItems = loadingStates.images.size + loadingStates.api.size;
-  const progress =
-    totalItems > 0 ? Math.round((totalItems / (totalItems + 1)) * 100) : 0;
+  const [initialTotal, setInitialTotal] = useState(0);
+  const [currentTotal, setCurrentTotal] = useState(0);
+
+  useEffect(() => {
+    const total = loadingStates.images.size + loadingStates.api.size;
+    if (initialTotal === 0 && total > 0) {
+      setInitialTotal(total);
+    }
+    setCurrentTotal(total);
+  }, [loadingStates, initialTotal]);
 
   return (
     <motion.div
@@ -19,16 +27,6 @@ export default function LoadingScreen() {
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-[var(--card-border)] border-t-transparent rounded-full animate-spin mx-auto"></div>
         <p className="mt-4 text-[var(--foreground)]">Завантаження...</p>
-        {totalItems > 0 && (
-          <div className="mt-2 w-48 h-2 bg-[var(--muted)] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-[var(--card-border)]"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        )}
       </div>
     </motion.div>
   );

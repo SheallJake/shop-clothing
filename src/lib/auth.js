@@ -29,7 +29,6 @@ export async function getServerSession() {
 
     return user ? { user } : null;
   } catch (error) {
-    console.error("Auth error:", error);
     return null;
   }
 }

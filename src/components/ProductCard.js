@@ -68,7 +68,9 @@ export default function ProductCard({ product }) {
   // Ensure we have a string or array for size
   const sizes = Array.isArray(product.size)
     ? product.size
-    : [product.size].filter(Boolean);
+    : typeof product.size === "string"
+      ? product.size.split(",").map((size) => size.trim())
+      : [product.size].filter(Boolean);
 
   // Ensure all text values are strings
   const productName = String(product.name || "");
@@ -167,10 +169,10 @@ export default function ProductCard({ product }) {
                     {productName}
                   </h3>
                   <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-3">
-                    {finalPrice} UAH
+                    {Math.round(finalPrice)} UAH
                     {product.isDiscountActive && product.discountPrice && (
                       <span className="text-sm line-through text-red-500 dark:text-red-400 ml-2">
-                        {productPrice} UAH
+                        {Math.round(productPrice)} UAH
                       </span>
                     )}
                   </p>
@@ -265,14 +267,13 @@ export default function ProductCard({ product }) {
                       <p className="text-xs mb-1 text-[var(--foreground)]/70">
                         Розміри:
                       </p>
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="grid grid-cols-4 gap-2">
                         {sizes.map((size) => (
-                          <span
-                            key={size}
-                            className="w-8 h-8 flex items-center justify-center text-xs border border-[var(--card-border)] rounded hover:border-[var(--foreground)] transition-colors text-[var(--foreground)]"
-                          >
-                            {size}
-                          </span>
+                          <div key={size} className="relative">
+                            <span className="w-full h-7 flex items-center justify-center text-xs font-medium border border-[var(--card-border)] rounded hover:border-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all text-[var(--foreground)]">
+                              {size.toUpperCase()}
+                            </span>
+                          </div>
                         ))}
                       </div>
                     </div>
