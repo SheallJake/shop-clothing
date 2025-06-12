@@ -19,14 +19,6 @@ export default function ClientLayout({ children }) {
   return (
     <AnimatePresence mode="wait">
       <PageTransition key="content">
-        {/* <div style={{ transition: "none" }}>
-          <Aurora
-            colorStops={auroraColors}
-            blend={0.5}
-            amplitude={1.0}
-            speed={0.5}
-          />
-        </div> */}
         {children}
         <AuthModal
           isOpen={showAuthModal}

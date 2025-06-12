@@ -19,7 +19,25 @@ export default function ImageWithFallback({
   const hasAddedToLoading = useRef(false);
 
   // Validate src prop
-  const imageSrc = src && src.trim() !== "" ? src : "/placeholder.svg";
+  const imageSrc = (() => {
+    if (!src || src.trim() === "") return "/placeholder.svg";
+    try {
+      const url = src.trim();
+      // If it's already a full URL, return it
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+      }
+      // If it's a relative path starting with /, return it
+      if (url.startsWith("/")) {
+        return url;
+      }
+      // If it's just a filename, prepend /img/
+      return `/img/${url}`;
+    } catch (error) {
+      console.error("Invalid image URL:", src);
+      return "/placeholder.svg";
+    }
+  })();
 
   useEffect(() => {
     if (

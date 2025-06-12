@@ -94,9 +94,24 @@ export default function ProductCard({ product }) {
     finalPrice: finalPrice,
   });
 
-  const productImage = product.mainImage
-    ? String(product.mainImage)
-    : "/placeholder.svg";
+  const productImage = (() => {
+    if (!product.mainImage) return "/placeholder.svg";
+    try {
+      const url = String(product.mainImage);
+      // Check if it's a valid URL or a relative path
+      if (
+        url.startsWith("/") ||
+        url.startsWith("http://") ||
+        url.startsWith("https://")
+      ) {
+        return url;
+      }
+      return "/placeholder.svg";
+    } catch (error) {
+      console.error("Invalid image URL:", product.mainImage);
+      return "/placeholder.svg";
+    }
+  })();
   const productDescription = String(product.description || "");
   const productMaterial = String(product.material || "");
 

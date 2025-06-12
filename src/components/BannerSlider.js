@@ -3,9 +3,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import ImageWithFallback from "@/components/ImageWithFallback";
 
 const slides = [
-  "/banners/banner1.jpg",
-  "/banners/banner2.jpg",
-  "/banners/banner3.jpg",
+  "/banners/banner1.png",
+  "/banners/banner2.png",
+  "/banners/banner3.png",
 ];
 
 export default function BannerSlider() {
@@ -55,6 +55,8 @@ export default function BannerSlider() {
               alt={`Banner ${i + 1}`}
               className="absolute inset-0 w-full h-full object-cover"
               priority={i === 0}
+              quality={100}
+              sizes="100vw"
             />
           </div>
         ))}

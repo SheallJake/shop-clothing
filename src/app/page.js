@@ -7,6 +7,9 @@ import CategoryGrid from "@/components/CategoryGrid";
 import { useAuthModal } from "@/context/AuthModalContext";
 import ProductCard from "@/components/ProductCard";
 import Spinner from "@/components/Spinner";
+import { Card } from "@/components/CardSwap";
+import CardSwap from "@/components/CardSwap";
+import Image from "next/image";
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -56,9 +59,77 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen">
       <div className="relative space-y-8">
-        <div className="mx-auto w-full">
+        {/* <div className="mx-auto w-full">
           <BannerSlider />
+        </div> */}
+
+        {/* CardSwap section */}
+        <div className="relative w-full h-96 overflow-hidden rounded-lg border border-[var(--card-border)] shadow-[0_0_2px_var(--glow-color)] p-4">
+          <div className="flex items-center justify-between gap-8 h-full">
+            <div className="flex-1 flex items-center">
+              <h2 className="text-5xl font-bold mb-4">
+                Починай{" "}
+                <span className="text-purple-600 dark:text-purple-400">
+                  купувати
+                </span>{" "}
+                прямо зараз!
+              </h2>
+            </div>
+            <div
+              className="flex-1"
+              style={{
+                height: "600px",
+                position: "relative",
+                marginTop: "200px",
+              }}
+            >
+              <CardSwap
+                cardDistance={60}
+                verticalDistance={70}
+                delay={5000}
+                pauseOnHover={false}
+              >
+                <Card className="overflow-hidden">
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/banners/banner1.png"
+                      alt="Banner 1"
+                      fill
+                      className="object-cover rounded-lg"
+                      priority
+                    />
+                  </div>
+                </Card>
+                <Card className="overflow-hidden">
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/banners/banner2.png"
+                      alt="Banner 2"
+                      fill
+                      className="object-cover rounded-lg"
+                      priority
+                    />
+                  </div>
+                </Card>
+                <Card className="overflow-hidden">
+                  <div className="relative w-full h-full">
+                    <Image
+                      src="/banners/banner3.png"
+                      alt="Banner 3"
+                      fill
+                      className="object-cover rounded-lg"
+                      priority
+                    />
+                  </div>
+                </Card>
+              </CardSwap>
+            </div>
+          </div>
         </div>
+
+        {/* Spacing */}
+        <div className="h-16"></div>
+
         <div className="mx-auto w-full">
           <CategoryGrid />
         </div>

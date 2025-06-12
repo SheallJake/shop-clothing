@@ -23,6 +23,7 @@ export function LoadingProvider({ children }) {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setForceHide(true);
+      setIsLoading(false); // Ensure loading is set to false when force hiding
     }, 5000);
 
     return () => clearTimeout(timeout);
@@ -84,6 +85,18 @@ export function LoadingProvider({ children }) {
       return () => clearTimeout(timer);
     }
   }, [loadingStates, forceHide]);
+
+  // Add error boundary
+  useEffect(() => {
+    const handleError = (error) => {
+      console.error("Loading error:", error);
+      setForceHide(true);
+      setIsLoading(false);
+    };
+
+    window.addEventListener("error", handleError);
+    return () => window.removeEventListener("error", handleError);
+  }, []);
 
   const contextValue = {
     addLoadingImage,
