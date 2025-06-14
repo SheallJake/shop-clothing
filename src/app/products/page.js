@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import ImageWithFallback from "@/components/imageWithFallback";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowDown,
@@ -8,6 +8,8 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -280,7 +282,7 @@ export default function ProductsPage() {
   return (
     <PageTransition>
       <div className="flex flex-col min-h-[calc(100vh-64px-80px)]">
-        <div className="px-6 py-4 flex-1">
+        <div className="px-6 py-0 sm:py-4 flex-1">
           {/* Search results heading */}
           {query && (
             <h1 className="text-2xl font-bold mb-6">
@@ -293,19 +295,18 @@ export default function ProductsPage() {
             className={`sticky top-[80px] z-10 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_5px_var(--glow-color)] ${
               isSticky ? "shadow-md" : ""
             }`}
-            style={
-              {
-                /* Removed framer-motion styles */
-              }
-            }
           >
-            <div className="flex justify-between items-center py-4 px-4">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 py-2 sm:py-4 px-4">
+              <div className="relative w-full sm:w-auto">
                 <button
-                  className="border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2"
+                  className="w-full sm:w-auto border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2 flex items-center justify-between sm:justify-start"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
-                  Сортувати
+                  <span>Сортувати</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transform transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -315,7 +316,7 @@ export default function ProductsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full left-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-60"
+                      className="absolute top-full left-0 right-0 sm:right-auto mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-full sm:w-60"
                     >
                       <motion.button
                         whileHover={{ backgroundColor: "var(--hover-bg)" }}
@@ -351,10 +352,11 @@ export default function ProductsPage() {
               </div>
 
               <button
-                className="border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)]"
+                className="w-full sm:w-auto border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] flex items-center justify-between sm:justify-start"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
-                Фільтри
+                <span>Фільтри</span>
+                <Filter size={16} />
               </button>
             </div>
 
@@ -365,11 +367,11 @@ export default function ProductsPage() {
               filters.brands.length > 0 ||
               filters.priceRange.min > 0 ||
               filters.priceRange.max < Infinity) && (
-              <div className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)]">
+              <div className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)] overflow-x-auto">
                 {filters.categories.map((category) => (
                   <div
                     key={`category-${category}`}
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
+                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm border border-[var(--card-border)] whitespace-nowrap"
                   >
                     <span>Категорія: {category}</span>
                     <button
@@ -460,7 +462,7 @@ export default function ProductsPage() {
               <Spinner size="md" />
             </div>
           ) : (
-            <div className="flex gap-4 mt-8">
+            <div className="flex flex-col lg:flex-row gap-4 mt-8">
               <ProductFilters
                 products={products}
                 filters={filters}
@@ -489,7 +491,7 @@ export default function ProductsPage() {
                     style={{ position: "relative", zIndex: 2 }}
                   >
                     {currentProducts.map((product, index) => (
-                      <div key={product.id} style={{}}>
+                      <div key={product.id}>
                         <ProductCard product={product} index={index} />
                       </div>
                     ))}

@@ -4,7 +4,9 @@ export default function ReviewList({ reviews }) {
   if (!reviews || reviews.length === 0) {
     return (
       <div className="text-center py-4">
-        <p className="text-gray-600">Поки що немає відгуків</p>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Поки що немає відгуків
+        </p>
       </div>
     );
   }
@@ -14,12 +16,14 @@ export default function ReviewList({ reviews }) {
       {reviews.map((review) => (
         <div
           key={review.id}
-          className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0"
+          className="border-b border-zinc-200 dark:border-zinc-700 pb-6 last:border-b-0 last:pb-0"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{review.user.name}</span>
-              <span className="text-gray-500 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="font-medium text-zinc-900 dark:text-white">
+                {review.user.name}
+              </span>
+              <span className="text-zinc-500 dark:text-zinc-400 text-sm">
                 {new Date(review.createdAt).toLocaleDateString("uk-UA", {
                   year: "numeric",
                   month: "long",
@@ -34,14 +38,14 @@ export default function ReviewList({ reviews }) {
                   className={`w-4 h-4 ${
                     index < review.rating
                       ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
+                      : "text-zinc-300 dark:text-zinc-600"
                   }`}
                 />
               ))}
             </div>
           </div>
           {review.comment && (
-            <p className="text-gray-700 whitespace-pre-wrap">
+            <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
               {review.comment}
             </p>
           )}

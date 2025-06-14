@@ -402,18 +402,18 @@ export default function OrderPage() {
             </h2>
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-4">
-                  <div className="w-20 h-20">
+                <div key={item.id} className="flex items-start gap-4">
+                  <div className="w-20 h-20 flex-shrink-0">
                     <ImageWithFallback
                       src={item.image}
                       alt={item.name}
                       width={80}
                       height={80}
-                      className="rounded-md"
+                      className="w-full h-full object-cover rounded-md"
                     />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-[var(--foreground)]">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-[var(--foreground)] truncate">
                       {item.name}
                     </h3>
                     <p className="text-[var(--foreground)]">

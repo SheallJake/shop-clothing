@@ -13,7 +13,7 @@ export const Card = forwardRef(({ customClass, ...rest }, ref) => (
   <div
     ref={ref}
     {...rest}
-    className={`absolute top-1/2 left-1/2 rounded-xl border border-white bg-black [transform-style:preserve-3d] [will-change:transform] [backface-visibility:hidden] ${customClass ?? ""} ${rest.className ?? ""}`.trim()}
+    className={`absolute top-1/2 left-1/2 rounded-xl border border-white bg-black [transform-style:preserve-3d] [will-change:transform] [backface-visibility:hidden] animate-glow ${customClass ?? ""} ${rest.className ?? ""}`.trim()}
   />
 ));
 Card.displayName = "Card";
@@ -196,7 +196,9 @@ const CardSwap = ({
   return (
     <div
       ref={container}
-      className="absolute bottom-0 right-0 transform translate-x-[-25%] translate-y-[-80%] origin-bottom-right perspective-[900px] overflow-visible max-[768px]:translate-x-[-15%] max-[768px]:translate-y-[-70%] max-[768px]:scale-[0.75] max-[480px]:translate-x-[-10%] max-[480px]:translate-y-[-60%] max-[480px]:scale-[0.55]"
+      className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:translate-y-[-65%] scale-[0.8] perspective-[900px] overflow-visible 
+      max-[768px]:scale-[0.6] 
+      max-[480px]:scale-[0.4]"
       style={{ width, height }}
     >
       {rendered}

@@ -116,15 +116,15 @@ export default function CartPage() {
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Кошик</h1>
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Кошик</h1>
 
         {cart.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-lg mb-4">Кошик порожній</p>
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-base sm:text-lg mb-4">Кошик порожній</p>
             <a
               href="/products"
-              className="btn bg-black text-white hover:bg-gray-800"
+              className="btn bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-lg text-sm sm:text-base"
             >
               Перейти до товарів
             </a>
@@ -135,16 +135,17 @@ export default function CartPage() {
               {cart.map((item) => (
                 <div
                   key={`${item.id}-${item.selectedSize}-${item.selectedColor}`}
-                  className="card card-hover"
+                  className="card card-hover p-3 sm:p-4"
                 >
-                  <ImageWithFallback
-                    src={item.image}
-                    alt={item.name || "Product image"}
-                    className="w-32 h-32 object-cover rounded"
-                  />
-                  <div className="flex flex-col justify-between flex-1">
-                    <div>
-                      <h2 className="font-bold text-xl">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <ImageWithFallback
+                      src={item.image}
+                      alt={item.name || "Product image"}
+                      className="w-full sm:w-32 h-32 object-cover rounded"
+                    />
+
+                    <div className="flex-1">
+                      <h2 className="font-bold text-lg sm:text-xl mb-1">
                         {item.name || "Без назви"}
                       </h2>
                       <p className="text-sm text-[var(--muted)]">
@@ -160,12 +161,13 @@ export default function CartPage() {
                           Колір: {item.selectedColor}
                         </p>
                       )}
-                      <p className="mt-1">
+                      <p className="mt-1 text-sm sm:text-base">
                         {formatPrice(item.price)} грн ×{" "}
                         {formatPrice(item.quantity)} шт.
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 mt-2">
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() =>
@@ -176,11 +178,13 @@ export default function CartPage() {
                               Number(item.quantity) - 1
                             )
                           }
-                          className="btn"
+                          className="btn w-8 h-8 flex items-center justify-center text-sm"
                         >
                           -
                         </button>
-                        <span>{formatPrice(item.quantity)}</span>
+                        <span className="text-sm sm:text-base">
+                          {formatPrice(item.quantity)}
+                        </span>
                         <button
                           onClick={() =>
                             handleQuantityChange(
@@ -190,7 +194,7 @@ export default function CartPage() {
                               Number(item.quantity) + 1
                             )
                           }
-                          className="btn"
+                          className="btn w-8 h-8 flex items-center justify-center text-sm"
                         >
                           +
                         </button>
@@ -203,7 +207,7 @@ export default function CartPage() {
                             item.selectedColor
                           )
                         }
-                        className="text-red-500 hover:text-red-700"
+                        className="text-red-500 hover:text-red-700 text-sm sm:text-base"
                       >
                         Видалити
                       </button>
@@ -212,35 +216,41 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-8 border-t border-[var(--card-border)] pt-4">
+
+            <div className="mt-6 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-xl font-bold">Загальна сума:</span>
-                <span className="text-xl font-bold">
+                <span className="text-lg sm:text-xl font-bold">
+                  Загальна сума:
+                </span>
+                <span className="text-lg sm:text-xl font-bold">
                   {formatPrice(discountedTotal)} грн
                 </span>
               </div>
               {discountPercent > 0 && (
-                <div className="text-green-600 text-sm mt-1">
+                <div className="text-green-600 text-sm">
                   Знижка: {discountPercent}%
                 </div>
               )}
-              <div className="mt-4 flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   placeholder="Введіть промокод"
-                  className="input flex-1"
+                  className="input flex-1 text-sm sm:text-base"
                 />
-                <button onClick={validatePromo} className="btn">
+                <button
+                  onClick={validatePromo}
+                  className="btn text-sm sm:text-base whitespace-nowrap"
+                >
                   Застосувати
                 </button>
               </div>
               {promoError && (
-                <div className="text-red-500 text-sm mt-1">{promoError}</div>
+                <div className="text-red-500 text-sm">{promoError}</div>
               )}
               <button
-                className="btn w-full mt-4 bg-black text-white hover:bg-gray-800"
+                className="btn w-full mt-4 bg-black text-white hover:bg-gray-800 text-sm sm:text-base py-3"
                 onClick={handleCheckout}
               >
                 {isAuthenticated

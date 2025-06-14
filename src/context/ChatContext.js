@@ -13,6 +13,7 @@ export const ChatProvider = ({ children }) => {
   const [currentChat, setCurrentChat] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -146,6 +147,8 @@ export const ChatProvider = ({ children }) => {
         currentChat,
         isConnecting,
         error,
+        isChatOpen,
+        setIsChatOpen,
       }}
     >
       {children}

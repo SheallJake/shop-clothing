@@ -6,11 +6,18 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatWidget() {
-  const { user, chatsList, messages, loadChat, sendMessage, currentChat } =
-    useChat();
+  const {
+    user,
+    chatsList,
+    messages,
+    loadChat,
+    sendMessage,
+    currentChat,
+    isChatOpen,
+    setIsChatOpen,
+  } = useChat();
   const { theme } = useTheme();
   const [input, setInput] = useState("");
-  const [open, setOpen] = useState(false);
   const [menuCollapsed, setMenuCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef(null);
@@ -100,38 +107,32 @@ export default function ChatWidget() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {!open && (
+    <div className="fixed bottom-4 right-4 z-[9999]">
+      {!isChatOpen && (
         <motion.button
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className={`shadow-md p-2 ${theme === "light" ? "bg-gradient-to-r from-stone-300 to-stone-200 text-slate-700 hover:from-stone-400 hover:to-stone-300" : "bg-gradient-to-r from-zinc-700 to-zinc-800 text-zinc-50 hover:from-zinc-600 hover:to-zinc-700"} px-6 py-3 rounded-full text-lg font-semibold transition-all duration-300`}
-          onClick={() => setOpen(true)}
+          className={`shadow-md p-2 ${theme === "light" ? "bg-gradient-to-r from-stone-300 to-stone-200 text-slate-700 hover:from-stone-400 hover:to-stone-300" : "bg-gradient-to-r from-zinc-700 to-zinc-800 text-zinc-50 hover:from-zinc-600 hover:to-zinc-700"} px-4 sm:px-6 py-2 sm:py-3 rounded-full text-base sm:text-lg font-semibold transition-all duration-300 hidden sm:block`}
+          onClick={() => setIsChatOpen(true)}
         >
           💬 Чат
         </motion.button>
       )}
 
       <AnimatePresence>
-        {open && (
+        {isChatOpen && (
           <motion.div
             ref={widgetRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className={`fixed bottom-4 right-4 z-50 ${
-              isFullscreen ? "fixed bottom-6 right-6" : ""
-            }`}
+            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm"
           >
             <div
-              className={`${currentStyles.container} rounded-xl shadow-xl flex flex-col overflow-hidden border transition-all duration-500 ease-in-out transform ${
-                isFullscreen
-                  ? "h-[calc(100vh-3rem)] w-[calc(100vw-3rem)] rounded-none border-none origin-bottom-right"
-                  : "w-[400px] h-[600px] origin-bottom-right"
-              }`}
+              className={`${currentStyles.container} fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 sm:w-[400px] sm:h-[600px] rounded-xl shadow-xl flex flex-col overflow-hidden border transition-all duration-500 ease-in-out transform`}
             >
               <div
                 className={`flex justify-between items-center bg-gradient-to-r ${currentStyles.header} px-4 py-3 border-b-2 shadow-md`}
@@ -141,18 +142,18 @@ export default function ChatWidget() {
                     ? "Чати адміну"
                     : "Онлайн підтримка"}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setIsFullscreen(!isFullscreen)}
-                    className={`${currentStyles.textSecondary} hover:text-white transition-all duration-300 transform hover:scale-110`}
+                    className={`${currentStyles.textSecondary} hover:text-white transition-all duration-300 transform hover:scale-110 text-xl`}
                   >
                     <span className="inline-block transition-transform duration-300">
                       {isFullscreen ? "⤓" : "⤢"}
                     </span>
                   </button>
                   <button
-                    onClick={() => setOpen(false)}
-                    className={`${currentStyles.textSecondary} hover:text-white transition-all duration-300 transform hover:scale-110`}
+                    onClick={() => setIsChatOpen(false)}
+                    className={`${currentStyles.textSecondary} hover:text-white transition-all duration-300 transform hover:scale-110 text-xl`}
                   >
                     <span className="inline-block transition-transform duration-300">
                       ×
@@ -165,19 +166,19 @@ export default function ChatWidget() {
                 <div className="flex flex-row flex-1 relative">
                   <div
                     className={`bg-gradient-to-b ${currentStyles.sidebar} overflow-y-auto overflow-x-hidden transition-all duration-300 ${
-                      menuCollapsed ? "w-0" : "w-1/3"
+                      menuCollapsed ? "w-0" : "w-full sm:w-1/3"
                     }`}
                   >
                     <div
                       className={`flex justify-between items-center p-3 border-b-2 bg-gradient-to-r ${currentStyles.header}`}
                     >
-                      <h2 className="font-semibold">Користувачі</h2>
+                      <h2 className="font-semibold text-base">Користувачі</h2>
                     </div>
                     <ul className="space-y-1 p-2">
                       {chatsList.map(({ userId, userName }) => (
                         <li key={userId}>
                           <button
-                            className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-200 truncate ${
+                            className={`w-full px-3 py-2.5 rounded-lg text-left transition-all duration-200 truncate text-base ${
                               currentChat === userId
                                 ? `bg-gradient-to-r ${currentStyles.activeChat} shadow-md`
                                 : currentStyles.hoverChat
@@ -203,7 +204,7 @@ export default function ChatWidget() {
                   ) : (
                     <button
                       onClick={() => setMenuCollapsed(true)}
-                      className={`absolute left-[calc(33.333%-1rem)] top-1/2 -translate-y-1/2 bg-gradient-to-r ${currentStyles.button} p-2 rounded-l-lg shadow-lg transition-all duration-300 z-10 group`}
+                      className={`absolute left-[calc(100%-1rem)] sm:left-[calc(33.333%-1rem)] top-1/2 -translate-y-1/2 bg-gradient-to-r ${currentStyles.button} p-2 rounded-l-lg shadow-lg transition-all duration-300 z-10 group`}
                     >
                       <span className="inline-block transition-transform duration-300 group-hover:-translate-x-1">
                         ←
@@ -214,7 +215,7 @@ export default function ChatWidget() {
                   {currentChat ? (
                     <div
                       className={`flex flex-col transition-all duration-300 ${
-                        menuCollapsed ? "w-full" : "w-2/3"
+                        menuCollapsed ? "w-full" : "w-0 sm:w-2/3"
                       }`}
                     >
                       <div
@@ -236,11 +237,11 @@ export default function ChatWidget() {
                             >
                               <motion.div
                                 whileHover={{ scale: 1.01 }}
-                                className={`relative px-4 py-2 rounded-2xl transition-all duration-200 ${
+                                className={`relative px-4 py-2.5 rounded-2xl transition-all duration-200 ${
                                   msg.sender === user.userId
                                     ? `bg-gradient-to-r ${currentStyles.sentMessage} rounded-tr-none shadow-md`
                                     : `bg-gradient-to-r ${currentStyles.receivedMessage} rounded-tl-none shadow-md`
-                                } max-w-[75%]`}
+                                } max-w-[85%] sm:max-w-[75%]`}
                               >
                                 {msg.sender !== user.userId && (
                                   <b
@@ -249,11 +250,11 @@ export default function ChatWidget() {
                                     {msg.senderName || "Користувач"}
                                   </b>
                                 )}
-                                <div className="break-words text-[15px] leading-relaxed">
+                                <div className="break-words text-base leading-relaxed">
                                   {msg.text}
                                 </div>
                                 <div
-                                  className={`text-[11px] ${currentStyles.textSecondary} mt-1 text-right`}
+                                  className={`text-xs ${currentStyles.textSecondary} mt-1 text-right`}
                                 >
                                   {formatDate(msg.timestamp)}
                                 </div>
@@ -266,17 +267,17 @@ export default function ChatWidget() {
 
                       <form
                         onSubmit={handleSend}
-                        className={`flex p-4 border-t-2 bg-gradient-to-r ${currentStyles.inputArea} shadow-inner`}
+                        className={`flex p-3 border-t-2 bg-gradient-to-r ${currentStyles.inputArea} shadow-inner`}
                       >
                         <input
-                          className={`flex-1 border-2 rounded-lg px-3 py-2 text-sm ${currentStyles.inputField} focus:outline-none transition-colors duration-200`}
+                          className={`flex-1 border-2 rounded-lg px-3 py-2.5 text-base ${currentStyles.inputField} focus:outline-none transition-colors duration-200`}
                           placeholder="Написати..."
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
                         />
                         <button
                           type="submit"
-                          className={`ml-3 bg-gradient-to-r ${currentStyles.button} px-5 py-2 rounded-lg font-semibold transition-colors duration-200 active:scale-95 shadow-md`}
+                          className={`ml-3 bg-gradient-to-r ${currentStyles.button} px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 active:scale-95 shadow-md text-base`}
                         >
                           ➤
                         </button>
@@ -285,14 +286,14 @@ export default function ChatWidget() {
                   ) : (
                     <div
                       className={`flex flex-col items-center justify-center transition-all duration-300 ${
-                        menuCollapsed ? "w-full" : "w-2/3"
+                        menuCollapsed ? "w-full" : "w-0 sm:w-2/3"
                       } bg-gradient-to-b ${currentStyles.chatBg}`}
                     >
                       <div
                         className={`${currentStyles.textSecondary} text-center p-4`}
                       >
                         <p className="text-lg mb-2">Виберіть чат зі списку</p>
-                        <p className="text-sm">
+                        <p className="text-base">
                           Для початку спілкування виберіть користувача зі списку
                           зліва
                         </p>
@@ -321,7 +322,7 @@ export default function ChatWidget() {
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className={`relative px-4 py-2 rounded-2xl max-w-[75%] shadow-md ${
+                              className={`relative px-4 py-2.5 rounded-2xl max-w-[85%] sm:max-w-[75%] shadow-md ${
                                 msg.sender === user.userId
                                   ? `bg-gradient-to-r ${currentStyles.sentMessage} rounded-tr-none`
                                   : `bg-gradient-to-r ${currentStyles.receivedMessage} rounded-tl-none`
@@ -336,11 +337,11 @@ export default function ChatWidget() {
                                   {msg.senderName || "Адмін"}
                                 </motion.b>
                               )}
-                              <div className="break-words text-[15px] leading-relaxed">
+                              <div className="break-words text-base leading-relaxed">
                                 {msg.text}
                               </div>
                               <div
-                                className={`text-[11px] ${currentStyles.textSecondary} mt-1 text-right`}
+                                className={`text-xs ${currentStyles.textSecondary} mt-1 text-right`}
                               >
                                 {formatDate(msg.timestamp)}
                               </div>
@@ -354,17 +355,17 @@ export default function ChatWidget() {
 
                   <form
                     onSubmit={handleSend}
-                    className={`flex border-t-2 p-4 bg-gradient-to-r ${currentStyles.inputArea} shadow-inner`}
+                    className={`flex border-t-2 p-3 bg-gradient-to-r ${currentStyles.inputArea} shadow-inner`}
                   >
                     <input
-                      className={`flex-1 border-2 rounded-lg px-3 py-2 text-sm ${currentStyles.inputField} focus:outline-none transition-colors duration-200`}
+                      className={`flex-1 border-2 rounded-lg px-3 py-2.5 text-base ${currentStyles.inputField} focus:outline-none transition-colors duration-200`}
                       placeholder="Доброго дня! Чим можемо допомогти?"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                     />
                     <button
                       type="submit"
-                      className={`ml-3 bg-gradient-to-r ${currentStyles.button} px-5 py-2 rounded-lg font-semibold transition-colors duration-200 active:scale-95 shadow-md`}
+                      className={`ml-3 bg-gradient-to-r ${currentStyles.button} px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 active:scale-95 shadow-md text-base`}
                     >
                       ➤
                     </button>

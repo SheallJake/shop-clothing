@@ -67,6 +67,10 @@ module.exports = {
           "0%": { "background-position": "100%" },
           "100%": { "background-position": "-100%" },
         },
+        glow: {
+          "0%, 100%": { "box-shadow": "0 0 2px var(--glow-color)" },
+          "50%": { "box-shadow": "0 0 8px var(--glow-color)" },
+        },
       },
       animation: {
         "slide-in-right": "slide-in-right 0.3s ease-out",
@@ -78,6 +82,7 @@ module.exports = {
         slideUp: "slideUp 0.5s ease-out",
         slideIn: "slideIn 0.5s ease-out",
         shine: "shine 5s linear infinite",
+        glow: "glow 2s ease-in-out infinite",
       },
     },
   },

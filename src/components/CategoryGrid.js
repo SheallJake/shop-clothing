@@ -1,14 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLoading } from "./LoadingManager";
 
 export default function CategoryGrid() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
-  const { addLoadingApi, removeLoadingApi } = useLoading();
 
   // Define gradient combinations
   const gradientCombinations = [
@@ -20,27 +18,33 @@ export default function CategoryGrid() {
   ];
 
   useEffect(() => {
-    setIsLoading(true);
-    const apiUrl = "/api/categories";
-    addLoadingApi(apiUrl);
+    const fetchCategories = async () => {
+      const apiUrl = "/api/categories";
+      try {
+        setIsLoading(true);
+        setError(null);
 
-    fetch(apiUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch categories");
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch categories");
         }
-        return res.json();
-      })
-      .then(setCategories)
-      .catch((err) => {
-        console.error("Error fetching categories:", err);
-        setError(err.message);
-      })
-      .finally(() => {
+
+        setCategories(data);
+      } catch (error) {
+        console.error("[CategoryGrid] Error:", error);
+        setError(
+          error.message ||
+            "Не вдалося завантажити категорії. Спробуйте оновити сторінку."
+        );
+      } finally {
         setIsLoading(false);
-        removeLoadingApi(apiUrl);
-      });
-  }, [addLoadingApi, removeLoadingApi]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleCategoryClick = (categoryName) => {
     router.push(`/products?category=${encodeURIComponent(categoryName)}`);

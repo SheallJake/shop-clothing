@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Menu, X, User, Heart, ShoppingCart } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import AuthModal from "@/components/AuthModal";
@@ -8,6 +7,7 @@ import SearchBar from "@/components/SearchBar";
 import { useTheme } from "@/context/ThemeContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useChat } from "@/context/ChatContext";
 import {
   FiSun,
   FiMoon,
@@ -16,10 +16,14 @@ import {
   FiUser,
   FiSearch,
   FiShield,
+  FiMessageSquare,
+  FiHome,
+  FiGrid,
 } from "react-icons/fi";
 import { useAuthModal } from "@/context/AuthModalContext";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import ImageWithFallback from "@/components/imageWithFallback";
 import Spinner from "./Spinner";
+import MobileChatButton from "./MobileChatButton";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -45,6 +49,7 @@ export default function Header() {
   const searchTimeoutRef = useRef(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const inputRef = useRef(null);
+  const { isChatOpen, setIsChatOpen } = useChat();
 
   // Функція перевірки сесії
   const checkSession = useCallback(async () => {
@@ -279,7 +284,8 @@ export default function Header() {
 
   return (
     <>
-      <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[80%]">
+      <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[80%] md:block hidden">
+        {/* Desktop Header */}
         <div className="flex items-center justify-between h-9">
           {/* Left Side - Burger Menu and Logo */}
           <div className="flex items-center space-x-4" ref={menuRef}>
@@ -376,95 +382,6 @@ export default function Header() {
                       </div>
                     </div>
                   </div>
-                  {showSuggestions &&
-                    searchQuery.trim() &&
-                    isSearchExpanded && (
-                      <div className="absolute top-[calc(100%+4px)] left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-[55] max-h-96 overflow-y-auto backdrop-blur-sm bg-opacity-95">
-                        {isSearching ? (
-                          <div className="p-4 text-center text-[var(--foreground)]">
-                            <Spinner size="sm" className="mx-auto" />
-                          </div>
-                        ) : searchResults.length > 0 ? (
-                          <div className="py-2 divide-y divide-[var(--card-border)]">
-                            {searchResults.map((product) => (
-                              <button
-                                key={product.id}
-                                onClick={() => {
-                                  router.push(`/products/${product.id}`);
-                                  setShowSuggestions(false);
-                                  setSearchQuery("");
-                                }}
-                                className="w-full px-4 py-3 text-left hover:bg-[var(--hover-bg)] transition-colors flex items-center gap-3 group"
-                              >
-                                <div className="relative w-14 h-14 flex-shrink-0">
-                                  <ImageWithFallback
-                                    src={product.mainImage}
-                                    alt={product.name}
-                                    className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
-                                    width={56}
-                                    height={56}
-                                  />
-                                  {product.isDiscountActive &&
-                                    product.discountPrice && (
-                                      <div className="absolute -top-2 -right-2 bg-red-500 dark:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12 shadow-lg">
-                                        -
-                                        {Math.round(
-                                          (1 -
-                                            product.discountPrice /
-                                              product.price) *
-                                            100
-                                        )}
-                                        %
-                                      </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div
-                                    className="font-medium text-[var(--foreground)] truncate"
-                                    dangerouslySetInnerHTML={{
-                                      __html:
-                                        product.nameHighlight || product.name,
-                                    }}
-                                  />
-                                  <div className="text-sm text-[var(--foreground)]/70 truncate">
-                                    {product.brand}
-                                  </div>
-                                  {product.descriptionHighlight && (
-                                    <div
-                                      className="text-xs text-[var(--foreground)]/60 mt-1 line-clamp-2"
-                                      dangerouslySetInnerHTML={{
-                                        __html: product.descriptionHighlight,
-                                      }}
-                                    />
-                                  )}
-                                </div>
-                                <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                                  {product.isDiscountActive &&
-                                  product.discountPrice ? (
-                                    <>
-                                      <div className="text-red-500 dark:text-red-400 font-medium">
-                                        {product.discountPrice} ₴
-                                      </div>
-                                      <div className="text-xs text-[var(--foreground)]/50 line-through">
-                                        {product.price} ₴
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <div className="text-[var(--foreground)] font-medium">
-                                      {product.price} ₴
-                                    </div>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-4 text-center text-[var(--foreground)]">
-                            Нічого не знайдено
-                          </div>
-                        )}
-                      </div>
-                    )}
                 </div>
                 <button
                   type="button"
@@ -511,6 +428,9 @@ export default function Header() {
                 </span>
               )}
             </Link>
+
+            {/* Chat Button */}
+            <MobileChatButton />
 
             {/* User */}
             <div className="relative" ref={userMenuRef}>
@@ -569,7 +489,7 @@ export default function Header() {
             </div>
 
             {/* Theme Toggle */}
-            <div className="ml-4">
+            <div>
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
@@ -603,6 +523,317 @@ export default function Header() {
               ))}
             </div>
           </nav>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[var(--card-bg)] dark:bg-black border-t border-[var(--card-border)] md:hidden z-50">
+        <div className="flex items-center justify-around px-4 py-2">
+          {/* Home */}
+          <Link
+            href="/"
+            className={`flex flex-col items-center p-2 rounded-lg ${
+              pathname === "/"
+                ? "bg-black dark:bg-white text-white dark:text-black"
+                : "text-[var(--foreground)]"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            <span className="text-xs mt-1">Головна</span>
+          </Link>
+
+          {/* Catalog */}
+          <Link
+            href="/products"
+            className={`flex flex-col items-center p-2 rounded-lg ${
+              pathname === "/products"
+                ? "bg-black dark:bg-white text-white dark:text-black"
+                : "text-[var(--foreground)]"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+              />
+            </svg>
+            <span className="text-xs mt-1">Каталог</span>
+          </Link>
+
+          {/* Search */}
+          <button
+            onClick={() => {
+              setIsSearchExpanded(true);
+              inputRef.current?.focus();
+            }}
+            className="flex flex-col items-center p-2 rounded-lg text-[var(--foreground)]"
+          >
+            <FiSearch className="h-6 w-6" />
+            <span className="text-xs mt-1">Пошук</span>
+          </button>
+
+          {/* Chat */}
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="flex flex-col items-center p-2 rounded-lg text-[var(--foreground)]"
+          >
+            <FiMessageSquare className="h-6 w-6" />
+            <span className="text-xs mt-1">Чат</span>
+          </button>
+
+          {/* Cart */}
+          <Link
+            href="/cart"
+            className={`flex flex-col items-center p-2 rounded-lg relative ${
+              pathname === "/cart"
+                ? "bg-black dark:bg-white text-white dark:text-black"
+                : "text-[var(--foreground)]"
+            }`}
+          >
+            <FiShoppingCart className="h-6 w-6" />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[var(--accent)] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+            <span className="text-xs mt-1">Кошик</span>
+          </Link>
+
+          {/* Profile */}
+          <div className="relative">
+            <button
+              onClick={handleUserButtonClick}
+              className={`flex flex-col items-center p-2 rounded-lg ${
+                pathname === "/cabinet"
+                  ? "bg-black dark:bg-white text-white dark:text-black"
+                  : "text-[var(--foreground)]"
+              }`}
+            >
+              <FiUser className="h-6 w-6" />
+              <span className="text-xs mt-1">Профіль</span>
+            </button>
+
+            {/* Mobile Profile Menu */}
+            <div
+              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[var(--card-bg)] rounded-lg shadow-lg border border-[var(--card-border)] transition-all duration-200 ${
+                userMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
+              {user ? (
+                <div className="py-2">
+                  <div className="px-4 py-2 border-b border-[var(--card-border)]">
+                    <p className="font-medium">{user.name}</p>
+                  </div>
+                  <Link
+                    href="/cabinet"
+                    className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    Особистий кабінет
+                  </Link>
+                  {user.role.toLowerCase() === "admin" && (
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-[var(--foreground)]">
+                          Адмін панель
+                        </span>
+                        <FiShield className="w-4 h-4 text-[var(--foreground)]" />
+                      </span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
+                  >
+                    Вийти з аккаунту
+                  </button>
+                </div>
+              ) : (
+                <div className="py-2">
+                  <button
+                    onClick={() => {
+                      openAuthModal("login");
+                      setUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
+                  >
+                    Увійти
+                  </button>
+                  <button
+                    onClick={() => {
+                      openAuthModal("register");
+                      setUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
+                  >
+                    Зареєструватися
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Search Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-50 md:hidden transition-opacity duration-300 ${
+          isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="absolute bottom-0 left-0 right-0 bg-[var(--card-bg)] p-4 rounded-t-2xl">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center gap-2"
+          >
+            <div className="relative flex-1">
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Пошук товарів..."
+                className="w-full px-4 py-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)] focus:outline-none"
+              />
+              {inputSuggestion && (
+                <div
+                  className="absolute top-0 left-0 w-full h-full px-4 py-3 pointer-events-none"
+                  style={{
+                    color: "var(--foreground)",
+                    opacity: 0.5,
+                  }}
+                >
+                  {searchQuery}
+                  <span
+                    style={{
+                      color: "var(--foreground)",
+                      opacity: 0.4,
+                    }}
+                  >
+                    {inputSuggestion.slice(searchQuery.length)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleSearchCollapse}
+              className="p-2 text-[var(--foreground)]"
+            >
+              Скасувати
+            </button>
+          </form>
+          {showSuggestions && searchQuery.trim() && (
+            <div className="mt-4 max-h-[60vh] overflow-y-auto">
+              {isSearching ? (
+                <div className="p-4 text-center text-[var(--foreground)]">
+                  <Spinner size="sm" className="mx-auto" />
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div className="divide-y divide-[var(--card-border)]">
+                  {searchResults.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        router.push(`/products/${product.id}`);
+                        setShowSuggestions(false);
+                        setSearchQuery("");
+                        setIsSearchExpanded(false);
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-[var(--hover-bg)] transition-colors flex items-center gap-3 group"
+                    >
+                      <div className="relative w-14 h-14 flex-shrink-0">
+                        <ImageWithFallback
+                          src={product.mainImage}
+                          alt={product.name}
+                          className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
+                          width={56}
+                          height={56}
+                        />
+                        {product.isDiscountActive && product.discountPrice && (
+                          <div className="absolute -top-2 -right-2 bg-red-500 dark:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12 shadow-lg">
+                            -
+                            {Math.round(
+                              (1 - product.discountPrice / product.price) * 100
+                            )}
+                            %
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="font-medium text-[var(--foreground)] truncate"
+                          dangerouslySetInnerHTML={{
+                            __html: product.nameHighlight || product.name,
+                          }}
+                        />
+                        <div className="text-sm text-[var(--foreground)]/70 truncate">
+                          {product.brand}
+                        </div>
+                        {product.descriptionHighlight && (
+                          <div
+                            className="text-xs text-[var(--foreground)]/60 mt-1 line-clamp-2"
+                            dangerouslySetInnerHTML={{
+                              __html: product.descriptionHighlight,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                        {product.isDiscountActive && product.discountPrice ? (
+                          <>
+                            <div className="text-red-500 dark:text-red-400 font-medium">
+                              {product.discountPrice} ₴
+                            </div>
+                            <div className="text-xs text-[var(--foreground)]/50 line-through">
+                              {product.price} ₴
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-[var(--foreground)] font-medium">
+                            {product.price} ₴
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 text-center text-[var(--foreground)]">
+                  Нічого не знайдено
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

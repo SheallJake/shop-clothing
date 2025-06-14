@@ -33,7 +33,9 @@ export default function ReviewSection({ productId }) {
   if (isLoading) {
     return (
       <div className="text-center py-4">
-        <p className="text-gray-600">Завантаження відгуків...</p>
+        <p className="text-zinc-600 dark:text-zinc-400">
+          Завантаження відгуків...
+        </p>
       </div>
     );
   }
@@ -41,15 +43,17 @@ export default function ReviewSection({ productId }) {
   if (error) {
     return (
       <div className="text-center py-4">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600 dark:text-red-400">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Відгуки</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-zinc-900 dark:text-white">
+          Відгуки
+        </h2>
         <ReviewForm
           productId={productId}
           onReviewSubmitted={handleReviewSubmitted}
@@ -57,7 +61,7 @@ export default function ReviewSection({ productId }) {
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4 text-zinc-900 dark:text-white">
           Всі відгуки ({reviews.length})
         </h3>
         <ReviewList reviews={reviews} />

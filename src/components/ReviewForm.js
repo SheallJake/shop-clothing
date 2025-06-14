@@ -61,9 +61,12 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
   if (!session) {
     return (
       <div className="text-center py-4">
-        <p className="text-gray-600">
+        <p className="text-zinc-600 dark:text-zinc-400">
           Будь ласка,{" "}
-          <a href="/login" className="text-blue-600 hover:underline">
+          <a
+            href="/login"
+            className="text-blue-600 dark:text-blue-400 hover:underline"
+          >
             увійдіть
           </a>{" "}
           щоб залишити відгук
@@ -75,7 +78,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
           Оцінка
         </label>
         <div className="flex gap-1">
@@ -84,13 +87,13 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
               key={star}
               type="button"
               onClick={() => setRating(star)}
-              className="focus:outline-none"
+              className="focus:outline-none p-1"
             >
               <Star
                 className={`w-6 h-6 ${
                   star <= rating
                     ? "fill-yellow-400 text-yellow-400"
-                    : "text-gray-300"
+                    : "text-zinc-300 dark:text-zinc-600"
                 }`}
               />
             </button>
@@ -101,7 +104,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
       <div>
         <label
           htmlFor="comment"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-zinc-900 dark:text-white mb-2"
         >
           Коментар
         </label>
@@ -110,20 +113,22 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={4}
-          className="text-black w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded-md shadow-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="Напишіть ваш відгук..."
         />
       </div>
 
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && (
+        <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
+      )}
 
       <button
         type="submit"
         disabled={isSubmitting || rating === 0}
         className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
           isSubmitting || rating === 0
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            ? "bg-zinc-400 dark:bg-zinc-600 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         }`}
       >
         {isSubmitting ? "Відправляємо..." : "Відправити відгук"}

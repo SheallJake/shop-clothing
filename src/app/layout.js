@@ -28,18 +28,18 @@ export default function RootLayout({ children }) {
             <CartProvider>
               <WishlistProvider>
                 <AuthModalProvider>
-                  <ClientLayout>
-                    <div className="flex flex-col min-h-[calc(100vh-64px)]">
-                      <Header />
-                      <ChatProvider>
+                  <ChatProvider>
+                    <ClientLayout>
+                      <div className="flex flex-col min-h-[calc(100vh-64px)]">
+                        <Header />
                         <main className="flex-1 py-6 relative max-w-[80%] mx-auto px-4 w-full mt-24">
                           {children}
                         </main>
                         <ChatWidget />
-                      </ChatProvider>
-                      <Footer />
-                    </div>
-                  </ClientLayout>
+                        <Footer />
+                      </div>
+                    </ClientLayout>
+                  </ChatProvider>
                 </AuthModalProvider>
               </WishlistProvider>
             </CartProvider>

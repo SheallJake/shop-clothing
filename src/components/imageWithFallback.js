@@ -1,7 +1,6 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useLoading } from "./LoadingManager";
 
 export default function ImageWithFallback({
   src,
@@ -15,8 +14,6 @@ export default function ImageWithFallback({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const { addLoadingImage, removeLoadingImage } = useLoading();
-  const hasAddedToLoading = useRef(false);
 
   // Validate src prop
   const imageSrc = (() => {
@@ -39,40 +36,13 @@ export default function ImageWithFallback({
     }
   })();
 
-  useEffect(() => {
-    if (
-      imageSrc &&
-      imageSrc !== "/placeholder.svg" &&
-      !hasAddedToLoading.current
-    ) {
-      hasAddedToLoading.current = true;
-      addLoadingImage(imageSrc);
-    }
-
-    // Cleanup function to ensure loading state is removed on unmount
-    return () => {
-      if (hasAddedToLoading.current) {
-        removeLoadingImage(imageSrc);
-        hasAddedToLoading.current = false;
-      }
-    };
-  }, [imageSrc, addLoadingImage, removeLoadingImage]);
-
   const handleLoad = () => {
     setLoaded(true);
-    if (hasAddedToLoading.current) {
-      removeLoadingImage(imageSrc);
-      hasAddedToLoading.current = false;
-    }
   };
 
   const handleError = () => {
     setError(true);
     setLoaded(true);
-    if (hasAddedToLoading.current) {
-      removeLoadingImage(imageSrc);
-      hasAddedToLoading.current = false;
-    }
   };
 
   const imgProps = { ...props };

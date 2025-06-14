@@ -208,10 +208,10 @@ export default function ProductPageClient({ id }) {
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="flex flex-col md:flex-row gap-8">
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           {/* Product Image Section */}
-          <div className="w-[490px] flex-shrink-0 bg-white dark:bg-zinc-800 rounded-lg p-4 shadow-sm">
+          <div className="w-full lg:w-[490px] flex-shrink-0 bg-white dark:bg-zinc-800 rounded-lg p-2 sm:p-4 shadow-sm">
             <div className="relative">
               {/* Main Image */}
               <div
@@ -286,7 +286,7 @@ export default function ProductPageClient({ id }) {
             {product.galleryImages && product.galleryImages.length > 0 && (
               <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
                 <button
-                  className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-colors ${
+                  className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded border-2 transition-colors ${
                     !selectedImage
                       ? "border-zinc-900 dark:border-white"
                       : "border-transparent"
@@ -302,7 +302,7 @@ export default function ProductPageClient({ id }) {
                 {product.galleryImages.map((image, index) => (
                   <button
                     key={index}
-                    className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-colors ${
+                    className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded border-2 transition-colors ${
                       selectedImage === image
                         ? "border-zinc-900 dark:border-white"
                         : "border-transparent"
@@ -321,11 +321,11 @@ export default function ProductPageClient({ id }) {
           </div>
 
           {/* Product Details Section */}
-          <div className="inline-flex flex-col items-start gap-4 relative w-full max-w-[490px]">
+          <div className="flex-1 space-y-4">
             {/* Product Header */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
+            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
               <div className="flex w-full items-start justify-between">
-                <div className="relative w-fit mt-[-1.00px] font-normal text-zinc-900 dark:text-white text-4xl tracking-normal leading-normal">
+                <div className="relative w-fit mt-[-1.00px] font-normal text-zinc-900 dark:text-white text-2xl sm:text-4xl tracking-normal leading-normal">
                   {product.name}
                 </div>
                 <AddToWishlistButton product={product} />
@@ -338,36 +338,32 @@ export default function ProductPageClient({ id }) {
                 <span className="font-light">{product.article || "N/A"}</span>
               </p>
 
-              <div className="relative w-fit font-semibold text-green-600 dark:text-green-500 text-2xl tracking-normal leading-5 mt-2">
+              <div className="relative w-fit font-semibold text-green-600 dark:text-green-500 text-xl sm:text-2xl tracking-normal leading-5 mt-2">
                 {product.price} UAH
               </div>
             </div>
 
             {/* Color Selection Section */}
             {product.color && product.color.length > 0 && (
-              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
+              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
                 <div className="flex flex-col w-full items-start gap-3">
-                  <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
-                    КОЛІР
+                  <div className="flex justify-between items-center w-full">
+                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
+                      КОЛІР
+                    </div>
                   </div>
-                  <div className="inline-flex items-start gap-[21px] px-[5px] py-[11px] relative">
+                  <div className="flex flex-wrap gap-2">
                     {product.color.map((color) => (
                       <button
                         key={color}
                         onClick={() => setSelectedColor(color)}
-                        className={`w-[27px] h-[27px] rounded-[13.5px] border border-solid border-zinc-200 dark:border-zinc-700 transition-all ${
+                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
                           selectedColor === color
-                            ? "ring-2 ring-zinc-900 dark:ring-white ring-offset-2"
-                            : ""
+                            ? "border-zinc-900 dark:border-white"
+                            : "border-transparent"
                         }`}
                         style={{
-                          backgroundColor:
-                            colorMapping[color.toLowerCase()] ||
-                            color.toLowerCase(),
-                          boxShadow:
-                            selectedColor === color
-                              ? "0 0 0 2px rgba(255,255,255,0.5)"
-                              : "none",
+                          backgroundColor: colorMapping[color] || color,
                         }}
                         title={color}
                       />
@@ -379,7 +375,7 @@ export default function ProductPageClient({ id }) {
 
             {/* Size Selection Section */}
             {product.size && (
-              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
+              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
                 <div className="flex flex-col w-full items-start gap-3">
                   <div className="flex justify-between items-center w-full">
                     <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
@@ -389,7 +385,7 @@ export default function ProductPageClient({ id }) {
                       Допомога з розміром
                     </button>
                   </div>
-                  <div className="flex gap-[5px]">
+                  <div className="flex flex-wrap gap-[5px]">
                     {(Array.isArray(product.size)
                       ? product.size
                       : [product.size]
@@ -407,7 +403,7 @@ export default function ProductPageClient({ id }) {
             )}
 
             {/* Product Actions */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
+            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
               <div className="flex flex-col gap-4">
                 <AddToCartButton product={product} />
                 <button
@@ -421,7 +417,7 @@ export default function ProductPageClient({ id }) {
             </div>
 
             {/* Additional Information Sections */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
+            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
               {/* Description */}
               {product.description && (
                 <div className="w-full py-4 border-b border-zinc-200 dark:border-zinc-700">
@@ -476,12 +472,9 @@ export default function ProductPageClient({ id }) {
                   onClick={() => toggleSection("delivery")}
                   className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                 >
-                  <div className="flex items-center gap-2">
-                    <Truck className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
-                    <span className="text-sm text-zinc-900 dark:text-white">
-                      Доставка
-                    </span>
-                  </div>
+                  <span className="text-sm text-zinc-900 dark:text-white">
+                    Доставка
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
                       expandedSections.delivery ? "rotate-180" : ""
@@ -490,23 +483,31 @@ export default function ProductPageClient({ id }) {
                 </button>
                 {expandedSections.delivery && (
                   <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    Безкоштовна доставка для замовлень від 1000 грн
+                    <div className="flex items-start gap-2 mb-4">
+                      <Truck className="w-5 h-5 text-zinc-900 dark:text-white flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-zinc-900 dark:text-white mb-1">
+                          Доставка по Україні
+                        </h4>
+                        <p>
+                          Доставка здійснюється через Нову Пошту та Укрпошту.
+                          Термін доставки 1-3 дні.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Payment */}
-              <div className="w-full py-4 border-b border-zinc-200 dark:border-zinc-700">
+              <div className="w-full py-4">
                 <button
                   onClick={() => toggleSection("payment")}
                   className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                 >
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
-                    <span className="text-sm text-zinc-900 dark:text-white">
-                      Оплата
-                    </span>
-                  </div>
+                  <span className="text-sm text-zinc-900 dark:text-white">
+                    Оплата
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
                       expandedSections.payment ? "rotate-180" : ""
@@ -515,7 +516,18 @@ export default function ProductPageClient({ id }) {
                 </button>
                 {expandedSections.payment && (
                   <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    Приймаємо банківські картки та PayPal
+                    <div className="flex items-start gap-2">
+                      <CreditCard className="w-5 h-5 text-zinc-900 dark:text-white flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-zinc-900 dark:text-white mb-1">
+                          Способи оплати
+                        </h4>
+                        <p>
+                          Оплата при отриманні, банківською картою онлайн або
+                          через термінал.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -527,7 +539,7 @@ export default function ProductPageClient({ id }) {
                   className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                 >
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-6 h-6 text-zinc-500 dark:text-zinc-300" />
+                    <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white" />
                     <span className="text-sm text-zinc-900 dark:text-white">
                       Відгуки
                     </span>
@@ -548,9 +560,9 @@ export default function ProductPageClient({ id }) {
           </div>
         </div>
 
-        {/* You May Also Like Section */}
-        <div className="mt-24 bg-white dark:bg-zinc-800 rounded-lg p-6 shadow-sm">
-          <h2 className="text-3xl font-normal mb-12 text-center text-zinc-900 dark:text-white">
+        {/* Related Products Section */}
+        <div className="mt-12 sm:mt-24 bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
+          <h2 className="text-2xl sm:text-3xl font-normal mb-8 sm:mb-12 text-center text-zinc-900 dark:text-white">
             Вам також може сподобатися
           </h2>
           {loadingRelated ? (
@@ -576,7 +588,7 @@ export default function ProductPageClient({ id }) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
               {relatedProducts.map((relatedProduct) => (
                 <div
                   key={relatedProduct.id}
