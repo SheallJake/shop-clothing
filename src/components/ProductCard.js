@@ -100,7 +100,7 @@ export default function ProductCard({ product }) {
   });
 
   const productImage = (() => {
-    if (!product.mainImage) return "/placeholder.svg";
+    if (!product.mainImage) return null;
     try {
       const url = String(product.mainImage);
       // Check if it's a valid URL or a relative path
@@ -111,10 +111,10 @@ export default function ProductCard({ product }) {
       ) {
         return url;
       }
-      return "/placeholder.svg";
+      return null;
     } catch (error) {
       console.error("Invalid image URL:", product.mainImage);
-      return "/placeholder.svg";
+      return null;
     }
   })();
   const productDescription = String(product.description || "");

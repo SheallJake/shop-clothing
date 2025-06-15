@@ -14,11 +14,11 @@ export default function ImageWithFallback({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState("");
+  const [currentSrc, setCurrentSrc] = useState("/placeholder.svg");
 
   // Validate src prop
   useEffect(() => {
-    if (!src || src.trim() === "") {
+    if (!src) {
       setCurrentSrc("/placeholder.svg");
       return;
     }
