@@ -3,10 +3,12 @@ import { useState, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function PromoGamePage() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { openAuthModal } = useAuthModal();
   const [loading, setLoading] = useState(false);
   const [promo, setPromo] = useState(null);
   const [discount, setDiscount] = useState(null);
@@ -130,6 +132,7 @@ export default function PromoGamePage() {
       if (res.status === 401) {
         setError("Будь ласка, увійдіть в систему, щоб грати");
         setAttemptsLeft(0);
+        openAuthModal("login");
         return;
       }
 
@@ -177,7 +180,7 @@ export default function PromoGamePage() {
             {error}
             {error.includes("увійдіть в систему") && (
               <button
-                onClick={() => router.push("/login")}
+                onClick={() => openAuthModal("login")}
                 className="block w-full mt-2 px-4 py-2 bg-[var(--card-bg)] text-[var(--foreground)] rounded-lg hover:bg-[var(--hover-bg)] transition border border-[var(--card-border)]"
               >
                 Увійти

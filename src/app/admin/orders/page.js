@@ -170,13 +170,14 @@ export default function OrdersManagement() {
   };
 
   if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
+    toast.error(error);
+    return null;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">
           Управління замовленнями
         </h1>
       </div>

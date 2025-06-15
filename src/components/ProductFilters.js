@@ -25,7 +25,32 @@ export default function ProductFilters({
 
   // Get unique values for filters
   const uniqueColors = [...new Set(products.flatMap((p) => p.color))];
-  const uniqueSizes = [...new Set(products.map((p) => p.size).filter(Boolean))];
+  const uniqueSizes = [
+    ...new Set(
+      products.flatMap((p) => {
+        // Split sizes by comma and trim whitespace
+        return p.size ? p.size.split(",").map((s) => s.trim()) : [];
+      })
+    ),
+  ].sort((a, b) => {
+    // Custom sorting for sizes
+    const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+
+    // Check if both sizes are numeric
+    const aNum = parseInt(a);
+    const bNum = parseInt(b);
+
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      return aNum - bNum;
+    }
+
+    // If one is numeric and other is letter
+    if (!isNaN(aNum)) return -1;
+    if (!isNaN(bNum)) return 1;
+
+    // If both are letters, use the predefined order
+    return sizeOrder.indexOf(a) - sizeOrder.indexOf(b);
+  });
   const uniqueBrands = [
     ...new Set(products.map((p) => p.brand).filter(Boolean)),
   ];

@@ -122,7 +122,45 @@ export async function PATCH(request) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "Promo code ID is required" },
+        { error: "ID промокоду обов'язковий" },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields
+    if (
+      !data.code ||
+      !data.discountPercent ||
+      !data.expirationDate ||
+      !data.usageLimit
+    ) {
+      return NextResponse.json(
+        { error: "Всі поля обов'язкові для заповнення" },
+        { status: 400 }
+      );
+    }
+
+    // Validate discount percent
+    if (data.discountPercent < 0 || data.discountPercent > 100) {
+      return NextResponse.json(
+        { error: "Знижка повинна бути від 0 до 100%" },
+        { status: 400 }
+      );
+    }
+
+    // Validate usage limit
+    if (data.usageLimit < 1) {
+      return NextResponse.json(
+        { error: "Ліміт використань повинен бути більше 0" },
+        { status: 400 }
+      );
+    }
+
+    // Validate expiration date
+    const expirationDate = new Date(data.expirationDate);
+    if (isNaN(expirationDate.getTime())) {
+      return NextResponse.json(
+        { error: "Невірний формат дати" },
         { status: 400 }
       );
     }
@@ -130,11 +168,19 @@ export async function PATCH(request) {
     // Check if promo code exists
     const existing = await prisma.promoCode.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        _count: {
+          select: {
+            orders: true,
+            gameAttempts: true,
+          },
+        },
+      },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Promo code not found" },
+        { error: "Промокод не знайдено" },
         { status: 404 }
       );
     }
@@ -147,10 +193,22 @@ export async function PATCH(request) {
 
       if (codeExists) {
         return NextResponse.json(
-          { error: "Promo code already exists" },
+          { error: "Промокод з таким кодом вже існує" },
           { status: 400 }
         );
       }
+    }
+
+    // Check if trying to reduce usage limit below current usage
+    const currentUsage = existing._count.orders + existing._count.gameAttempts;
+    if (data.usageLimit < currentUsage) {
+      return NextResponse.json(
+        {
+          error:
+            "Новий ліміт використань не може бути меншим за поточну кількість використань",
+        },
+        { status: 400 }
+      );
     }
 
     const promoCode = await prisma.promoCode.update({
@@ -158,7 +216,7 @@ export async function PATCH(request) {
       data: {
         code: data.code,
         discountPercent: data.discountPercent,
-        expirationDate: new Date(data.expirationDate),
+        expirationDate: expirationDate,
         usageLimit: data.usageLimit,
         isActive: data.isActive,
       },
@@ -168,7 +226,7 @@ export async function PATCH(request) {
   } catch (error) {
     console.error("Error updating promo code:", error);
     return NextResponse.json(
-      { error: "Failed to update promo code" },
+      { error: "Помилка при оновленні промокоду" },
       { status: 500 }
     );
   }
@@ -177,8 +235,14 @@ export async function PATCH(request) {
 // DELETE /api/admin/promocodes?id={id}
 export async function DELETE(request) {
   try {
-    const { isAuthenticated } = await verifyAdmin();
-    if (!isAuthenticated) {
+    const token = request.cookies.get("token");
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const decoded = await verifyJwtEdge(token.value);
+    if (!decoded || decoded.role.toLowerCase() !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -192,15 +256,62 @@ export async function DELETE(request) {
       );
     }
 
+    const promoId = parseInt(id);
+    if (isNaN(promoId)) {
+      return NextResponse.json(
+        { error: "Invalid promo code ID" },
+        { status: 400 }
+      );
+    }
+
+    // Check if promo code exists
+    const existingPromo = await prisma.promoCode.findUnique({
+      where: { id: promoId },
+      include: {
+        _count: {
+          select: {
+            orders: true,
+            gameAttempts: true,
+          },
+        },
+      },
+    });
+
+    if (!existingPromo) {
+      return NextResponse.json(
+        { error: "Промокод не знайдено" },
+        { status: 404 }
+      );
+    }
+
+    // Check if promo code is used in any orders
+    if (existingPromo._count.orders > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Неможливо видалити промокод, який використовувався в замовленнях",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if promo code is used in any game attempts
+    if (existingPromo._count.gameAttempts > 0) {
+      return NextResponse.json(
+        { error: "Неможливо видалити промокод, який використовувався в іграх" },
+        { status: 400 }
+      );
+    }
+
     await prisma.promoCode.delete({
-      where: { id: parseInt(id) },
+      where: { id: promoId },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting promo code:", error);
     return NextResponse.json(
-      { error: "Failed to delete promo code" },
+      { error: "Помилка при видаленні промокоду" },
       { status: 500 }
     );
   }

@@ -216,6 +216,17 @@ export default function PromoCodesManagement() {
 
   const handleSubmit = async (formData) => {
     try {
+      // Validate data
+      if (formData.discountPercent < 0 || formData.discountPercent > 100) {
+        throw new Error("Знижка повинна бути від 0 до 100%");
+      }
+      if (formData.usageLimit < 1) {
+        throw new Error("Ліміт використань повинен бути більше 0");
+      }
+      if (new Date(formData.expirationDate) < new Date()) {
+        throw new Error("Дата закінчення не може бути в минулому");
+      }
+
       const method = editingPromoCode ? "PATCH" : "POST";
       const url =
         "/api/admin/promocodes" +
@@ -229,13 +240,18 @@ export default function PromoCodesManagement() {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Не вдалося зберегти промокод");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Не вдалося зберегти промокод");
+      }
 
       fetchPromoCodes();
       setShowForm(false);
       setEditingPromoCode(null);
       toast.success("Промокод збережено");
     } catch (err) {
+      console.error("Error saving promo code:", err);
       setError(err.message);
       toast.error(err.message || "Помилка при збереженні промокоду");
     }
@@ -249,12 +265,16 @@ export default function PromoCodesManagement() {
         method: "DELETE",
       });
 
-      if (!response.ok) throw new Error("Не вдалося видалити промокод");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Не вдалося видалити промокод");
+      }
 
       fetchPromoCodes();
       toast.success("Промокод видалено");
     } catch (err) {
-      setError(err.message);
+      console.error("Error deleting promo code:", err);
       toast.error(err.message || "Помилка при видаленні промокоду");
     }
   };
@@ -264,14 +284,15 @@ export default function PromoCodesManagement() {
   );
 
   if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
+    toast.error(error);
+    return null;
   }
 
   return (
     <PageTransition>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">
             Управління промокодами
           </h1>
           <button
@@ -279,10 +300,10 @@ export default function PromoCodesManagement() {
               setEditingPromoCode(null);
               setShowForm(true);
             }}
-            className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--background)] px-4 py-2 rounded-lg flex items-center gap-2"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)] transition-colors"
           >
             <Plus className="w-5 h-5" />
-            <span>Додати промокод</span>
+            Додати промокод
           </button>
         </div>
 

@@ -504,17 +504,14 @@ export default function CategoriesManagement() {
   };
 
   if (error) {
-    return (
-      <div className="text-[var(--foreground)] text-center py-4">
-        Error: {error}
-      </div>
-    );
+    toast.error(error);
+    return null;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">
           Управління категоріями
         </h1>
         <button
@@ -522,10 +519,10 @@ export default function CategoriesManagement() {
             setSelectedCategory(null);
             setShowForm(true);
           }}
-          className="flex items-center space-x-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent-hover)]"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)] transition-colors"
         >
           <Plus className="w-5 h-5" />
-          <span>Додати категорію</span>
+          Додати категорію
         </button>
       </div>
 

@@ -204,9 +204,29 @@ export async function DELETE(req) {
       );
     }
 
-    await prisma.product.delete({
-      where: { id },
-    });
+    // Delete all related records first
+    await prisma.$transaction([
+      // Delete cart items
+      prisma.cart.deleteMany({
+        where: { productId: parseInt(id) },
+      }),
+      // Delete wishlist items
+      prisma.wishlist.deleteMany({
+        where: { productId: parseInt(id) },
+      }),
+      // Delete order items
+      prisma.orderItem.deleteMany({
+        where: { productId: parseInt(id) },
+      }),
+      // Delete reviews
+      prisma.review.deleteMany({
+        where: { productId: parseInt(id) },
+      }),
+      // Finally delete the product
+      prisma.product.delete({
+        where: { id: parseInt(id) },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

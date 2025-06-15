@@ -73,6 +73,7 @@ export function LoadingProvider({ children }) {
 
   const contextValue = {
     isLoading,
+    setIsLoading,
     error,
   };
 

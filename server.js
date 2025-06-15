@@ -8,12 +8,6 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// Track compilation status
-let compilationStatus = {
-  mainPage: false,
-  apiSession: false,
-};
-
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     handle(req, res);
@@ -24,6 +18,10 @@ app.prepare().then(() => {
       origin: "*",
       methods: ["GET", "POST"],
     },
+    path: "/socket.io",
+    transports: ["websocket"],
+    pingTimeout: 10000,
+    pingInterval: 5000,
   });
 
   setupSocket(io);

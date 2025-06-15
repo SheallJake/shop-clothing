@@ -129,6 +129,15 @@ export async function DELETE(request) {
       return NextResponse.json({ error: "Invalid review ID" }, { status: 400 });
     }
 
+    // Check if review exists
+    const existingReview = await prisma.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    if (!existingReview) {
+      return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    }
+
     await prisma.review.delete({
       where: { id: reviewId },
     });

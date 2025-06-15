@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   Children,
   cloneElement,
@@ -16,6 +18,7 @@ export const Card = forwardRef(({ customClass, ...rest }, ref) => (
     className={`absolute top-1/2 left-1/2 rounded-xl border border-white bg-black [transform-style:preserve-3d] [will-change:transform] [backface-visibility:hidden] animate-glow ${customClass ?? ""} ${rest.className ?? ""}`.trim()}
   />
 ));
+
 Card.displayName = "Card";
 
 const makeSlot = (i, distX, distY, total) => ({

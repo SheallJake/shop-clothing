@@ -1,21 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import { useEffect, useState, useRef } from "react";
+import ImageWithFallback from "@/components/imageWithFallback";
 import PageTransition from "@/components/PageTransition";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import AuthModal from "@/components/AuthModal";
 import Spinner from "@/components/Spinner";
+import { useAuthModal } from "@/context/AuthModalContext";
+import { toast } from "react-hot-toast";
 
 export default function CartPage() {
   const router = useRouter();
   const { cart, removeFromCart, updateQuantity } = useCart();
+  const { openAuthModal, showAuthModal, closeAuthModal } = useAuthModal();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [promoCode, setPromoCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
   const [promoError, setPromoError] = useState("");
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const isNavigatingToOrder = useRef(false);
 
   useEffect(() => {
     checkAuth();
@@ -28,6 +31,14 @@ export default function CartPage() {
     if (savedDiscount) {
       setDiscountPercent(Number(savedDiscount));
     }
+
+    // Cleanup function to clear promo code when leaving the page
+    return () => {
+      if (!isNavigatingToOrder.current) {
+        localStorage.removeItem("promoCode");
+        localStorage.removeItem("discountPercent");
+      }
+    };
   }, []);
 
   const checkAuth = async () => {
@@ -42,14 +53,9 @@ export default function CartPage() {
     }
   };
 
-  const handleQuantityChange = (
-    itemId,
-    selectedSize,
-    selectedColor,
-    newQuantity
-  ) => {
+  const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
-    updateQuantity(itemId, selectedSize, selectedColor, newQuantity);
+    updateQuantity(itemId, newQuantity, true);
   };
 
   // Форматування ціни
@@ -98,11 +104,20 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = () => {
-    if (!isAuthenticated) {
-      setShowAuthModal(true);
-    } else {
-      router.push("/order");
+  const handleCheckout = async () => {
+    try {
+      const res = await fetch("/api/session");
+      const data = await res.json();
+      if (!data.user) {
+        sessionStorage.setItem("intendedDestination", "/order");
+        openAuthModal("login");
+      } else {
+        isNavigatingToOrder.current = true;
+        router.push("/order");
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+      toast.error("Помилка при перевірці авторизації");
     }
   };
 
@@ -133,10 +148,7 @@ export default function CartPage() {
           <>
             <div className="flex flex-col gap-4">
               {cart.map((item) => (
-                <div
-                  key={`${item.id}-${item.selectedSize}-${item.selectedColor}`}
-                  className="card card-hover p-3 sm:p-4"
-                >
+                <div key={item.id} className="card card-hover p-3 sm:p-4">
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <ImageWithFallback
                       src={item.image}
@@ -151,67 +163,45 @@ export default function CartPage() {
                       <p className="text-sm text-[var(--muted)]">
                         {item.category || "Без категорії"}
                       </p>
-                      {item.selectedSize && (
-                        <p className="text-sm text-[var(--muted)]">
-                          Розмір: {item.selectedSize}
-                        </p>
-                      )}
-                      {item.selectedColor && (
-                        <p className="text-sm text-[var(--muted)]">
-                          Колір: {item.selectedColor}
-                        </p>
-                      )}
                       <p className="mt-1 text-sm sm:text-base">
                         {formatPrice(item.price)} грн ×{" "}
                         {formatPrice(item.quantity)} шт.
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item.id,
-                              item.selectedSize,
-                              item.selectedColor,
-                              Number(item.quantity) - 1
-                            )
-                          }
-                          className="btn w-8 h-8 flex items-center justify-center text-sm"
-                        >
-                          -
-                        </button>
-                        <span className="text-sm sm:text-base">
-                          {formatPrice(item.quantity)}
-                        </span>
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item.id,
-                              item.selectedSize,
-                              item.selectedColor,
-                              Number(item.quantity) + 1
-                            )
-                          }
-                          className="btn w-8 h-8 flex items-center justify-center text-sm"
-                        >
-                          +
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
-                          removeFromCart(
+                          handleQuantityChange(
                             item.id,
-                            item.selectedSize,
-                            item.selectedColor
+                            Number(item.quantity) - 1
                           )
                         }
-                        className="text-red-500 hover:text-red-700 text-sm sm:text-base"
+                        className="btn w-8 h-8 flex items-center justify-center text-sm"
                       >
-                        Видалити
+                        -
+                      </button>
+                      <span className="text-sm sm:text-base">
+                        {formatPrice(item.quantity)}
+                      </span>
+                      <button
+                        onClick={() =>
+                          handleQuantityChange(
+                            item.id,
+                            Number(item.quantity) + 1
+                          )
+                        }
+                        className="btn w-8 h-8 flex items-center justify-center text-sm"
+                      >
+                        +
                       </button>
                     </div>
+                    <button
+                      onClick={() => removeFromCart(item.id, true)}
+                      className="text-red-500 hover:text-red-700 text-sm sm:text-base"
+                    >
+                      Видалити
+                    </button>
                   </div>
                 </div>
               ))}
@@ -263,7 +253,7 @@ export default function CartPage() {
       </div>
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={closeAuthModal}
         theme="light"
         initialMode="login"
       />

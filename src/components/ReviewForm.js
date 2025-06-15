@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function ReviewForm({ productId, onReviewSubmitted }) {
   const [session, setSession] = useState(null);
@@ -7,6 +8,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -63,12 +65,12 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
       <div className="text-center py-4">
         <p className="text-zinc-600 dark:text-zinc-400">
           Будь ласка,{" "}
-          <a
-            href="/login"
+          <button
+            onClick={() => openAuthModal("login")}
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
             увійдіть
-          </a>{" "}
+          </button>{" "}
           щоб залишити відгук
         </p>
       </div>

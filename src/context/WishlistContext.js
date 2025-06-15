@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 const WishlistContext = createContext();
 
@@ -11,6 +12,7 @@ export function WishlistProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
+  const { openAuthModal } = useAuthModal();
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -53,9 +55,9 @@ export function WishlistProvider({ children }) {
             setWishlist(serverWishlist);
             localStorage.setItem("wishlist", JSON.stringify(serverWishlist));
           } else if (serverResponse.status === 401) {
-            console.log("Session expired, redirecting to login...");
+            console.log("Session expired, showing auth modal...");
             toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
-            router.push("/login");
+            openAuthModal("login");
           }
         }
       } catch (error) {
@@ -66,7 +68,7 @@ export function WishlistProvider({ children }) {
     if (isInitialized) {
       syncWithServer();
     }
-  }, [router, isInitialized]);
+  }, [router, isInitialized, openAuthModal]);
 
   // Save to localStorage when wishlist changes
   useEffect(() => {
@@ -112,7 +114,7 @@ export function WishlistProvider({ children }) {
         if (!serverResponse.ok) {
           if (serverResponse.status === 401) {
             toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
-            router.push("/login");
+            openAuthModal("login");
             return;
           }
           throw new Error(
@@ -164,7 +166,7 @@ export function WishlistProvider({ children }) {
         if (!serverResponse.ok) {
           if (serverResponse.status === 401) {
             toast.error("Ваша сесія закінчилася. Будь ласка, увійдіть знову.");
-            router.push("/login");
+            openAuthModal("login");
             return;
           }
           // Revert local state on error

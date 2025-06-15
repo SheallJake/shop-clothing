@@ -47,7 +47,6 @@ export default function AuthModal({
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [wasManuallyClosed, setWasManuallyClosed] = useState(true);
   const router = useRouter();
 
   // Reset form when mode changes
@@ -148,6 +147,29 @@ export default function AuthModal({
     setErrors((prev) => ({ ...prev, [field]: "" }));
   }, []);
 
+  // Handle successful authentication
+  const handleSuccessfulAuth = useCallback(
+    (successType) => {
+      // Store success message
+      sessionStorage.setItem(`${successType}Success`, "true");
+      const intendedDestination = sessionStorage.getItem("intendedDestination");
+      onClose();
+
+      if (intendedDestination) {
+        // Store cart items in sessionStorage before redirect
+        const cartItems = localStorage.getItem("cart");
+        if (cartItems) {
+          sessionStorage.setItem("cart", cartItems);
+        }
+        sessionStorage.removeItem("intendedDestination");
+        window.location.href = intendedDestination;
+      } else {
+        window.location.reload();
+      }
+    },
+    [onClose]
+  );
+
   // Handle form submission
   const handleSubmit = useCallback(
     async (e) => {
@@ -181,11 +203,7 @@ export default function AuthModal({
             return;
           }
 
-          // Store success message in sessionStorage to show after reload
-          sessionStorage.setItem("loginSuccess", "true");
-          onClose();
-          setWasManuallyClosed(false);
-          window.location.reload();
+          handleSuccessfulAuth("login");
         } else {
           const registerResponse = await fetch("/api/register", {
             method: "POST",
@@ -222,20 +240,16 @@ export default function AuthModal({
             throw new Error("Помилка автоматичного входу");
           }
 
-          // Store success message in sessionStorage to show after reload
-          sessionStorage.setItem("registrationSuccess", "true");
-          onClose();
-          setWasManuallyClosed(false);
-          window.location.reload();
+          handleSuccessfulAuth("registration");
         }
-      } catch (err) {
-        toast.error(err.message || ERROR_MESSAGES.SERVER_ERROR);
-        console.error(err);
+      } catch (error) {
+        toast.error(error.message || ERROR_MESSAGES.SERVER_ERROR);
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
     },
-    [modalState.mode, formData, onClose]
+    [modalState.mode, formData, validateForm, handleSuccessfulAuth]
   );
 
   // Add useEffect to show success message after reload

@@ -65,8 +65,9 @@ export async function POST(request) {
       },
       include: {
         user: true,
-        orderItems: true,
         payment: true,
+        promoCode: true,
+        orderItems: true,
       },
     });
 
@@ -137,9 +138,28 @@ export async function POST(request) {
           userId: order.user.id,
           deletedItemsCount: deletedItems.count,
         });
+
+        // Update promo code usage count if promo code was used
+        if (order.promoCode) {
+          await prisma.promoCode.update({
+            where: { id: order.promoCode.id },
+            data: {
+              usedCount: {
+                increment: 1,
+              },
+            },
+          });
+          console.log("[Monobank Webhook] Updated promo code usage count", {
+            promoCodeId: order.promoCode.id,
+            promoCode: order.promoCode.code,
+          });
+        }
       } catch (error) {
-        console.error("[Monobank Webhook] Error clearing cart:", error);
-        // Не прерываем выполнение, если не удалось очистить корзину
+        console.error(
+          "[Monobank Webhook] Error processing post-payment tasks:",
+          error
+        );
+        // Не прерываем выполнение, если не удалось выполнить пост-оплатные задачи
       }
     }
 

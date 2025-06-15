@@ -54,6 +54,7 @@ export async function POST(request) {
     return NextResponse.json({
       valid: true,
       discountPercent: promoCode.discountPercent,
+      promoCodeId: promoCode.id,
     });
   } catch (error) {
     console.error("[Promo Code Validation Error]:", error);

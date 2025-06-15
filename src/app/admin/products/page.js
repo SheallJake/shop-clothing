@@ -776,15 +776,14 @@ export default function ProductsManagement() {
   };
 
   if (error) {
-    return (
-      <div className="text-red-500 text-center py-4">Помилка: {error}</div>
-    );
+    toast.error(error);
+    return null;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
+        <h1 className="text-3xl font-bold text-[var(--foreground)]">
           Управління товарами
         </h1>
         <button
@@ -792,10 +791,10 @@ export default function ProductsManagement() {
             setEditingProduct(null);
             setShowForm(true);
           }}
-          className="bg-gradient-to-r from-zinc-700 to-zinc-800 hover:from-zinc-600 hover:to-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-[0_0_2px_var(--glow-color)] hover:shadow-[0_0_4px_var(--glow-color)]"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)] transition-colors"
         >
           <Plus className="w-5 h-5" />
-          <span>Додати товар</span>
+          Додати товар
         </button>
       </div>
 

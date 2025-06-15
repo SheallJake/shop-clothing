@@ -362,20 +362,22 @@ export default function Header() {
                         />
                         {inputSuggestion && isSearchExpanded && (
                           <div
-                            className="absolute top-0 left-0 w-full h-full px-4 py-2 pointer-events-none"
+                            className="absolute top-0 left-0 w-full h-full px-4 py-2 pointer-events-none whitespace-nowrap overflow-hidden"
                             style={{
                               color: "var(--foreground)",
                               opacity: 0.5,
                             }}
                           >
-                            {searchQuery}
-                            <span
-                              style={{
-                                color: "var(--foreground)",
-                                opacity: 0.4,
-                              }}
-                            >
-                              {inputSuggestion.slice(searchQuery.length)}
+                            <span className="inline-block truncate">
+                              {searchQuery}
+                              <span
+                                style={{
+                                  color: "var(--foreground)",
+                                  opacity: 0.4,
+                                }}
+                              >
+                                {inputSuggestion.slice(searchQuery.length)}
+                              </span>
                             </span>
                           </div>
                         )}
@@ -399,6 +401,91 @@ export default function Header() {
                   <FiSearch size={20} />
                 </button>
               </form>
+              {showSuggestions && searchQuery.trim() && isSearchExpanded && (
+                <div className="absolute top-[calc(100%+4px)] left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-[55] max-h-96 overflow-y-auto backdrop-blur-sm bg-opacity-95">
+                  {isSearching ? (
+                    <div className="p-4 text-center text-[var(--foreground)]">
+                      <Spinner size="sm" className="mx-auto" />
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <div className="py-2 divide-y divide-[var(--card-border)]">
+                      {searchResults.map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => {
+                            router.push(`/products/${product.id}`);
+                            setShowSuggestions(false);
+                            setSearchQuery("");
+                          }}
+                          className="w-full px-4 py-3 text-left hover:bg-[var(--hover-bg)] transition-colors flex items-center gap-3 group"
+                        >
+                          <div className="relative w-14 h-14 flex-shrink-0">
+                            <ImageWithFallback
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
+                              width={56}
+                              height={56}
+                            />
+                            {product.isDiscountActive &&
+                              product.discountPrice && (
+                                <div className="absolute -top-2 -right-2 bg-red-500 dark:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12 shadow-lg">
+                                  -
+                                  {Math.round(
+                                    (1 -
+                                      product.discountPrice / product.price) *
+                                      100
+                                  )}
+                                  %
+                                </div>
+                              )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className="font-medium text-[var(--foreground)] truncate"
+                              dangerouslySetInnerHTML={{
+                                __html: product.nameHighlight || product.name,
+                              }}
+                            />
+                            <div className="text-sm text-[var(--foreground)]/70 truncate">
+                              {product.brand}
+                            </div>
+                            {product.descriptionHighlight && (
+                              <div
+                                className="text-xs text-[var(--foreground)]/60 mt-1 line-clamp-2"
+                                dangerouslySetInnerHTML={{
+                                  __html: product.descriptionHighlight,
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                            {product.isDiscountActive &&
+                            product.discountPrice ? (
+                              <>
+                                <div className="text-red-500 dark:text-red-400 font-medium">
+                                  {product.discountPrice} ₴
+                                </div>
+                                <div className="text-xs text-[var(--foreground)]/50 line-through">
+                                  {product.price} ₴
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-[var(--foreground)] font-medium">
+                                {product.price} ₴
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-[var(--foreground)]">
+                      Нічого не знайдено
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Cart */}
@@ -773,7 +860,7 @@ export default function Header() {
                     >
                       <div className="relative w-14 h-14 flex-shrink-0">
                         <ImageWithFallback
-                          src={product.mainImage}
+                          src={product.image}
                           alt={product.name}
                           className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
                           width={56}

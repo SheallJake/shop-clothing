@@ -25,9 +25,9 @@ export default function RootLayout({ children }) {
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <ThemeProvider>
           <LoadingProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <AuthModalProvider>
+            <AuthModalProvider>
+              <CartProvider>
+                <WishlistProvider>
                   <ChatProvider>
                     <ClientLayout>
                       <div className="flex flex-col min-h-[calc(100vh-64px)]">
@@ -40,9 +40,9 @@ export default function RootLayout({ children }) {
                       </div>
                     </ClientLayout>
                   </ChatProvider>
-                </AuthModalProvider>
-              </WishlistProvider>
-            </CartProvider>
+                </WishlistProvider>
+              </CartProvider>
+            </AuthModalProvider>
             <Toaster
               position="top-center"
               toastOptions={{

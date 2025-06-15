@@ -4,6 +4,10 @@ import prisma from "@/lib/prisma";
 import { verifyJwt } from "@/utils/jwt";
 
 export async function POST(request) {
+  let order = null;
+  let delivery = null;
+  let payment = null;
+
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token");
@@ -19,8 +23,60 @@ export async function POST(request) {
 
     const { amount, deliveryInfo, items, promoCode } = await request.json();
 
+    // Validate required environment variables
+    if (!process.env.MONOBANK_API_KEY) {
+      console.error("MONOBANK_API_KEY is not set");
+      return NextResponse.json(
+        { error: "Payment service configuration error" },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.NEXT_PUBLIC_BASE_URL) {
+      console.error("NEXT_PUBLIC_BASE_URL is not set");
+      return NextResponse.json(
+        { error: "Payment service configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // Ensure NEXT_PUBLIC_BASE_URL has the correct format
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL.startsWith("http")
+      ? process.env.NEXT_PUBLIC_BASE_URL
+      : `https://${process.env.NEXT_PUBLIC_BASE_URL}`;
+
+    // Validate input data
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
+
+    if (!deliveryInfo || !deliveryInfo.city || !deliveryInfo.warehouse) {
+      return NextResponse.json(
+        { error: "Invalid delivery information" },
+        { status: 400 }
+      );
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid order items" },
+        { status: 400 }
+      );
+    }
+
+    // Validate each item
+    for (const item of items) {
+      if (!item.productId || !item.quantity || !item.pricePerUnit) {
+        return NextResponse.json(
+          { error: "Invalid item data", item },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.log("Creating payment record with amount:", amount);
     // Create payment record
-    const payment = await prisma.payment.create({
+    payment = await prisma.payment.create({
       data: {
         method: "card",
         transactionId: `TRX${Date.now()}`,
@@ -30,8 +86,9 @@ export async function POST(request) {
       },
     });
 
+    console.log("Creating delivery record");
     // Create delivery record
-    const delivery = await prisma.delivery.create({
+    delivery = await prisma.delivery.create({
       data: {
         address: deliveryInfo.warehouse,
         city: deliveryInfo.city,
@@ -44,8 +101,9 @@ export async function POST(request) {
       },
     });
 
+    console.log("Creating order record");
     // Create order with pending status
-    const order = await prisma.order.create({
+    order = await prisma.order.create({
       data: {
         user: {
           connect: {
@@ -68,7 +126,7 @@ export async function POST(request) {
           create: items.map((item) => ({
             product: {
               connect: {
-                id: item.productId,
+                id: parseInt(item.productId),
               },
             },
             quantity: item.quantity,
@@ -78,14 +136,38 @@ export async function POST(request) {
         ...(promoCode && {
           promoCode: {
             connect: {
-              code: promoCode,
+              id: parseInt(promoCode),
             },
           },
         }),
       },
     });
 
+    console.log("Creating Monobank invoice");
     // Create Monobank invoice
+    const monobankRequestData = {
+      amount: amount * 100, // Convert to kopiykas
+      ccy: 980, // UAH
+      merchantPaymInfo: {
+        reference: order.id.toString(),
+        destination: "Payment for order",
+        basketOrder: items.map((item) => ({
+          name: item.name,
+          qty: item.quantity,
+          sum: item.pricePerUnit * item.quantity * 100,
+          icon: item.image || "", // Add image URL to each item
+        })),
+      },
+      redirectUrl: `${baseUrl}/order/success?orderId=${order.id}`,
+      webHookUrl: `${baseUrl}/api/payment/monobank/webhook`,
+      validity: 3600,
+    };
+
+    console.log(
+      "Monobank request data:",
+      JSON.stringify(monobankRequestData, null, 2)
+    );
+
     const monobankResponse = await fetch(
       "https://api.monobank.ua/api/merchant/invoice/create",
       {
@@ -94,41 +176,58 @@ export async function POST(request) {
           "Content-Type": "application/json",
           "X-Token": process.env.MONOBANK_API_KEY,
         },
-        body: JSON.stringify({
-          amount: amount * 100, // Convert to kopiykas
-          ccy: 980, // UAH
-          merchantPaymInfo: {
-            reference: order.id.toString(),
-            destination: "Payment for order",
-            basketOrder: items.map((item) => ({
-              name: item.name,
-              qty: item.quantity,
-              sum: item.pricePerUnit * item.quantity * 100,
-            })),
-          },
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?orderId=${order.id}`,
-          webHookUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment/monobank/webhook`,
-          validity: 3600,
-        }),
+        body: JSON.stringify(monobankRequestData),
       }
     );
 
     if (!monobankResponse.ok) {
-      // If Monobank invoice creation fails, delete the order and related records
-      await prisma.order.delete({
-        where: { id: order.id },
-      });
-      await prisma.delivery.delete({
-        where: { id: delivery.id },
-      });
-      await prisma.payment.delete({
-        where: { id: payment.id },
-      });
+      const errorData = await monobankResponse.json();
+      console.error("Monobank API error:", errorData);
 
-      throw new Error("Failed to create Monobank invoice");
+      // If Monobank invoice creation fails, delete the order and related records
+      if (order) {
+        try {
+          // First delete order items
+          await prisma.orderItem.deleteMany({
+            where: { orderId: order.id },
+          });
+
+          // Then delete the order
+          await prisma.order.delete({
+            where: { id: order.id },
+          });
+        } catch (error) {
+          console.error("Error deleting order:", error);
+        }
+      }
+
+      if (delivery) {
+        try {
+          await prisma.delivery.delete({
+            where: { id: delivery.id },
+          });
+        } catch (error) {
+          console.error("Error deleting delivery:", error);
+        }
+      }
+
+      if (payment) {
+        try {
+          await prisma.payment.delete({
+            where: { id: payment.id },
+          });
+        } catch (error) {
+          console.error("Error deleting payment:", error);
+        }
+      }
+
+      throw new Error(
+        `Failed to create Monobank invoice: ${errorData.errorDescription || "Unknown error"}`
+      );
     }
 
     const monobankData = await monobankResponse.json();
+    console.log("Monobank response:", monobankData);
 
     // Update payment with Monobank invoice ID
     await prisma.payment.update({
@@ -145,7 +244,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("[Payment API Error]:", error);
     return NextResponse.json(
-      { error: "Failed to create payment", details: error },
+      { error: "Failed to create payment", details: error.message },
       { status: 500 }
     );
   }

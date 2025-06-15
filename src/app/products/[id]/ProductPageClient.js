@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import ImageWithFallback from "@/components/imageWithFallback";
 import AddToCartButton from "@/components/AddToCartButton";
 import AddToWishlistButton from "@/components/AddToWishlistButton";
 import PageTransition from "@/components/PageTransition";
@@ -26,6 +26,10 @@ import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import Spinner from "@/components/Spinner";
+import { getColorFromName, getContrastTextColor } from "@/utils/colorUtils";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function ProductPageClient({ id }) {
   const [product, setProduct] = useState(null);
@@ -44,10 +48,13 @@ export default function ProductPageClient({ id }) {
     delivery: false,
     payment: false,
     reviews: false,
+    sizeGuide: false,
   });
   const [selectedImage, setSelectedImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const router = useRouter();
+  const { openAuthModal } = useAuthModal();
 
   const fetchRelatedProducts = async () => {
     try {
@@ -150,14 +157,27 @@ export default function ProductPageClient({ id }) {
     }));
   };
 
-  const handleAddToCart = (product) => {
-    addToCart(
-      {
-        ...product,
-        quantity: 1,
-      },
-      true
-    );
+  const handleAddToCart = async (product) => {
+    try {
+      const res = await fetch("/api/session");
+      const data = await res.json();
+      if (!data.user) {
+        openAuthModal("login");
+      } else {
+        addToCart(
+          {
+            ...product,
+            quantity: 1,
+            selectedSize: selectedSize,
+            selectedColor: selectedColor,
+          },
+          true
+        );
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Помилка при додаванні товару до кошика");
+    }
   };
 
   const handleAddToWishlist = (product) => {
@@ -168,15 +188,29 @@ export default function ProductPageClient({ id }) {
     }
   };
 
-  const handleOrder = () => {
-    addToCart(
-      {
-        ...product,
-        quantity: 1,
-      },
-      true
-    );
-    window.location.href = "/checkout";
+  const handleOrder = async () => {
+    try {
+      const res = await fetch("/api/session");
+      const data = await res.json();
+      if (!data.user) {
+        sessionStorage.setItem("intendedDestination", "/order");
+        openAuthModal("login");
+      } else {
+        await addToCart(
+          {
+            ...product,
+            quantity: 1,
+            selectedSize: selectedSize,
+            selectedColor: selectedColor,
+          },
+          true
+        );
+        router.push("/order");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Помилка при додаванні товару до кошика");
+    }
   };
 
   if (loading) {
@@ -353,50 +387,151 @@ export default function ProductPageClient({ id }) {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {product.color.map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`w-8 h-8 rounded-full border-2 transition-colors ${
-                          selectedColor === color
-                            ? "border-zinc-900 dark:border-white"
-                            : "border-transparent"
-                        }`}
-                        style={{
-                          backgroundColor: colorMapping[color] || color,
-                        }}
-                        title={color}
-                      />
-                    ))}
+                    {product.color.map((color) => {
+                      const colorStyle = getColorFromName(color);
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                            selectedColor === color
+                              ? "border-zinc-900 dark:border-white"
+                              : "border-transparent"
+                          }`}
+                          style={colorStyle}
+                          title={color}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             )}
 
             {/* Size Selection Section */}
-            {product.size && (
+            {product.size ? (
               <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
                 <div className="flex flex-col w-full items-start gap-3">
                   <div className="flex justify-between items-center w-full">
                     <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
                       РОЗМІР
                     </div>
-                    <button className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
-                      Допомога з розміром
+                    <button
+                      className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
+                      onClick={() => toggleSection("sizeGuide")}
+                    >
+                      <span>Таблиця розмірів</span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          expandedSections.sizeGuide ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-[5px]">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 w-full">
                     {(Array.isArray(product.size)
                       ? product.size
                       : [product.size]
-                    ).map((size) => (
-                      <ItemSize
-                        key={size}
-                        text={size}
-                        property1={selectedSize === size ? "active" : "default"}
-                        onClick={() => setSelectedSize(size)}
-                      />
-                    ))}
+                    )
+                      .flatMap((size) => size.split(/[,\s]+/).filter(Boolean))
+                      .map((size) => (
+                        <div key={size} className="relative">
+                          <button
+                            onClick={() => setSelectedSize(size)}
+                            className={`w-full h-10 flex items-center justify-center text-sm font-medium border rounded transition-all ${
+                              selectedSize === size
+                                ? "border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                                : "border-[var(--card-border)] hover:border-[var(--foreground)] hover:bg-[var(--hover-bg)] text-[var(--foreground)]"
+                            }`}
+                          >
+                            {size.toUpperCase()}
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                  {expandedSections.sizeGuide && (
+                    <div className="w-full mt-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
+                      <h4 className="text-sm font-medium mb-2">
+                        Як визначити свій розмір:
+                      </h4>
+                      <ol className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 list-decimal list-inside">
+                        <li>Виміряйте обхват грудей на найширшій частині</li>
+                        <li>Виміряйте обхват талії на найвужчій частині</li>
+                        <li>Виміряйте обхват стегон на найширшій частині</li>
+                        <li>Порівняйте свої виміри з таблицею розмірів</li>
+                      </ol>
+                      <div className="mt-4 overflow-x-auto">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <th className="py-2 px-3 text-left">Розмір</th>
+                              <th className="py-2 px-3 text-left">
+                                Груди (см)
+                              </th>
+                              <th className="py-2 px-3 text-left">
+                                Талія (см)
+                              </th>
+                              <th className="py-2 px-3 text-left">
+                                Стегна (см)
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <td className="py-2 px-3">XS</td>
+                              <td className="py-2 px-3">82-86</td>
+                              <td className="py-2 px-3">62-66</td>
+                              <td className="py-2 px-3">88-92</td>
+                            </tr>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <td className="py-2 px-3">S</td>
+                              <td className="py-2 px-3">86-90</td>
+                              <td className="py-2 px-3">66-70</td>
+                              <td className="py-2 px-3">92-96</td>
+                            </tr>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <td className="py-2 px-3">M</td>
+                              <td className="py-2 px-3">90-94</td>
+                              <td className="py-2 px-3">70-74</td>
+                              <td className="py-2 px-3">96-100</td>
+                            </tr>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <td className="py-2 px-3">L</td>
+                              <td className="py-2 px-3">94-98</td>
+                              <td className="py-2 px-3">74-78</td>
+                              <td className="py-2 px-3">100-104</td>
+                            </tr>
+                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
+                              <td className="py-2 px-3">XL</td>
+                              <td className="py-2 px-3">98-102</td>
+                              <td className="py-2 px-3">78-82</td>
+                              <td className="py-2 px-3">104-108</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-3">XXL</td>
+                              <td className="py-2 px-3">102-106</td>
+                              <td className="py-2 px-3">82-86</td>
+                              <td className="py-2 px-3">108-112</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
+                <div className="flex flex-col w-full items-start gap-3">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
+                      РОЗМІР
+                    </div>
+                  </div>
+                  <div className="w-full">
+                    <div className="w-full h-10 flex items-center justify-center text-sm font-medium border border-[var(--card-border)] rounded">
+                      CUSTOM
+                    </div>
                   </div>
                 </div>
               </div>

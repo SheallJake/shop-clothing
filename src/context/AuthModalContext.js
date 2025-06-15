@@ -6,17 +6,15 @@ const AuthModalContext = createContext();
 export function AuthModalProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
-  const [wasManuallyClosed, setWasManuallyClosed] = useState(false);
 
   const openAuthModal = useCallback((mode = "login") => {
     setAuthMode(mode);
     setShowAuthModal(true);
-    setWasManuallyClosed(false);
   }, []);
 
   const closeAuthModal = useCallback(() => {
     setShowAuthModal(false);
-    setWasManuallyClosed(true);
+    sessionStorage.removeItem("intendedDestination");
   }, []);
 
   return (
@@ -26,7 +24,6 @@ export function AuthModalProvider({ children }) {
         authMode,
         openAuthModal,
         closeAuthModal,
-        setWasManuallyClosed,
       }}
     >
       {children}

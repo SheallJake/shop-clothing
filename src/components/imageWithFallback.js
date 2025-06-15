@@ -14,35 +14,43 @@ export default function ImageWithFallback({
 }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState("");
 
   // Validate src prop
-  const imageSrc = (() => {
-    if (!src || src.trim() === "") return "/placeholder.svg";
+  useEffect(() => {
+    if (!src || src.trim() === "") {
+      setCurrentSrc("/placeholder.svg");
+      return;
+    }
     try {
       const url = src.trim();
-      // If it's already a full URL, return it
+      // If it's already a full URL, use it
       if (url.startsWith("http://") || url.startsWith("https://")) {
-        return url;
+        setCurrentSrc(url);
+        return;
       }
-      // If it's a relative path starting with /, return it
+      // If it's a relative path starting with /, use it
       if (url.startsWith("/")) {
-        return url;
+        setCurrentSrc(url);
+        return;
       }
       // If it's just a filename, prepend /img/
-      return `/img/${url}`;
+      setCurrentSrc(`/img/${url}`);
     } catch (error) {
       console.error("Invalid image URL:", src);
-      return "/placeholder.svg";
+      setCurrentSrc("/placeholder.svg");
     }
-  })();
+  }, [src]);
 
   const handleLoad = () => {
     setLoaded(true);
+    setError(false);
   };
 
   const handleError = () => {
     setError(true);
     setLoaded(true);
+    setCurrentSrc("/placeholder.svg");
   };
 
   const imgProps = { ...props };
@@ -52,9 +60,9 @@ export default function ImageWithFallback({
     return (
       <div className={`relative overflow-hidden ${className}`}>
         <Image
-          src={error ? "/placeholder.svg" : imageSrc}
+          src={currentSrc}
           alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-700 ${
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           onLoad={handleLoad}
@@ -77,9 +85,9 @@ export default function ImageWithFallback({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <Image
-        src={error ? "/placeholder.svg" : imageSrc}
+        src={currentSrc}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-700 ${
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         onLoad={handleLoad}

@@ -4,15 +4,17 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import PageTransition from "@/components/PageTransition";
-import ImageWithFallback from "@/components/ImageWithFallback";
+import ImageWithFallback from "@/components/imageWithFallback";
 import { toast } from "react-hot-toast";
 import { useTheme } from "@/context/ThemeContext";
 import Spinner from "@/components/Spinner";
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function OrderPage() {
   const router = useRouter();
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, addToCart } = useCart();
   const { theme } = useTheme();
+  const { openAuthModal } = useAuthModal();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [cities, setCities] = useState([]);
@@ -26,6 +28,7 @@ export default function OrderPage() {
   const [selectedCityName, setSelectedCityName] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [promoCodeId, setPromoCodeId] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,32 +39,55 @@ export default function OrderPage() {
   const lastSearchRef = useRef("");
 
   useEffect(() => {
-    checkAuth();
-    // Load promo code from localStorage
-    const savedPromoCode = localStorage.getItem("promoCode");
-    const savedDiscount = localStorage.getItem("discountPercent");
-    if (savedPromoCode) {
-      setPromoCode(savedPromoCode);
-    }
-    if (savedDiscount) {
-      setDiscount(Number(savedDiscount));
-    }
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/session");
+        const data = await res.json();
+        if (!data.user) {
+          openAuthModal("login");
+          return;
+        }
+        setIsAuthenticated(true);
 
-  const checkAuth = async () => {
-    try {
-      const res = await fetch("/api/session");
-      const data = await res.json();
-      setIsAuthenticated(!!data.user);
-      if (!data.user) {
-        router.push("/login");
+        // Restore cart items from sessionStorage if they exist
+        const savedCart = sessionStorage.getItem("cart");
+        if (savedCart) {
+          try {
+            const cartItems = JSON.parse(savedCart);
+            // Update cart context with saved items
+            cartItems.forEach((item) => {
+              addToCart(item);
+            });
+            // Clear saved cart from sessionStorage
+            sessionStorage.removeItem("cart");
+          } catch (error) {
+            console.error("Error restoring cart items:", error);
+          }
+        }
+
+        // Load promo code from localStorage
+        const savedPromoCode = localStorage.getItem("promoCode");
+        const savedDiscount = localStorage.getItem("discountPercent");
+        const savedPromoCodeId = localStorage.getItem("promoCodeId");
+        if (savedPromoCode) {
+          setPromoCode(savedPromoCode);
+        }
+        if (savedDiscount) {
+          setDiscount(Number(savedDiscount));
+        }
+        if (savedPromoCodeId) {
+          setPromoCodeId(savedPromoCodeId);
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        toast.error("Помилка при перевірці авторизації");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error checking auth:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    checkAuth();
+  }, [openAuthModal]);
 
   const loadCities = useCallback(async (search) => {
     if (search === lastSearchRef.current) return;
@@ -215,16 +241,20 @@ export default function OrderPage() {
       const data = await res.json();
       if (data.valid) {
         setDiscount(data.discountPercent);
+        setPromoCodeId(data.promoCodeId);
         // Save to localStorage
         localStorage.setItem("promoCode", promoCode);
         localStorage.setItem("discountPercent", data.discountPercent);
+        localStorage.setItem("promoCodeId", data.promoCodeId);
         toast.success("Промокод успішно застосовано!");
       } else {
         toast.error("Недійсний промокод");
         // Clear from localStorage
         localStorage.removeItem("promoCode");
         localStorage.removeItem("discountPercent");
+        localStorage.removeItem("promoCodeId");
         setDiscount(0);
+        setPromoCodeId(null);
       }
     } catch (error) {
       toast.error("Помилка при перевірці промокоду");
@@ -266,93 +296,49 @@ export default function OrderPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedCity || !selectedWarehouse) {
-      toast.error("Будь ласка, виберіть місто та відділення");
-      return;
-    }
-
-    if (!cart || cart.length === 0) {
-      toast.error("Корзина порожня");
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setPaymentError(null);
+
     try {
-      // Логуємо початкові дані корзини
-      console.log("Cart data:", cart);
-
-      // Перевіряємо кожен товар
-      const orderItems = cart.map((item) => {
-        console.log("Processing item:", item);
-
-        // Перевіряємо наявність всіх необхідних полів
-        if (!item.id) {
-          console.error("Missing product ID:", item);
-          throw new Error("Відсутній ID товару");
-        }
-        if (!item.quantity || item.quantity <= 0) {
-          console.error("Invalid quantity:", item);
-          throw new Error("Невірна кількість товару");
-        }
-        if (!item.price && !item.discountPrice) {
-          console.error("Missing price:", item);
-          throw new Error("Відсутня ціна товару");
-        }
-
-        const pricePerUnit = item.isDiscountActive
-          ? item.discountPrice
-          : item.price;
-        console.log("Calculated price per unit:", pricePerUnit);
-
-        return {
-          productId: item.id,
-          quantity: item.quantity,
-          pricePerUnit: pricePerUnit,
-          name: item.name || "Товар",
-          image: item.image || "",
-        };
-      });
-
-      // Логуємо підготовлені дані для відправки
-      const requestData = {
-        items: orderItems,
-        amount: calculateTotal(),
-        deliveryInfo: {
-          city: selectedCityName,
-          cityRef: selectedCity,
-          warehouse: selectedWarehouse,
-        },
-        promoCode: promoCode,
-      };
-      console.log("Request data:", requestData);
-
+      const total = calculateTotal();
       const response = await fetch("/api/payment/monobank", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          amount: total,
+          deliveryInfo: {
+            city: selectedCityName,
+            warehouse: selectedWarehouse,
+          },
+          items: cart.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            pricePerUnit:
+              item.isDiscountActive && item.discountPrice
+                ? item.discountPrice
+                : item.price,
+            name: item.name,
+            image: item.image,
+          })),
+          promoCode: promoCodeId,
+        }),
       });
-
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
 
       if (!response.ok) {
-        throw new Error(responseData.error || "Failed to create payment");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create payment");
       }
 
-      if (responseData.pageUrl) {
-        window.location.href = responseData.pageUrl;
-      } else {
-        throw new Error("Payment URL is missing");
-      }
+      const data = await response.json();
+      window.location.href = data.pageUrl;
     } catch (error) {
-      console.error("Payment error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-      toast.error(error.message || "Помилка при створенні платежу");
+      console.error("Payment error:", error);
+      setPaymentError(error.message);
+      toast.error("Помилка при створенні платежу");
     } finally {
       setIsSubmitting(false);
     }

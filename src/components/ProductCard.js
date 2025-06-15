@@ -1,10 +1,13 @@
-import ImageWithFallback from "./ImageWithFallback";
+"use client";
+
+import ImageWithFallback from "./imageWithFallback";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { colorMapping } from "../utils/colorMapping";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import { getColorFromName, getContrastTextColor } from "@/utils/colorUtils";
 
 export default function ProductCard({ product }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -44,8 +47,8 @@ export default function ProductCard({ product }) {
 
     const productToAdd = {
       ...product,
-      selectedColor: selectedColor,
-      selectedSize: product.size,
+      selectedColor: null,
+      selectedSize: null,
       price: finalPrice,
     };
 
@@ -68,9 +71,9 @@ export default function ProductCard({ product }) {
   // Ensure we have a string or array for size
   const sizes = Array.isArray(product.size)
     ? product.size
-    : typeof product.size === "string"
+    : typeof product.size === "string" && product.size.trim() !== ""
       ? product.size.split(",").map((size) => size.trim())
-      : [product.size].filter(Boolean);
+      : [];
 
   // Ensure all text values are strings
   const productName = String(product.name || "");
@@ -246,35 +249,47 @@ export default function ProductCard({ product }) {
                         Доступні кольори:
                       </p>
                       <div className="flex gap-1 flex-wrap">
-                        {colors.map((color) => (
-                          <div
-                            key={color}
-                            className="w-4 h-4 rounded-full border border-[var(--card-border)]"
-                            style={{
-                              backgroundColor:
-                                colorMapping[color.toLowerCase()] ||
-                                color.toLowerCase(),
-                            }}
-                            title={color}
-                          />
-                        ))}
+                        {colors.map((color) => {
+                          const colorStyle = getColorFromName(color);
+                          return (
+                            <div
+                              key={color}
+                              className="w-4 h-4 rounded-full border border-[var(--card-border)]"
+                              style={colorStyle}
+                              title={color}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
-                  {sizes.length > 0 && (
+                  {sizes.length > 0 ? (
                     <div>
                       <p className="text-xs mb-1 text-[var(--foreground)]/70">
                         Розміри:
                       </p>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {sizes.map((size) => (
                           <div key={size} className="relative">
-                            <span className="w-full h-7 flex items-center justify-center text-xs font-medium border border-[var(--card-border)] rounded hover:border-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all text-[var(--foreground)]">
+                            <span className="px-3 h-7 flex items-center justify-center text-xs font-medium border border-[var(--card-border)] rounded hover:border-[var(--foreground)] hover:bg-[var(--hover-bg)] transition-all text-[var(--foreground)]">
                               {size.toUpperCase()}
                             </span>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs mb-1 text-[var(--foreground)]/70">
+                        Розмір:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <div className="relative">
+                          <span className="px-3 h-7 flex items-center justify-center text-xs font-medium border border-[var(--card-border)] rounded text-[var(--foreground)]">
+                            CUSTOM
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
