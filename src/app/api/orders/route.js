@@ -37,8 +37,7 @@ export async function POST(request) {
       );
     }
 
-    const { deliveryInfo, paymentMethod, items, totalAmount, promoCode } =
-      orderData;
+    const { deliveryInfo, paymentMethod, items, totalAmount } = orderData;
 
     // Validate required fields
     if (!deliveryInfo || !paymentMethod || !items || !totalAmount) {
@@ -138,13 +137,6 @@ export async function POST(request) {
               pricePerUnit: item.price,
             })),
           },
-          ...(promoCode && {
-            promoCode: {
-              connect: {
-                code: promoCode,
-              },
-            },
-          }),
         },
         include: {
           orderItems: {

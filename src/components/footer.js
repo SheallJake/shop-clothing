@@ -1,17 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { FiGithub, FiTwitter, FiInstagram } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import {
+  BiLogoGithub,
+  BiLogoTwitter,
+  BiLogoInstagram,
+} from "react-icons/bi";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[var(--card-border)] bg-[var(--background)] mt-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="border-t border-[var(--card-border)] bg-[var(--background)] mt-auto overflow-x-hidden w-full">
+      <div className="container mx-auto px-4 py-8 md:py-12 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Крамничка</h3>
-            <p className="text-[var(--muted)]">
+            <h3 className="text-lg font-bold mb-4">Крамничка</h3>
+            <p className="text-[var(--muted)] text-sm leading-relaxed">
               Сучасний мінімалістичний магазин одягу з акцентом на якість та
               стиль.
             </p>
@@ -19,28 +24,20 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Швидкі посилання</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-bold mb-4">Швидкі посилання</h3>
+            <ul className="space-y-3">
               <li>
                 <Link
                   href="/products"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Товари
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/game"
-                  className="hover:text-[var(--muted)] transition-colors"
-                >
-                  Промогра
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/cart"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Кошик
                 </Link>
@@ -48,7 +45,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/wishlist"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Список бажань
                 </Link>
@@ -58,12 +55,12 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Служба підтримки</h3>
-            <ul className="space-y-2">
+            <h3 className="text-lg font-bold mb-4">Служба підтримки</h3>
+            <ul className="space-y-3">
               <li>
                 <Link
                   href="/contact"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Зв'язатися з нами
                 </Link>
@@ -71,7 +68,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/shipping"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Інформація про доставку
                 </Link>
@@ -79,7 +76,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/returns"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Повернення
                 </Link>
@@ -87,7 +84,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/faq"
-                  className="hover:text-[var(--muted)] transition-colors"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm"
                 >
                   Часті питання
                 </Link>
@@ -97,39 +94,50 @@ export default function Footer() {
 
           {/* Social Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Слідкуйте за нами</h3>
-            <div className="flex space-x-4">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[var(--muted)] transition-colors"
-              >
-                <FiGithub size={24} />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[var(--muted)] transition-colors"
-              >
-                <FiTwitter size={24} />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[var(--muted)] transition-colors"
-              >
-                <FiInstagram size={24} />
-              </a>
-            </div>
+            <h3 className="text-lg font-bold mb-4">Слідкуйте за нами</h3>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm flex items-center gap-2"
+                >
+                  <BiLogoGithub size={20} />
+                  <span>GitHub</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm flex items-center gap-2"
+                >
+                  <BiLogoTwitter size={20} />
+                  <span>Twitter</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors text-sm flex items-center gap-2"
+                >
+                  <BiLogoInstagram size={20} />
+                  <span>Instagram</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-[var(--card-border)] mt-8 pt-8 text-center">
-          <p>&copy; {new Date().getFullYear()} Магазин. Всі права захищені.</p>
+        <div className="border-t border-[var(--card-border)] mt-12 pt-8 text-center">
+          <p className="text-[var(--muted)] text-sm">
+            &copy; {new Date().getFullYear()} Крамничка. Всі права захищені.
+          </p>
         </div>
       </div>
     </footer>

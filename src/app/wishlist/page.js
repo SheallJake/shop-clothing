@@ -29,34 +29,32 @@ export default function WishlistPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="md" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-[var(--foreground)]">
-        Список бажаного
-      </h1>
+    <div className="container-main">
+      {/* Заголовок и описание */}
+      <div className="page-section">
+        <h1 className="heading-1 mb-2">Список бажаного</h1>
+        <p className="text-muted text-sm md:text-base">
+          Зберігайте улюблені товари, щоб повернутися до них пізніше.
+        </p>
+      </div>
 
-      {wishlist.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg mb-4 text-[var(--foreground)]">
-            Список бажаного порожній
-          </p>
-          <a
-            href="/products"
-            className="btn bg-[var(--card-bg)] text-[var(--foreground)] hover:bg-[var(--hover-bg)]"
-          >
+      {/* Состояние загрузки */}
+      {loading ? (
+        <div className="loading-state">
+          <Spinner size="md" />
+        </div>
+      ) : wishlist.length === 0 ? (
+        // Пустий список
+        <div className="empty-state">
+          <p className="empty-message mb-4">Список бажаного порожній</p>
+          <a href="/products" className="btn-primary inline-flex">
             Перейти до товарів
           </a>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        // Список товарів
+        <div className="section-grid">
           {wishlist.map((item) => {
             const product = item.product;
             if (!product) return null;
@@ -67,12 +65,9 @@ export default function WishlistPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="product-card"
               >
-                <ProductCard
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                  onRemove={removeFromWishlist}
-                />
+                <ProductCard product={product} />
               </motion.div>
             );
           })}

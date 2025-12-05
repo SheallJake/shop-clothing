@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { BiStar } from "react-icons/bi";
 
 export default function ReviewList({ reviews }) {
   if (!reviews || reviews.length === 0) {
@@ -33,7 +33,7 @@ export default function ReviewList({ reviews }) {
             </div>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, index) => (
-                <Star
+                <BiStar
                   key={index}
                   className={`w-4 h-4 ${
                     index < review.rating

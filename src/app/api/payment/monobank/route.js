@@ -21,7 +21,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    const { amount, deliveryInfo, items, promoCode } = await request.json();
+    const { amount, deliveryInfo, items } = await request.json();
 
     // Validate required environment variables
     if (!process.env.MONOBANK_API_KEY) {
@@ -133,13 +133,6 @@ export async function POST(request) {
             pricePerUnit: item.pricePerUnit,
           })),
         },
-        ...(promoCode && {
-          promoCode: {
-            connect: {
-              id: parseInt(promoCode),
-            },
-          },
-        }),
       },
     });
 

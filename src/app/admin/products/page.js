@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Pencil, Trash2, Search, X } from "lucide-react";
+import {
+  BiPlus,
+  BiPencil,
+  BiTrash,
+  BiSearch,
+  BiX,
+} from "react-icons/bi";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -253,14 +259,14 @@ const ProductForm = ({ product, onSubmit, onCancel, categories }) => {
             >
               {product ? "Редагувати товар" : "Новий товар"}
             </motion.h2>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleClose}
-              className="text-[var(--foreground)]"
-            >
-              <X className="w-6 h-6" />
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleClose}
+                className="text-[var(--foreground)]"
+              >
+                <BiX className="w-6 h-6" />
+              </motion.button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <motion.div
@@ -499,7 +505,7 @@ const ProductForm = ({ product, onSubmit, onCancel, categories }) => {
                       onClick={() => removeGalleryImage(index)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                     >
-                      <X className="w-3 h-3" />
+                      <BiX className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
@@ -793,7 +799,7 @@ export default function ProductsManagement() {
           }}
           className="flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--background)] rounded-md hover:bg-[var(--accent-hover)] transition-colors"
         >
-          <Plus className="w-5 h-5" />
+          <BiPlus className="w-5 h-5" />
           Додати товар
         </button>
       </div>
@@ -806,7 +812,7 @@ export default function ProductsManagement() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
+        <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
       </div>
 
       <div className="bg-[var(--card-bg)] rounded-lg shadow-[0_0_2px_var(--glow-color)] overflow-x-auto">
@@ -916,7 +922,7 @@ export default function ProductsManagement() {
                         }}
                         className="text-[var(--background)] hover:text-[var(--accent)] transition-colors"
                       >
-                        <Pencil className="w-5 h-5" />
+                        <BiPencil className="w-5 h-5" />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -924,7 +930,7 @@ export default function ProductsManagement() {
                         onClick={() => handleDelete(product.id)}
                         className="text-red-500 hover:text-red-700 transition-colors"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <BiTrash className="w-5 h-5" />
                       </motion.button>
                     </div>
                   </td>

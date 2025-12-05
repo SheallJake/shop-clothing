@@ -3,7 +3,8 @@ const next = require("next");
 const { Server } = require("socket.io");
 const { setupSocket } = require("./src/lib/socketServer");
 
-const port = process.env.PORT || 3000;
+const parsedPort = process.env.PORT != null ? parseInt(process.env.PORT, 10) : NaN;
+const port = !isNaN(parsedPort) && parsedPort >= 0 ? parsedPort : 3000;
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();

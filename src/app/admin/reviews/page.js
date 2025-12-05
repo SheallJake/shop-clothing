@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Search,
-  Trash2,
-  MessageSquare,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { BiSearch, BiTrash, BiChevronDown } from "react-icons/bi";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import React from "react";
@@ -244,7 +238,7 @@ export default function ReviewsManagement() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
+          <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
         </div>
       </div>
 
@@ -321,7 +315,7 @@ export default function ReviewsManagement() {
                             expandedRowId === review.id ? "rotate-180" : ""
                           }`}
                         >
-                          <ChevronDown className="w-4 h-4" />
+                          <BiChevronDown className="w-4 h-4" />
                         </div>
                       </div>
                     </td>
@@ -340,7 +334,7 @@ export default function ReviewsManagement() {
                           }}
                           className="text-red-500 hover:text-red-700 transition-colors duration-200"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <BiTrash className="w-5 h-5" />
                         </button>
                       </div>
                     </td>

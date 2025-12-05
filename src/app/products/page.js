@@ -1,21 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
-import ImageWithFallback from "@/components/imageWithFallback";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  ArrowDown,
-  ArrowUp,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Filter,
-} from "lucide-react";
-import Link from "next/link";
-import AddToCartButton from "@/components/AddToCartButton";
+  BiChevronUp,
+  BiChevronDown,
+  BiStar,
+  BiChevronLeft,
+  BiChevronRight,
+  BiFilter,
+} from "react-icons/bi";
 import PageTransition from "@/components/PageTransition";
 import ProductFilters from "@/components/ProductFilters";
-import { colorMapping } from "@/utils/colorMapping";
 import ProductCard from "@/components/ProductCard";
 import { motion, AnimatePresence } from "framer-motion";
 import Spinner from "@/components/Spinner";
@@ -34,7 +29,6 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isSticky, setIsSticky] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
   const [filters, setFilters] = useState({
     categories: [],
     colors: [],
@@ -43,19 +37,49 @@ export default function ProductsPage() {
     priceRange: { min: 0, max: Infinity },
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   // Handle scroll
   useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrollY(currentScrollY);
-
-      // Визначаємо, коли елемент має стати sticky
-      // 64 - це висота навігації
-      if (currentScrollY > 64) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const shouldBeSticky = currentScrollY > 100;
+          
+          setIsSticky((prev) => {
+            // Only update if state actually changes
+            if (prev !== shouldBeSticky) {
+              return shouldBeSticky;
+            }
+            return prev;
+          });
+          
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -179,7 +203,7 @@ export default function ProductsPage() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  const sortProducts = (type) => {
+  const sortProducts = useCallback((type) => {
     let sorted = [...filteredProducts];
     if (type === "price-asc") {
       sorted.sort((a, b) => a.price - b.price);
@@ -206,9 +230,9 @@ export default function ProductsPage() {
     }
     setProducts(sorted);
     setSortType(type);
-    setDropdownOpen(false);
     setCurrentPage(1);
-  };
+    setDropdownOpen(false);
+  }, [filteredProducts]);
 
   // Handle page change without animation
   const handlePageChange = (newPage) => {
@@ -267,7 +291,7 @@ export default function ProductsPage() {
     }));
   };
 
-  const handleCategoryClick = (category) => {
+  const handleCategoryClick = useCallback((category) => {
     setFilters((prev) => ({
       ...prev,
       categories: [category],
@@ -277,87 +301,165 @@ export default function ProductsPage() {
     const url = new URL(window.location);
     url.searchParams.set("category", category);
     window.history.pushState({}, "", url);
-  };
+  }, []);
+
+  const toggleDropdown = useCallback((e) => {
+    e?.stopPropagation();
+    setDropdownOpen((prev) => !prev);
+  }, []);
+
+  const toggleFilters = useCallback(() => {
+    setIsFilterOpen((prev) => !prev);
+  }, []);
 
   return (
     <PageTransition>
-      <div className="flex flex-col min-h-[calc(100vh-64px-80px)]">
-        <div className="px-6 py-0 sm:py-4 flex-1">
+      <div className="relative overflow-x-hidden">
+        <div className="relative max-w-[1400px] mx-auto px-4 py-4 md:px-8 md:py-8">
           {/* Search results heading */}
           {query && (
-            <h1 className="text-2xl font-bold mb-6">
-              Результати пошуку для "{query}"
-            </h1>
+            <div className="mb-6">
+              <h1 className="section-title">
+                Результати пошуку для "{query}"
+              </h1>
+            </div>
           )}
 
           {/* Sorting and filtering block - now sticky */}
-          <div
-            className={`sticky top-[80px] z-10 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_5px_var(--glow-color)] ${
-              isSticky ? "shadow-md" : ""
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 py-2 sm:py-4 px-4">
-              <div className="relative w-full sm:w-auto">
-                <button
-                  className="w-full sm:w-auto border border-[var(--card-border)] px-4 py-2 bg-[var(--card-bg)] rounded-lg p-2 flex items-center justify-between sm:justify-start"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
+          <div className="sticky top-0 z-30 mb-6" style={{ willChange: "transform" }}>
+            <motion.div
+              animate={{
+                boxShadow: isSticky 
+                  ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+                  : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
+              }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="border-[0.1px] border-[var(--card-border)] bg-[var(--card-bg)] shadow-card backdrop-blur-card rounded-3xl p-4"
+              style={{ transition: "none" }}
+            >
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+              <div className="relative w-full sm:w-auto" ref={dropdownRef}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="w-full sm:w-auto btn-secondary rounded-full flex items-center justify-between sm:justify-start gap-2"
+                  style={{ transition: "none" }}
+                  onClick={toggleDropdown}
                 >
-                  <span>Сортувати</span>
-                  <ChevronDown
-                    size={16}
-                    className={`transform transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+                  <span className="text-sm md:text-base text-[var(--text-inverse)]">
+                    Сортувати
+                  </span>
+                  <motion.div
+                    animate={{ rotate: dropdownOpen ? 180 : 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    style={{ transition: "none" }}
+                  >
+                    <BiChevronDown
+                      size={18}
+                      className="text-[var(--text-inverse)]"
+                    />
+                  </motion.div>
+                </motion.button>
 
                 <AnimatePresence>
                   {dropdownOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full left-0 right-0 sm:right-auto mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded shadow-lg z-20 w-full sm:w-60"
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ 
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                        mass: 0.5
+                      }}
+                      style={{ transition: "none" }}
+                      className="absolute top-full left-0 right-0 sm:right-auto mt-2 search-dropdown w-full sm:w-64 max-h-80"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <motion.button
-                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
-                        onClick={() => sortProducts("price-asc")}
+                        whileHover={{ scale: 1.01, x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        style={{ transition: "none" }}
+                        className="search-result-item justify-start text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sortProducts("price-asc");
+                        }}
                       >
-                        <ArrowUp size={16} /> За зростанням ціни
+                        <BiChevronUp size={16} className="text-primary" />
+                        <span className="text-primary">
+                          За зростанням ціни
+                        </span>
                       </motion.button>
                       <motion.button
-                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
-                        onClick={() => sortProducts("price-desc")}
+                        whileHover={{ scale: 1.01, x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        style={{ transition: "none" }}
+                        className="search-result-item justify-start text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sortProducts("price-desc");
+                        }}
                       >
-                        <ArrowDown size={16} /> За спаданням ціни
+                        <BiChevronDown size={16} className="text-primary" />
+                        <span className="text-primary">
+                          За спаданням ціни
+                        </span>
                       </motion.button>
                       <motion.button
-                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
-                        onClick={() => sortProducts("reviews-desc")}
+                        whileHover={{ scale: 1.01, x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        style={{ transition: "none" }}
+                        className="search-result-item justify-start text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sortProducts("reviews-desc");
+                        }}
                       >
-                        <Star size={16} /> За найвищими рейтингами
+                        <BiStar size={16} className="text-primary" />
+                        <span className="text-primary">
+                          За найвищими рейтингами
+                        </span>
                       </motion.button>
                       <motion.button
-                        whileHover={{ backgroundColor: "var(--hover-bg)" }}
-                        className="flex items-center gap-2 px-4 py-2 w-full text-left"
-                        onClick={() => sortProducts("reviews-asc")}
+                        whileHover={{ scale: 1.01, x: 2 }}
+                        whileTap={{ scale: 0.99 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        style={{ transition: "none" }}
+                        className="search-result-item justify-start text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sortProducts("reviews-asc");
+                        }}
                       >
-                        <Star size={16} /> За найнижчими рейтингами
+                        <BiStar size={16} className="text-primary" />
+                        <span className="text-primary">
+                          За найнижчими рейтингами
+                        </span>
                       </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              <button
-                className="w-full sm:w-auto border border-[var(--card-border)] px-4 py-2 rounded bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] flex items-center justify-between sm:justify-start"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                style={{ transition: "none" }}
+                className="w-full sm:w-auto btn-secondary rounded-full flex items-center justify-center gap-2"
+                onClick={toggleFilters}
               >
-                <span>Фільтри</span>
-                <Filter size={16} />
-              </button>
+                <span className="text-sm md:text-base text-[var(--text-inverse)]">
+                  Фільтри
+                </span>
+                <BiFilter size={18} className="text-[var(--text-inverse)]" />
+              </motion.button>
             </div>
 
             {/* Active filters */}
@@ -367,16 +469,16 @@ export default function ProductsPage() {
               filters.brands.length > 0 ||
               filters.priceRange.min > 0 ||
               filters.priceRange.max < Infinity) && (
-              <div className="flex flex-wrap gap-2 py-3 px-4 border-t border-[var(--card-border)] overflow-x-auto">
+              <div className="flex flex-wrap gap-2 py-3 mt-4 border-t border-[var(--border)] overflow-x-auto">
                 {filters.categories.map((category) => (
                   <div
                     key={`category-${category}`}
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm border border-[var(--card-border)] whitespace-nowrap"
+                    className="flex items-center gap-1 bg-[var(--hover-bg)] text-primary px-4 py-2 rounded-full text-sm whitespace-nowrap"
                   >
                     <span>Категорія: {category}</span>
                     <button
                       onClick={() => handleFilterChange("categories", [])}
-                      className="hover:text-red-400 text-gray-400 ml-1"
+                      className="hover:text-red-500 text-muted ml-1 transition-colors"
                     >
                       ⨉
                     </button>
@@ -385,12 +487,12 @@ export default function ProductsPage() {
                 {filters.colors.map((color) => (
                   <div
                     key={`color-${color}`}
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
+                    className="flex items-center gap-1 bg-[var(--hover-bg)] text-primary px-4 py-2 rounded-full text-sm"
                   >
                     <span>Колір: {color}</span>
                     <button
                       onClick={() => handleFilterChange("colors", color)}
-                      className="hover:text-red-400 text-gray-400 ml-1"
+                      className="hover:text-red-500 text-muted ml-1 transition-colors"
                     >
                       ⨉
                     </button>
@@ -399,12 +501,12 @@ export default function ProductsPage() {
                 {filters.sizes.map((size) => (
                   <div
                     key={`size-${size}`}
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
+                    className="flex items-center gap-1 bg-[var(--hover-bg)] text-primary px-4 py-2 rounded-full text-sm"
                   >
                     <span>Розмір: {size}</span>
                     <button
                       onClick={() => handleFilterChange("sizes", size)}
-                      className="hover:text-red-400 text-gray-400 ml-1"
+                      className="hover:text-red-500 text-muted ml-1 transition-colors"
                     >
                       ⨉
                     </button>
@@ -413,12 +515,12 @@ export default function ProductsPage() {
                 {filters.brands.map((brand) => (
                   <div
                     key={`brand-${brand}`}
-                    className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]"
+                    className="flex items-center gap-1 bg-[var(--hover-bg)] text-primary px-4 py-2 rounded-full text-sm"
                   >
                     <span>Бренд: {brand}</span>
                     <button
                       onClick={() => handleFilterChange("brands", brand)}
-                      className="hover:text-red-400 text-gray-400 ml-1"
+                      className="hover:text-red-500 text-muted ml-1 transition-colors"
                     >
                       ⨉
                     </button>
@@ -426,7 +528,7 @@ export default function ProductsPage() {
                 ))}
                 {(filters.priceRange.min > 0 ||
                   filters.priceRange.max < Infinity) && (
-                  <div className="flex items-center gap-1 bg-[var(--card-bg)] px-3 py-1 rounded-full text-sm  border border-[var(--card-border)]">
+                  <div className="flex items-center gap-1 bg-[var(--hover-bg)] text-primary px-4 py-2 rounded-full text-sm">
                     <span>
                       Ціна:{" "}
                       {filters.priceRange.min > 0 &&
@@ -443,7 +545,7 @@ export default function ProductsPage() {
                           max: Infinity,
                         })
                       }
-                      className="hover:text-red-400 text-gray-400 ml-1"
+                      className="hover:text-red-500 text-muted ml-1 transition-colors"
                     >
                       ⨉
                     </button>
@@ -451,18 +553,19 @@ export default function ProductsPage() {
                 )}
               </div>
             )}
+            </motion.div>
           </div>
 
           {error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-600">{error}</p>
+            <div className="bg-red-500/20 border border-red-500 rounded-2xl p-6 mb-6">
+              <p className="text-red-400">{error}</p>
             </div>
           ) : isLoading ? (
             <div className="min-h-screen flex items-center justify-center">
               <Spinner size="md" />
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row gap-4 mt-8">
+            <div className="page-section mt-0">
               <ProductFilters
                 products={products}
                 filters={filters}
@@ -473,50 +576,45 @@ export default function ProductsPage() {
               />
 
               {/* Products */}
-              <div className="flex-1">
-                {currentProducts.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">
+              {currentProducts.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-white text-lg">
                     {query
                       ? "Товарів не знайдено за вашим запитом"
                       : "Товарів не знайдено"}
                   </p>
-                ) : (
-                  <div
-                    key={currentPage}
-                    className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ${
-                      isCatalogVisible
-                        ? "catalog-grid-visible"
-                        : "catalog-grid-hidden"
-                    }`}
-                    style={{ position: "relative", zIndex: 2 }}
-                  >
-                    {currentProducts.map((product, index) => (
-                      <div key={product.id}>
-                        <ProductCard product={product} index={index} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div
+                  key={currentPage}
+                  className={`section-grid mt-0 ${
+                    isCatalogVisible
+                      ? "catalog-grid-visible"
+                      : "catalog-grid-hidden"
+                  }`}
+                >
+                  {currentProducts.map((product, index) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && !isLoading && !error && (
-          <div
-            className="px-6 py-2 bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] relative"
-            style={{ zIndex: 1 }}
-          >
-            <div className="flex justify-center items-center gap-2 bg-[var(--card-bg)] dark:bg-black">
+          {/* Pagination */}
+          {totalPages > 1 && !isLoading && !error && (
+            <div className="flex justify-center items-center gap-2 py-8">
+              {/* Previous */}
               <button
                 onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 border rounded hover:bg-[var(--hover-bg)] bg-[var(--card-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-full border border-[var(--border)] bg-[var(--hover-bg)] text-muted hover:bg-[var(--card-bg)] hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
               >
-                <ChevronLeft size={20} />
+                <BiChevronLeft size={18} />
+                <span className="hidden sm:inline">Назад</span>
               </button>
 
+              {/* Page numbers */}
               {getPageNumbers().map((page, index) => (
                 <button
                   key={index}
@@ -524,30 +622,32 @@ export default function ProductsPage() {
                     typeof page === "number" && handlePageChange(page)
                   }
                   disabled={page === "..."}
-                  className={`px-4 py-2 border rounded ${
-                    page === currentPage
-                      ? "bg-[var(--background)] shadow-[0_0_10px_var(--glow-color)]"
-                      : "hover:bg-[var(--hover-bg)]"
-                  } ${
-                    page === "..." ? "cursor-default" : ""
-                  } transition-colors`}
+                  className={`min-w-[2.5rem] h-9 px-3 py-1 rounded-full text-sm transition-colors flex items-center justify-center ${
+                    page === currentPage && typeof page === "number"
+                      ? "bg-[var(--btn-primary)] text-[var(--text-inverse)]"
+                      : typeof page === "number"
+                      ? "bg-[var(--hover-bg)] text-primary border border-[var(--border)] hover:bg-[var(--card-bg)]"
+                      : "bg-transparent text-muted cursor-default"
+                  }`}
                 >
                   {page}
                 </button>
               ))}
 
+              {/* Next */}
               <button
                 onClick={() =>
                   handlePageChange(Math.min(currentPage + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="p-2 border rounded hover:bg-[var(--hover-bg)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-2 rounded-full border border-[var(--border)] bg-[var(--hover-bg)] text-muted hover:bg-[var(--card-bg)] hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1 text-sm"
               >
-                <ChevronRight size={20} />
+                <span className="hidden sm:inline">Вперед</span>
+                <BiChevronRight size={18} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </PageTransition>
   );

@@ -1,4 +1,6 @@
-import { ShoppingCart } from "lucide-react";
+'use client';
+
+import { BiShoppingBag } from "react-icons/bi";
 import { useCart } from "@/context/CartContext";
 
 export default function AddToCartButton({ product, className = "" }) {
@@ -21,7 +23,7 @@ export default function AddToCartButton({ product, className = "" }) {
       onClick={handleAddToCart}
       className={`w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 ${className}`}
     >
-      <ShoppingCart className="w-5 h-5" />
+      <BiShoppingBag className="w-5 h-5" />
       <span>Додати до кошика</span>
     </button>
   );

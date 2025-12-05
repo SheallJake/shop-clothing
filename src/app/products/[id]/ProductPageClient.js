@@ -9,18 +9,15 @@ import ItemSize from "@/components/ItemSize";
 import ReviewSection from "@/components/ReviewSection";
 import { colorMapping } from "@/utils/colorMapping";
 import {
-  Truck,
-  MessageSquare,
-  CreditCard,
-  ChevronDown,
-  Heart,
-  ShoppingCart,
-  Package,
-  ZoomIn,
-  ChevronLeft,
-  ChevronRight,
-  X,
-} from "lucide-react";
+  BiTruck,
+  BiMessageSquare,
+  BiCreditCard,
+  BiChevronDown,
+  BiShoppingBag,
+  BiZoomIn,
+  BiChevronLeft,
+  BiChevronRight,
+} from "react-icons/bi";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";
@@ -215,7 +212,7 @@ export default function ProductPageClient({ id }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="loading-state">
         <Spinner size="md" />
       </div>
     );
@@ -223,29 +220,26 @@ export default function ProductPageClient({ id }) {
 
   if (error || !product) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
-        <h2 className="text-3xl font-bold mb-4 text-zinc-900 dark:text-white">
-          Помилка
-        </h2>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-6">
-          {error || "Товар не знайдено"}
-        </p>
-        <Link
-          href="/products"
-          className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
-        >
-          Повернутися до каталогу
-        </Link>
+      <div className="container-main">
+        <div className="empty-state">
+          <h2 className="heading-1 mb-4">Помилка</h2>
+          <p className="empty-message mb-6">
+            {error || "Товар не знайдено"}
+          </p>
+          <Link href="/products" className="btn-primary inline-flex">
+            Повернутися до каталогу
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+      <div className="container-main">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Product Image Section */}
-          <div className="w-full lg:w-[490px] flex-shrink-0 bg-white dark:bg-zinc-800 rounded-lg p-2 sm:p-4 shadow-sm">
+          <div className="w-full lg:w-[490px] flex-shrink-0 card shadow-card rounded-3xl p-4 sm:p-6">
             <div className="relative">
               {/* Main Image */}
               <div
@@ -272,10 +266,10 @@ export default function ProductPageClient({ id }) {
                   priority
                 />
                 <button
-                  className="absolute top-2 right-2 p-2 bg-white/80 dark:bg-zinc-800/80 rounded-full hover:bg-white dark:hover:bg-zinc-800 transition-colors"
+                  className="absolute top-2 right-2 p-2 bg-[var(--card-bg)]/80 backdrop-blur-sm rounded-full hover:bg-[var(--card-bg)] transition-colors border border-[var(--border)]"
                   onClick={() => setIsZoomed(!isZoomed)}
                 >
-                  <ZoomIn className="w-5 h-5 text-zinc-900 dark:text-white" />
+                  <BiZoomIn className="w-5 h-5 text-primary" />
                 </button>
               </div>
 
@@ -283,7 +277,7 @@ export default function ProductPageClient({ id }) {
               {product.galleryImages && product.galleryImages.length > 0 && (
                 <>
                   <button
-                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-zinc-800/80 rounded-full hover:bg-white dark:hover:bg-zinc-800 transition-colors"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-[var(--card-bg)]/80 backdrop-blur-sm rounded-full hover:bg-[var(--card-bg)] transition-colors border border-[var(--border)]"
                     onClick={() => {
                       const currentIndex = selectedImage
                         ? product.galleryImages.indexOf(selectedImage)
@@ -295,10 +289,10 @@ export default function ProductPageClient({ id }) {
                       setSelectedImage(product.galleryImages[prevIndex]);
                     }}
                   >
-                    <ChevronLeft className="w-5 h-5 text-zinc-900 dark:text-white" />
+                    <BiChevronLeft className="w-5 h-5 text-primary" />
                   </button>
                   <button
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-zinc-800/80 rounded-full hover:bg-white dark:hover:bg-zinc-800 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[var(--card-bg)]/80 backdrop-blur-sm rounded-full hover:bg-[var(--card-bg)] transition-colors border border-[var(--border)]"
                     onClick={() => {
                       const currentIndex = selectedImage
                         ? product.galleryImages.indexOf(selectedImage)
@@ -310,7 +304,7 @@ export default function ProductPageClient({ id }) {
                       setSelectedImage(product.galleryImages[nextIndex]);
                     }}
                   >
-                    <ChevronRight className="w-5 h-5 text-zinc-900 dark:text-white" />
+                    <BiChevronRight className="w-5 h-5 text-primary" />
                   </button>
                 </>
               )}
@@ -320,33 +314,33 @@ export default function ProductPageClient({ id }) {
             {product.galleryImages && product.galleryImages.length > 0 && (
               <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
                 <button
-                  className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded border-2 transition-colors ${
+                  className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg border-2 transition-colors overflow-hidden ${
                     !selectedImage
-                      ? "border-zinc-900 dark:border-white"
-                      : "border-transparent"
+                      ? "border-[var(--btn-primary)]"
+                      : "border-[var(--card-border)] hover:border-[var(--btn-primary)]"
                   }`}
                   onClick={() => setSelectedImage(null)}
                 >
                   <ImageWithFallback
                     src={product.mainImage}
                     alt={`${product.name} - Main`}
-                    className="w-full h-full object-cover rounded"
+                    className="w-full h-full object-cover"
                   />
                 </button>
                 {product.galleryImages.map((image, index) => (
                   <button
                     key={index}
-                    className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded border-2 transition-colors ${
+                    className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg border-2 transition-colors overflow-hidden ${
                       selectedImage === image
-                        ? "border-zinc-900 dark:border-white"
-                        : "border-transparent"
+                        ? "border-[var(--btn-primary)]"
+                        : "border-[var(--card-border)] hover:border-[var(--btn-primary)]"
                     }`}
                     onClick={() => setSelectedImage(image)}
                   >
                     <ImageWithFallback
                       src={image}
                       alt={`${product.name} - Gallery ${index + 1}`}
-                      className="w-full h-full object-cover rounded"
+                      className="w-full h-full object-cover"
                     />
                   </button>
                 ))}
@@ -355,37 +349,49 @@ export default function ProductPageClient({ id }) {
           </div>
 
           {/* Product Details Section */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-6">
             {/* Product Header */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
-              <div className="flex w-full items-start justify-between">
-                <div className="relative w-fit mt-[-1.00px] font-normal text-zinc-900 dark:text-white text-2xl sm:text-4xl tracking-normal leading-normal">
+            <div className="card shadow-card rounded-3xl p-4 sm:p-6">
+              <div className="flex w-full items-start justify-between mb-4">
+                <h1 className="heading-1 flex-1 pr-4">
                   {product.name}
-                </div>
+                </h1>
                 <AddToWishlistButton product={product} />
               </div>
 
-              <p className="relative w-fit font-normal text-zinc-500 dark:text-zinc-400 text-[11px] tracking-normal leading-5 mt-2">
-                <span className="font-normal text-zinc-500 dark:text-zinc-400">
-                  Артикул:{" "}
-                </span>
+              <p className="text-muted text-xs mb-4">
+                <span>Артикул: </span>
                 <span className="font-light">{product.article || "N/A"}</span>
               </p>
 
-              <div className="relative w-fit font-semibold text-green-600 dark:text-green-500 text-xl sm:text-2xl tracking-normal leading-5 mt-2">
-                {product.price} UAH
+              <div className="flex items-baseline gap-3">
+                {product.isDiscountActive && product.discountPrice ? (
+                  <>
+                    <div className="text-2xl sm:text-3xl font-bold text-primary">
+                      {Math.round(product.discountPrice)} ₴
+                    </div>
+                    <div className="text-lg text-muted line-through">
+                      {Math.round(product.price)} ₴
+                    </div>
+                    <div className="badge badge-pending">
+                      -{Math.round((1 - product.discountPrice / product.price) * 100)}%
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-2xl sm:text-3xl font-bold text-primary">
+                    {Math.round(product.price)} ₴
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Color Selection Section */}
             {product.color && product.color.length > 0 && (
-              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
-                <div className="flex flex-col w-full items-start gap-3">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
-                      КОЛІР
-                    </div>
-                  </div>
+              <div className="card shadow-card rounded-3xl p-4 sm:p-6">
+                <div className="flex flex-col w-full items-start gap-4">
+                  <h3 className="heading-2 uppercase">
+                    Колір
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {product.color.map((color) => {
                       const colorStyle = getColorFromName(color);
@@ -393,10 +399,10 @@ export default function ProductPageClient({ id }) {
                         <button
                           key={color}
                           onClick={() => setSelectedColor(color)}
-                          className={`w-8 h-8 rounded-full border-2 transition-colors ${
+                          className={`w-10 h-10 rounded-full border-2 transition-all hover:scale-110 ${
                             selectedColor === color
-                              ? "border-zinc-900 dark:border-white"
-                              : "border-transparent"
+                              ? "border-[var(--btn-primary)] ring-2 ring-[var(--btn-primary)] ring-offset-2"
+                              : "border-[var(--card-border)] hover:border-[var(--btn-primary)]"
                           }`}
                           style={colorStyle}
                           title={color}
@@ -410,18 +416,18 @@ export default function ProductPageClient({ id }) {
 
             {/* Size Selection Section */}
             {product.size ? (
-              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
-                <div className="flex flex-col w-full items-start gap-3">
+              <div className="card shadow-card rounded-3xl p-4 sm:p-6">
+                <div className="flex flex-col w-full items-start gap-4">
                   <div className="flex justify-between items-center w-full">
-                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
-                      РОЗМІР
-                    </div>
+                    <h3 className="heading-2 uppercase">
+                      Розмір
+                    </h3>
                     <button
-                      className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1"
+                      className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1"
                       onClick={() => toggleSection("sizeGuide")}
                     >
                       <span>Таблиця розмірів</span>
-                      <ChevronDown
+                      <BiChevronDown
                         className={`w-4 h-4 transition-transform ${
                           expandedSections.sizeGuide ? "rotate-180" : ""
                         }`}
@@ -438,10 +444,10 @@ export default function ProductPageClient({ id }) {
                         <div key={size} className="relative">
                           <button
                             onClick={() => setSelectedSize(size)}
-                            className={`w-full h-10 flex items-center justify-center text-sm font-medium border rounded transition-all ${
+                            className={`w-full h-10 flex items-center justify-center text-sm font-medium border rounded-lg transition-all ${
                               selectedSize === size
-                                ? "border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
-                                : "border-[var(--card-border)] hover:border-[var(--foreground)] hover:bg-[var(--hover-bg)] text-[var(--foreground)]"
+                                ? "border-[var(--btn-primary)] bg-[var(--btn-primary)] text-[var(--text-inverse)]"
+                                : "border-[var(--card-border)] hover:border-[var(--btn-primary)] hover:bg-[var(--hover-bg)] text-primary"
                             }`}
                           >
                             {size.toUpperCase()}
@@ -450,11 +456,11 @@ export default function ProductPageClient({ id }) {
                       ))}
                   </div>
                   {expandedSections.sizeGuide && (
-                    <div className="w-full mt-4 p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
-                      <h4 className="text-sm font-medium mb-2">
+                    <div className="w-full mt-4 p-4 bg-[var(--hover-bg)] rounded-lg">
+                      <h4 className="text-sm font-medium mb-2 text-primary">
                         Як визначити свій розмір:
                       </h4>
-                      <ol className="text-sm text-zinc-600 dark:text-zinc-400 space-y-2 list-decimal list-inside">
+                      <ol className="text-sm text-secondary space-y-2 list-decimal list-inside">
                         <li>Виміряйте обхват грудей на найширшій частині</li>
                         <li>Виміряйте обхват талії на найвужчій частині</li>
                         <li>Виміряйте обхват стегон на найширшій частині</li>
@@ -463,55 +469,55 @@ export default function ProductPageClient({ id }) {
                       <div className="mt-4 overflow-x-auto">
                         <table className="w-full text-sm border-collapse">
                           <thead>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <th className="py-2 px-3 text-left">Розмір</th>
-                              <th className="py-2 px-3 text-left">
+                            <tr className="border-b border-[var(--border)]">
+                              <th className="py-2 px-3 text-left text-primary">Розмір</th>
+                              <th className="py-2 px-3 text-left text-primary">
                                 Груди (см)
                               </th>
-                              <th className="py-2 px-3 text-left">
+                              <th className="py-2 px-3 text-left text-primary">
                                 Талія (см)
                               </th>
-                              <th className="py-2 px-3 text-left">
+                              <th className="py-2 px-3 text-left text-primary">
                                 Стегна (см)
                               </th>
                             </tr>
                           </thead>
                           <tbody>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <td className="py-2 px-3">XS</td>
-                              <td className="py-2 px-3">82-86</td>
-                              <td className="py-2 px-3">62-66</td>
-                              <td className="py-2 px-3">88-92</td>
+                            <tr className="border-b border-[var(--border)]">
+                              <td className="py-2 px-3 text-secondary">XS</td>
+                              <td className="py-2 px-3 text-secondary">82-86</td>
+                              <td className="py-2 px-3 text-secondary">62-66</td>
+                              <td className="py-2 px-3 text-secondary">88-92</td>
                             </tr>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <td className="py-2 px-3">S</td>
-                              <td className="py-2 px-3">86-90</td>
-                              <td className="py-2 px-3">66-70</td>
-                              <td className="py-2 px-3">92-96</td>
+                            <tr className="border-b border-[var(--border)]">
+                              <td className="py-2 px-3 text-secondary">S</td>
+                              <td className="py-2 px-3 text-secondary">86-90</td>
+                              <td className="py-2 px-3 text-secondary">66-70</td>
+                              <td className="py-2 px-3 text-secondary">92-96</td>
                             </tr>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <td className="py-2 px-3">M</td>
-                              <td className="py-2 px-3">90-94</td>
-                              <td className="py-2 px-3">70-74</td>
-                              <td className="py-2 px-3">96-100</td>
+                            <tr className="border-b border-[var(--border)]">
+                              <td className="py-2 px-3 text-secondary">M</td>
+                              <td className="py-2 px-3 text-secondary">90-94</td>
+                              <td className="py-2 px-3 text-secondary">70-74</td>
+                              <td className="py-2 px-3 text-secondary">96-100</td>
                             </tr>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <td className="py-2 px-3">L</td>
-                              <td className="py-2 px-3">94-98</td>
-                              <td className="py-2 px-3">74-78</td>
-                              <td className="py-2 px-3">100-104</td>
+                            <tr className="border-b border-[var(--border)]">
+                              <td className="py-2 px-3 text-secondary">L</td>
+                              <td className="py-2 px-3 text-secondary">94-98</td>
+                              <td className="py-2 px-3 text-secondary">74-78</td>
+                              <td className="py-2 px-3 text-secondary">100-104</td>
                             </tr>
-                            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-                              <td className="py-2 px-3">XL</td>
-                              <td className="py-2 px-3">98-102</td>
-                              <td className="py-2 px-3">78-82</td>
-                              <td className="py-2 px-3">104-108</td>
+                            <tr className="border-b border-[var(--border)]">
+                              <td className="py-2 px-3 text-secondary">XL</td>
+                              <td className="py-2 px-3 text-secondary">98-102</td>
+                              <td className="py-2 px-3 text-secondary">78-82</td>
+                              <td className="py-2 px-3 text-secondary">104-108</td>
                             </tr>
                             <tr>
-                              <td className="py-2 px-3">XXL</td>
-                              <td className="py-2 px-3">102-106</td>
-                              <td className="py-2 px-3">82-86</td>
-                              <td className="py-2 px-3">108-112</td>
+                              <td className="py-2 px-3 text-secondary">XXL</td>
+                              <td className="py-2 px-3 text-secondary">102-106</td>
+                              <td className="py-2 px-3 text-secondary">82-86</td>
+                              <td className="py-2 px-3 text-secondary">108-112</td>
                             </tr>
                           </tbody>
                         </table>
@@ -521,15 +527,13 @@ export default function ProductPageClient({ id }) {
                 </div>
               </div>
             ) : (
-              <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
-                <div className="flex flex-col w-full items-start gap-3">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="relative w-fit font-light text-zinc-900 dark:text-white text-[17px] tracking-normal leading-5">
-                      РОЗМІР
-                    </div>
-                  </div>
+              <div className="card shadow-card rounded-3xl p-4 sm:p-6">
+                <div className="flex flex-col w-full items-start gap-4">
+                  <h3 className="heading-2 uppercase">
+                    Розмір
+                  </h3>
                   <div className="w-full">
-                    <div className="w-full h-10 flex items-center justify-center text-sm font-medium border border-[var(--card-border)] rounded">
+                    <div className="w-full h-10 flex items-center justify-center text-sm font-medium border border-[var(--card-border)] rounded-lg text-secondary">
                       CUSTOM
                     </div>
                   </div>
@@ -538,39 +542,39 @@ export default function ProductPageClient({ id }) {
             )}
 
             {/* Product Actions */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
+            <div className="card shadow-card rounded-3xl p-4 sm:p-6">
               <div className="flex flex-col gap-4">
                 <AddToCartButton product={product} />
                 <button
                   onClick={() => handleOrder()}
-                  className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-6 py-3 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                  className="btn-success w-full flex items-center justify-center gap-2 rounded-full"
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <BiShoppingBag className="w-5 h-5" />
                   <span>Купити зараз</span>
                 </button>
               </div>
             </div>
 
             {/* Additional Information Sections */}
-            <div className="w-full bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
+            <div className="card shadow-card rounded-3xl p-4 sm:p-6">
               {/* Description */}
               {product.description && (
-                <div className="w-full py-4 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="w-full py-4 border-b border-[var(--border)]">
                   <button
                     onClick={() => toggleSection("description")}
-                    className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
+                    className="flex w-full items-center justify-between hover:opacity-80 transition-opacity"
                   >
-                    <span className="text-sm text-zinc-900 dark:text-white">
+                    <span className="text-sm text-primary font-medium">
                       Опис
                     </span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
+                    <BiChevronDown
+                      className={`w-4 h-4 transition-transform text-primary ${
                         expandedSections.description ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   {expandedSections.description && (
-                    <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    <div className="mt-4 text-sm text-secondary">
                       {product.description}
                     </div>
                   )}
@@ -579,22 +583,22 @@ export default function ProductPageClient({ id }) {
 
               {/* Structure */}
               {product.structure && (
-                <div className="w-full py-4 border-b border-zinc-200 dark:border-zinc-700">
+                <div className="w-full py-4 border-b border-[var(--border)]">
                   <button
                     onClick={() => toggleSection("structure")}
-                    className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
+                    className="flex w-full items-center justify-between hover:opacity-80 transition-opacity"
                   >
-                    <span className="text-sm text-zinc-900 dark:text-white">
+                    <span className="text-sm text-primary font-medium">
                       Склад
                     </span>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
+                    <BiChevronDown
+                      className={`w-4 h-4 transition-transform text-primary ${
                         expandedSections.structure ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   {expandedSections.structure && (
-                    <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                    <div className="mt-4 text-sm text-secondary">
                       {product.structure}
                     </div>
                   )}
@@ -602,29 +606,29 @@ export default function ProductPageClient({ id }) {
               )}
 
               {/* Delivery */}
-              <div className="w-full py-4 border-b border-zinc-200 dark:border-zinc-700">
+              <div className="w-full py-4 border-b border-[var(--border)]">
                 <button
                   onClick={() => toggleSection("delivery")}
-                  className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
+                  className="flex w-full items-center justify-between hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-sm text-zinc-900 dark:text-white">
+                  <span className="text-sm text-primary font-medium">
                     Доставка
                   </span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
+                  <BiChevronDown
+                    className={`w-4 h-4 transition-transform text-primary ${
                       expandedSections.delivery ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {expandedSections.delivery && (
-                  <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                  <div className="mt-4 text-sm text-secondary">
                     <div className="flex items-start gap-2 mb-4">
-                      <Truck className="w-5 h-5 text-zinc-900 dark:text-white flex-shrink-0 mt-0.5" />
+                      <BiTruck className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-zinc-900 dark:text-white mb-1">
+                        <h4 className="font-medium text-primary mb-1">
                           Доставка по Україні
                         </h4>
-                        <p>
+                        <p className="text-secondary">
                           Доставка здійснюється через Нову Пошту та Укрпошту.
                           Термін доставки 1-3 дні.
                         </p>
@@ -638,26 +642,26 @@ export default function ProductPageClient({ id }) {
               <div className="w-full py-4">
                 <button
                   onClick={() => toggleSection("payment")}
-                  className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
+                  className="flex w-full items-center justify-between hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-sm text-zinc-900 dark:text-white">
+                  <span className="text-sm text-primary font-medium">
                     Оплата
                   </span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
+                  <BiChevronDown
+                    className={`w-4 h-4 transition-transform text-primary ${
                       expandedSections.payment ? "rotate-180" : ""
                     }`}
                   />
                 </button>
                 {expandedSections.payment && (
-                  <div className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                  <div className="mt-4 text-sm text-secondary">
                     <div className="flex items-start gap-2">
-                      <CreditCard className="w-5 h-5 text-zinc-900 dark:text-white flex-shrink-0 mt-0.5" />
+                      <BiCreditCard className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-zinc-900 dark:text-white mb-1">
+                        <h4 className="font-medium text-primary mb-1">
                           Способи оплати
                         </h4>
-                        <p>
+                        <p className="text-secondary">
                           Оплата при отриманні, банківською картою онлайн або
                           через термінал.
                         </p>
@@ -671,16 +675,16 @@ export default function ProductPageClient({ id }) {
               <div className="w-full py-4">
                 <button
                   onClick={() => toggleSection("reviews")}
-                  className="flex w-full items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
+                  className="flex w-full items-center justify-between hover:opacity-80 transition-opacity"
                 >
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-zinc-900 dark:text-white" />
-                    <span className="text-sm text-zinc-900 dark:text-white">
+                    <BiMessageSquare className="w-5 h-5 text-primary" />
+                    <span className="text-sm text-primary font-medium">
                       Відгуки
                     </span>
                   </div>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform text-zinc-900 dark:text-white ${
+                  <BiChevronDown
+                    className={`w-4 h-4 transition-transform text-primary ${
                       expandedSections.reviews ? "rotate-180" : ""
                     }`}
                   />
@@ -696,45 +700,36 @@ export default function ProductPageClient({ id }) {
         </div>
 
         {/* Related Products Section */}
-        <div className="mt-12 sm:mt-24 bg-white dark:bg-zinc-800 rounded-lg p-4 sm:p-6 shadow-sm">
-          <h2 className="text-2xl sm:text-3xl font-normal mb-8 sm:mb-12 text-center text-zinc-900 dark:text-white">
+        <div className="page-section mt-12 sm:mt-16">
+          <h2 className="section-title text-center mb-8 sm:mb-12">
             Вам також може сподобатися
           </h2>
           {loadingRelated ? (
-            <div className="flex justify-center py-16">
+            <div className="loading-state">
               <Spinner size="md" />
             </div>
           ) : errorRelated ? (
-            <div className="text-center py-16">
-              <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-lg">
+            <div className="error-state">
+              <p className="error-message mb-6">
                 {errorRelated}
               </p>
               <button
                 onClick={fetchRelatedProducts}
-                className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 underline transition-colors"
+                className="btn-secondary"
               >
                 Спробувати ще раз
               </button>
             </div>
           ) : relatedProducts.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-zinc-600 dark:text-zinc-400 text-lg">
+            <div className="empty-state">
+              <p className="empty-message">
                 Немає пов'язаних товарів
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
+            <div className="section-grid">
               {relatedProducts.map((relatedProduct) => (
-                <div
-                  key={relatedProduct.id}
-                  className="transform transition-transform hover:scale-105"
-                >
-                  <ProductCard
-                    product={relatedProduct}
-                    onAddToCart={handleAddToCart}
-                    onAddToWishlist={handleAddToWishlist}
-                  />
-                </div>
+                <ProductCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>
           )}

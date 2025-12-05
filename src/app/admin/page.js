@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  Package,
-  ShoppingCart,
-  MessageSquare,
-  BarChart2,
-  Tags,
-} from "lucide-react";
+  BiPackage,
+  BiShoppingBag,
+  BiMessageSquare,
+  BiBarChart,
+  BiTag,
+} from "react-icons/bi";
 import Link from "next/link";
 import PageTransition from "@/components/PageTransition";
 
@@ -29,45 +29,39 @@ export default function AdminDashboard() {
   const dashboardItems = [
     {
       title: "Управління товарами",
-      icon: Package,
+      icon: BiPackage,
       href: "/admin/products",
       description: "Додавання, редагування та видалення товарів",
     },
     {
       title: "Категорії",
-      icon: Tags,
+      icon: BiTag,
       href: "/admin/categories",
       description: "Управління категоріями товарів",
     },
     {
       title: "Замовлення",
-      icon: ShoppingCart,
+      icon: BiShoppingBag,
       href: "/admin/orders",
       description: "Перегляд та обробка замовлень",
     },
     {
       title: "Відгуки",
-      icon: MessageSquare,
+      icon: BiMessageSquare,
       href: "/admin/reviews",
       description: "Модерація відгуків користувачів",
     },
     {
       title: "Статистика",
-      icon: BarChart2,
+      icon: BiBarChart,
       href: "/admin/statistics",
       description: "Аналітика та звіти",
     },
     {
       title: "Чат",
-      icon: MessageSquare,
+      icon: BiMessageSquare,
       href: "/admin/chat",
       description: "Перегляд та обробка чатів",
-    },
-    {
-      title: "Промокоди",
-      icon: Tags,
-      href: "/admin/promocodes",
-      description: "Управління промокодами",
     },
   ];
 

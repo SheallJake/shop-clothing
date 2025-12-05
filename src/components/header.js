@@ -1,55 +1,83 @@
 "use client";
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import AuthModal from "@/components/AuthModal";
-import SearchBar from "@/components/SearchBar";
+import Image from "next/image";
 import { useTheme } from "@/context/ThemeContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { useChat } from "@/context/ChatContext";
-import {
-  FiSun,
-  FiMoon,
-  FiShoppingCart,
-  FiHeart,
-  FiUser,
-  FiSearch,
-  FiShield,
-  FiMessageSquare,
-  FiHome,
-  FiGrid,
-} from "react-icons/fi";
 import { useAuthModal } from "@/context/AuthModalContext";
+import {
+  BiSun,
+  BiMoon,
+  BiShield,
+  BiHome,
+  BiListUl,
+  BiShoppingBag,
+  BiHeart,
+  BiMenu,
+  BiX,
+  BiSearch,
+} from "react-icons/bi";
 import ImageWithFallback from "@/components/imageWithFallback";
 import Spinner from "./Spinner";
-import MobileChatButton from "./MobileChatButton";
+
+function NavItem({ href, icon: Icon, label, isActive, badge, theme }) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors rounded-2xl relative ${
+        isActive
+          ? "bg-zinc-800 dark:bg-zinc-600 text-white"
+          : "hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+      }`}
+    >
+      <div className="w-6 h-6 flex-shrink-0 relative">
+        <Icon
+          className={`w-full h-full ${
+            isActive
+              ? "text-white"
+              : theme === "light"
+              ? "text-zinc-700"
+              : "text-zinc-200"
+          }`}
+        />
+        {badge > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+            {badge}
+          </span>
+        )}
+      </div>
+      <span className="text-base">
+        {label}
+      </span>
+    </Link>
+  );
+}
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
+  const [query, setQuery] = useState("");
   const [user, setUser] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const router = useRouter();
-  const menuRef = useRef(null);
-  const userMenuRef = useRef(null);
-  const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
-  const { cart = [] } = useCart();
-  const { wishlistItems = [] } = useWishlist();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const searchRef = useRef(null);
-  const { openAuthModal } = useAuthModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [inputSuggestion, setInputSuggestion] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const searchTimeoutRef = useRef(null);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const inputRef = useRef(null);
-  const { isChatOpen, setIsChatOpen } = useChat();
+  const userMenuRef = useRef(null);
+  const searchRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  
+  const router = useRouter();
+  const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
+  const { cart = [] } = useCart();
+  const { wishlistItems = [] } = useWishlist();
+  const { openAuthModal } = useAuthModal();
 
   // Функція перевірки сесії
   const checkSession = useCallback(async () => {
@@ -84,48 +112,6 @@ export default function Header() {
     checkSession();
   }, [checkSession]);
 
-  // Оновлення при зміні стану авторизації
-  useEffect(() => {
-    if (showAuth) {
-      checkSession();
-    }
-  }, [showAuth, checkSession]);
-
-  // Логіка закриття меню при кліку поза ним
-  const handleClickOutside = useCallback((event, ref, setState) => {
-    if (ref.current && !ref.current.contains(event.target)) {
-      setState(false);
-    }
-  }, []);
-
-  // Налаштування обробників кліків поза меню
-  useEffect(() => {
-    const handleBurgerClick = (e) =>
-      handleClickOutside(e, menuRef, setIsMenuOpen);
-    const handleUserMenuClick = (e) =>
-      handleClickOutside(e, userMenuRef, setUserMenuOpen);
-
-    if (isMenuOpen) document.addEventListener("mousedown", handleBurgerClick);
-    if (userMenuOpen)
-      document.addEventListener("mousedown", handleUserMenuClick);
-
-    return () => {
-      document.removeEventListener("mousedown", handleBurgerClick);
-      document.removeEventListener("mousedown", handleUserMenuClick);
-    };
-  }, [isMenuOpen, userMenuOpen, handleClickOutside]);
-
-  // Навігація
-  const navigateToProducts = () => {
-    router.push("/products");
-    setOpen(false);
-  };
-
-  const navigateToProfile = () => {
-    router.push("/cabinet");
-    setUserMenuOpen(false);
-  };
-
   // Обробка виходу
   const logout = async () => {
     try {
@@ -150,29 +136,17 @@ export default function Header() {
     }
   };
 
-  // Handle click outside user menu
+  // Handle click outside user menu, search, and mobile menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setUserMenuOpen(false);
       }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const navItems = [
-    { href: "/", label: "Головна" },
-    { href: "/products", label: "Каталог" },
-    { href: "/game", label: "Отримати промокод" },
-  ];
-
-  // Handle click outside search
-  useEffect(() => {
-    const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchExpanded(false);
+        setShowSuggestions(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
       }
     };
 
@@ -229,29 +203,12 @@ export default function Header() {
     }
   };
 
-  // Handle search collapse
-  const handleSearchCollapse = () => {
-    setIsSearchExpanded(false);
-    setShowSuggestions(false);
-    setInputSuggestion("");
-    setSearchResults([]);
-  };
-
-  // Handle suggestion accept
-  const handleSuggestionAccept = () => {
-    if (inputSuggestion) {
-      setSearchQuery(inputSuggestion);
-      setInputSuggestion("");
-    }
-  };
-
   // Handle search submission
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/products?q=${encodeURIComponent(searchQuery)}`);
       setShowSuggestions(false);
-      setIsSearchExpanded(false);
     }
   };
 
@@ -261,592 +218,131 @@ export default function Header() {
       handleSearchSubmit(e);
     } else if (e.key === "Tab" && inputSuggestion) {
       e.preventDefault();
-      handleSuggestionAccept();
+      setSearchQuery(inputSuggestion);
+      setInputSuggestion("");
     }
   };
 
-  // Handle click outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
     }
+  };
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isMenuOpen]);
+  const navItems = [
+    {
+      href: "/",
+      icon: BiHome,
+      label: "Головна",
+      path: "/",
+    },
+    {
+      href: "/products",
+      icon: BiListUl,
+      label: "Каталог",
+      path: "/products",
+    },
+    {
+      href: "/cart",
+      icon: BiShoppingBag,
+
+
+      label: "Кошик",
+      path: "/cart",
+      badge: cart.length,
+    },
+    {
+      href: "/wishlist",
+      icon: BiHeart,
+      label: "Обрані",
+      path: "/wishlist",
+      badge: wishlistItems.length,
+    },
+  ];
 
   return (
     <>
-      <div className="bg-[var(--card-bg)] dark:bg-black rounded-lg p-2 shadow-[0_0_2px_var(--glow-color)] fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-[80%] md:block hidden">
-        {/* Desktop Header */}
-        <div className="flex items-center justify-between h-9">
-          {/* Left Side - Burger Menu and Logo */}
-          <div className="flex items-center space-x-4" ref={menuRef}>
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-              aria-label="Меню"
-            >
-              <div className="w-6 h-5 flex flex-col justify-between">
-                <span
-                  className={`w-full h-0.5 bg-[var(--foreground)] transition-transform ${
-                    isMenuOpen ? "rotate-45 translate-y-2" : ""
-                  }`}
-                ></span>
-                <span
-                  className={`w-full h-0.5 bg-[var(--foreground)] transition-opacity ${
-                    isMenuOpen ? "opacity-0" : ""
-                  }`}
-                ></span>
-                <span
-                  className={`w-full h-0.5 bg-[var(--foreground)] transition-transform ${
-                    isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                  }`}
-                ></span>
-              </div>
-            </button>
+      {/* Mobile Header */}
+      <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-3 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 transition-colors duration-300 shadow-md md:hidden">
+        {/* Logo */}
+        <Link href="/" className="text-zinc-900 dark:text-white text-xl font-bold transition-colors flex-shrink-0">
+          Крамничка
+        </Link>
 
-            {/* Logo */}
-            <Link href="/" className="text-xl font-bold">
-              Крамничка
-            </Link>
-          </div>
-
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative" ref={searchRef}>
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex items-center gap-2"
-              >
-                <div
-                  className={`overflow-visible transition-all duration-300 ${
-                    isSearchExpanded ? "w-64" : "w-0"
-                  }`}
-                >
-                  <div
-                    className={`relative ${isSearchFocused ? "animate-gradient-border" : ""}`}
-                  >
-                    <div className="relative">
-                      <div className="relative">
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={searchQuery}
-                          onChange={handleSearchChange}
-                          onKeyDown={handleKeyPress}
-                          onFocus={() => {
-                            setIsSearchExpanded(true);
-                            setShowSuggestions(true);
-                            setIsSearchFocused(true);
-                          }}
-                          onBlur={() => {
-                            setTimeout(() => {
-                              setIsSearchFocused(false);
-                              setInputSuggestion("");
-                            }, 200);
-                          }}
-                          placeholder="Пошук товарів..."
-                          className={`w-full px-4 py-2 rounded-md bg-[var(--background)] border border-[var(--card-border)] focus:outline-none transition-all duration-300 ${
-                            isSearchExpanded ? "opacity-100" : "opacity-0"
-                          }`}
-                        />
-                        {inputSuggestion && isSearchExpanded && (
-                          <div
-                            className="absolute top-0 left-0 w-full h-full px-4 py-2 pointer-events-none whitespace-nowrap overflow-hidden"
-                            style={{
-                              color: "var(--foreground)",
-                              opacity: 0.5,
-                            }}
-                          >
-                            <span className="inline-block truncate">
-                              {searchQuery}
-                              <span
-                                style={{
-                                  color: "var(--foreground)",
-                                  opacity: 0.4,
-                                }}
-                              >
-                                {inputSuggestion.slice(searchQuery.length)}
-                              </span>
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isSearchExpanded) {
-                      handleSearchCollapse();
-                    } else {
-                      setIsSearchExpanded(true);
-                      inputRef.current?.focus();
-                    }
-                  }}
-                  className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out z-10"
-                  aria-label="Пошук"
-                >
-                  <FiSearch size={20} />
-                </button>
-              </form>
-              {showSuggestions && searchQuery.trim() && isSearchExpanded && (
-                <div className="absolute top-[calc(100%+4px)] left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-[55] max-h-96 overflow-y-auto backdrop-blur-sm bg-opacity-95">
-                  {isSearching ? (
-                    <div className="p-4 text-center text-[var(--foreground)]">
-                      <Spinner size="sm" className="mx-auto" />
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    <div className="py-2 divide-y divide-[var(--card-border)]">
-                      {searchResults.map((product) => (
-                        <button
-                          key={product.id}
-                          onClick={() => {
-                            router.push(`/products/${product.id}`);
-                            setShowSuggestions(false);
-                            setSearchQuery("");
-                          }}
-                          className="w-full px-4 py-3 text-left hover:bg-[var(--hover-bg)] transition-colors flex items-center gap-3 group"
-                        >
-                          <div className="relative w-14 h-14 flex-shrink-0">
-                            <ImageWithFallback
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
-                              width={56}
-                              height={56}
-                            />
-                            {product.isDiscountActive &&
-                              product.discountPrice && (
-                                <div className="absolute -top-2 -right-2 bg-red-500 dark:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12 shadow-lg">
-                                  -
-                                  {Math.round(
-                                    (1 -
-                                      product.discountPrice / product.price) *
-                                      100
-                                  )}
-                                  %
-                                </div>
-                              )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div
-                              className="font-medium text-[var(--foreground)] truncate"
-                              dangerouslySetInnerHTML={{
-                                __html: product.nameHighlight || product.name,
-                              }}
-                            />
-                            <div className="text-sm text-[var(--foreground)]/70 truncate">
-                              {product.brand}
-                            </div>
-                            {product.descriptionHighlight && (
-                              <div
-                                className="text-xs text-[var(--foreground)]/60 mt-1 line-clamp-2"
-                                dangerouslySetInnerHTML={{
-                                  __html: product.descriptionHighlight,
-                                }}
-                              />
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end flex-shrink-0 ml-2">
-                            {product.isDiscountActive &&
-                            product.discountPrice ? (
-                              <>
-                                <div className="text-red-500 dark:text-red-400 font-medium">
-                                  {product.discountPrice} ₴
-                                </div>
-                                <div className="text-xs text-[var(--foreground)]/50 line-through">
-                                  {product.price} ₴
-                                </div>
-                              </>
-                            ) : (
-                              <div className="text-[var(--foreground)] font-medium">
-                                {product.price} ₴
-                              </div>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-[var(--foreground)]">
-                      Нічого не знайдено
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Cart */}
-            <Link
-              href="/cart"
-              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out relative"
-              aria-label="Кошик"
-            >
-              <FiShoppingCart size={20} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[var(--card-border)] text-[var(--background)] text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
-            </Link>
-
-            {/* Wishlist */}
-            <Link
-              href="/wishlist"
-              className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out relative"
-              aria-label="Обрані"
-            >
-              <FiHeart size={20} />
-              {wishlistItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[var(--card-border)] text-[var(--background)] text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {wishlistItems.length}
-                </span>
-              )}
-            </Link>
-
-            {/* Chat Button */}
-            <MobileChatButton />
-
-            {/* User */}
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={handleUserButtonClick}
-                className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                aria-label="Профіль"
-              >
-                <FiUser size={20} />
-              </button>
-
-              {/* User Menu Dropdown */}
-              <div
-                className={`absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-lg shadow-lg border border-[var(--card-border)] transition-all duration-200 ${
-                  userMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-                }`}
-              >
-                {user && (
-                  <div className="py-2">
-                    <div className="px-4 py-2 border-b border-[var(--card-border)]">
-                      <p className="font-medium">{user.name}</p>
-                    </div>
-                    <Link
-                      href="/cabinet"
-                      className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      Особистий кабінет
-                    </Link>
-                    {user.role.toLowerCase() === "admin" && (
-                      <Link
-                        href="/admin"
-                        className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="text-[var(--foreground)]">
-                            Адмін панель
-                          </span>
-                          <FiShield className="w-4 h-4 text-[var(--foreground)]" />
-                        </span>
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                    >
-                      Вийти з аккаунту
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Theme Toggle */}
-            <div>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-md hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                aria-label="Змінити тему"
-              >
-                {theme === "light" ? <FiMoon size={20} /> : <FiSun size={20} />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Menu */}
-        <div
-          className={`overflow-hidden transition-all duration-300 ${
-            isMenuOpen ? "max-h-96" : "max-h-0"
-          }`}
-        >
-          <nav className="py-4 border-t-[0.5px] border-[var(--card-border)]">
-            <div className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 rounded-md transition-all duration-500 ease-in-out ${
-                    pathname === item.href ? "bg-[var(--hover-bg)]" : ""
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
-        </div>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--card-bg)] dark:bg-black border-t border-[var(--card-border)] md:hidden z-50">
-        <div className="flex items-center justify-around px-4 py-2">
-          {/* Home */}
-          <Link
-            href="/"
-            className={`flex flex-col items-center p-2 rounded-lg ${
-              pathname === "/"
-                ? "bg-black dark:bg-white text-white dark:text-black"
-                : "text-[var(--foreground)]"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className="text-xs mt-1">Головна</span>
-          </Link>
-
-          {/* Catalog */}
-          <Link
-            href="/products"
-            className={`flex flex-col items-center p-2 rounded-lg ${
-              pathname === "/products"
-                ? "bg-black dark:bg-white text-white dark:text-black"
-                : "text-[var(--foreground)]"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-              />
-            </svg>
-            <span className="text-xs mt-1">Каталог</span>
-          </Link>
-
-          {/* Search */}
+        {/* Right Actions */}
+        <div className="flex items-center gap-2">
+          {/* Search Button (Mobile) */}
           <button
-            onClick={() => {
-              setIsSearchExpanded(true);
-              inputRef.current?.focus();
-            }}
-            className="flex flex-col items-center p-2 rounded-lg text-[var(--foreground)]"
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="w-10 h-10 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+            title="Пошук"
           >
-            <FiSearch className="h-6 w-6" />
-            <span className="text-xs mt-1">Пошук</span>
+            <BiSearch className="w-5 h-5 text-zinc-900 dark:text-white" />
           </button>
 
-          {/* Chat */}
-          <button
-            onClick={() => setIsChatOpen(true)}
-            className="flex flex-col items-center p-2 rounded-lg text-[var(--foreground)]"
-          >
-            <FiMessageSquare className="h-6 w-6" />
-            <span className="text-xs mt-1">Чат</span>
-          </button>
-
-          {/* Cart */}
+          {/* Cart Icon (Mobile) */}
           <Link
             href="/cart"
-            className={`flex flex-col items-center p-2 rounded-lg relative ${
-              pathname === "/cart"
-                ? "bg-black dark:bg-white text-white dark:text-black"
-                : "text-[var(--foreground)]"
-            }`}
+            className="w-10 h-10 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors relative"
+            title="Кошик"
           >
-            <FiShoppingCart className="h-6 w-6" />
+            <BiShoppingBag className="w-5 h-5 text-zinc-900 dark:text-white" />
             {cart.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[var(--accent)] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                 {cart.length}
               </span>
             )}
-            <span className="text-xs mt-1">Кошик</span>
           </Link>
 
-          {/* Profile */}
-          <div className="relative">
-            <button
-              onClick={handleUserButtonClick}
-              className={`flex flex-col items-center p-2 rounded-lg ${
-                pathname === "/cabinet"
-                  ? "bg-black dark:bg-white text-white dark:text-black"
-                  : "text-[var(--foreground)]"
-              }`}
-            >
-              <FiUser className="h-6 w-6" />
-              <span className="text-xs mt-1">Профіль</span>
-            </button>
-
-            {/* Mobile Profile Menu */}
-            <div
-              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[var(--card-bg)] rounded-lg shadow-lg border border-[var(--card-border)] transition-all duration-200 ${
-                userMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-            >
-              {user ? (
-                <div className="py-2">
-                  <div className="px-4 py-2 border-b border-[var(--card-border)]">
-                    <p className="font-medium">{user.name}</p>
-                  </div>
-                  <Link
-                    href="/cabinet"
-                    className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                    onClick={() => setUserMenuOpen(false)}
-                  >
-                    Особистий кабінет
-                  </Link>
-                  {user.role.toLowerCase() === "admin" && (
-                    <Link
-                      href="/admin"
-                      className="block px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                      onClick={() => setUserMenuOpen(false)}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="text-[var(--foreground)]">
-                          Адмін панель
-                        </span>
-                        <FiShield className="w-4 h-4 text-[var(--foreground)]" />
-                      </span>
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => {
-                      logout();
-                      setUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                  >
-                    Вийти з аккаунту
-                  </button>
-                </div>
-              ) : (
-                <div className="py-2">
-                  <button
-                    onClick={() => {
-                      openAuthModal("login");
-                      setUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                  >
-                    Увійти
-                  </button>
-                  <button
-                    onClick={() => {
-                      openAuthModal("register");
-                      setUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-zinc-300/80 hover:to-zinc-200/80 dark:hover:from-zinc-700/30 dark:hover:to-zinc-600/30 transition-all duration-500 ease-in-out"
-                  >
-                    Зареєструватися
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Menu Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="w-10 h-10 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+            title="Меню"
+          >
+            {mobileMenuOpen ? (
+              <BiX className="w-5 h-5 text-zinc-900 dark:text-white" />
+            ) : (
+              <BiMenu className="w-5 h-5 text-zinc-900 dark:text-white" />
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Mobile Search Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-50 md:hidden transition-opacity duration-300 ${
-          isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="absolute bottom-0 left-0 right-0 bg-[var(--card-bg)] p-4 rounded-t-2xl">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex items-center gap-2"
-          >
-            <div className="relative flex-1">
+      {/* Mobile Search Bar */}
+      {searchOpen && (
+        <div className="fixed top-[57px] left-0 right-0 z-[99] px-4 py-3 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 md:hidden" ref={searchRef}>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
               <input
-                ref={inputRef}
                 type="text"
+                placeholder="Пошук товарів..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onKeyDown={handleKeyPress}
-                placeholder="Пошук товарів..."
-                className="w-full px-4 py-3 rounded-lg bg-[var(--background)] border border-[var(--card-border)] focus:outline-none"
+                onFocus={() => setShowSuggestions(true)}
+                className="w-full px-4 py-2 pr-10 bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 rounded-full outline-none transition-colors text-sm"
+                autoFocus
               />
-              {inputSuggestion && (
-                <div
-                  className="absolute top-0 left-0 w-full h-full px-4 py-3 pointer-events-none"
-                  style={{
-                    color: "var(--foreground)",
-                    opacity: 0.5,
-                  }}
-                >
-                  {searchQuery}
-                  <span
-                    style={{
-                      color: "var(--foreground)",
-                      opacity: 0.4,
-                    }}
-                  >
-                    {inputSuggestion.slice(searchQuery.length)}
-                  </span>
-                </div>
-              )}
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6"
+              >
+                <BiSearch className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleSearchCollapse}
-              className="p-2 text-[var(--foreground)]"
-            >
-              Скасувати
-            </button>
           </form>
+          
+          {/* Search Results Dropdown (Mobile) */}
           {showSuggestions && searchQuery.trim() && (
-            <div className="mt-4 max-h-[60vh] overflow-y-auto">
+            <div className="absolute top-full left-4 right-4 mt-2 search-dropdown max-h-80 rounded-2xl shadow-xl border border-[var(--border)] overflow-hidden">
               {isSearching ? (
-                <div className="p-4 text-center text-[var(--foreground)]">
+                <div className="p-6 text-center">
                   <Spinner size="sm" className="mx-auto" />
                 </div>
               ) : searchResults.length > 0 ? (
-                <div className="divide-y divide-[var(--card-border)]">
+                <div className="py-2">
                   {searchResults.map((product) => (
                     <button
                       key={product.id}
@@ -854,20 +350,20 @@ export default function Header() {
                         router.push(`/products/${product.id}`);
                         setShowSuggestions(false);
                         setSearchQuery("");
-                        setIsSearchExpanded(false);
+                        setSearchOpen(false);
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-[var(--hover-bg)] transition-colors flex items-center gap-3 group"
+                      className="search-result-item group hover:bg-[var(--hover-bg)] transition-colors"
                     >
-                      <div className="relative w-14 h-14 flex-shrink-0">
+                      <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--hover-bg)]">
                         <ImageWithFallback
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-cover rounded-md transition-transform duration-300 group-hover:scale-105"
-                          width={56}
-                          height={56}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          width={48}
+                          height={48}
                         />
                         {product.isDiscountActive && product.discountPrice && (
-                          <div className="absolute -top-2 -right-2 bg-red-500 dark:bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12 shadow-lg">
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                             -
                             {Math.round(
                               (1 - product.discountPrice / product.price) * 100
@@ -878,36 +374,28 @@ export default function Header() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div
-                          className="font-medium text-[var(--foreground)] truncate"
+                          className="font-semibold text-sm text-primary truncate mb-0.5"
                           dangerouslySetInnerHTML={{
                             __html: product.nameHighlight || product.name,
                           }}
                         />
-                        <div className="text-sm text-[var(--foreground)]/70 truncate">
+                        <div className="text-xs text-muted truncate">
                           {product.brand}
                         </div>
-                        {product.descriptionHighlight && (
-                          <div
-                            className="text-xs text-[var(--foreground)]/60 mt-1 line-clamp-2"
-                            dangerouslySetInnerHTML={{
-                              __html: product.descriptionHighlight,
-                            }}
-                          />
-                        )}
                       </div>
-                      <div className="flex flex-col items-end flex-shrink-0 ml-2">
+                      <div className="flex flex-col items-end flex-shrink-0">
                         {product.isDiscountActive && product.discountPrice ? (
                           <>
-                            <div className="text-red-500 dark:text-red-400 font-medium">
-                              {product.discountPrice} ₴
+                            <div className="text-red-500 font-bold text-sm">
+                              {Math.round(product.discountPrice)} ₴
                             </div>
-                            <div className="text-xs text-[var(--foreground)]/50 line-through">
-                              {product.price} ₴
+                            <div className="text-xs text-muted line-through">
+                              {Math.round(product.price)} ₴
                             </div>
                           </>
                         ) : (
-                          <div className="text-[var(--foreground)] font-medium">
-                            {product.price} ₴
+                          <div className="text-primary font-semibold text-sm">
+                            {Math.round(product.price)} ₴
                           </div>
                         )}
                       </div>
@@ -915,98 +403,571 @@ export default function Header() {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center text-[var(--foreground)]">
+                <div className="p-6 text-center text-muted text-sm">
                   Нічого не знайдено
                 </div>
               )}
             </div>
           )}
         </div>
+      )}
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed top-[57px] left-0 right-0 bottom-0 z-[98] bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 md:hidden overflow-y-auto" ref={mobileMenuRef}>
+          <div className="px-4 py-4 space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors ${
+                  pathname === item.path
+                    ? "bg-zinc-800 dark:bg-zinc-600 text-white"
+                    : "hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200"
+                }`}
+              >
+                <item.icon className="w-6 h-6" />
+                <span className="text-base">{item.label}</span>
+                {item.badge > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-semibold">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+            
+            {/* User Section in Mobile Menu */}
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700 mt-4">
+              {user ? (
+                <>
+                  <div className="px-4 py-2 mb-2">
+                    <p className="font-medium text-zinc-900 dark:text-white text-sm">{user.name}</p>
+                  </div>
+                  <Link
+                    href="/cabinet"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <span>Особистий кабінет</span>
+                  </Link>
+                  {user.role?.toLowerCase() === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                      <BiShield className="w-6 h-6" />
+                      <span>Адмін панель</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <span>Вийти з аккаунту</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      openAuthModal("login");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <span>Увійти</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      openAuthModal("register");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <span>Зареєструватися</span>
+                  </button>
+                </>
+              )}
+              
+              {/* Theme Toggle in Mobile Menu */}
+              <button
+                onClick={toggleTheme}
+                className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors mt-2"
+              >
+                {theme === "light" ? (
+                  <>
+                    <BiMoon className="w-6 h-6" />
+                    <span>Темна тема</span>
+                  </>
+                ) : (
+                  <>
+                    <BiSun className="w-6 h-6" />
+                    <span>Світла тема</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tablet Header (Intermediate) */}
+      <div className="hidden md:flex xl:hidden fixed top-0 left-0 right-0 z-[100] flex-row items-center gap-4 px-4 py-4 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 transition-colors duration-300 shadow-md">
+        {/* Logo */}
+        <Link href="/" className="text-zinc-900 dark:text-white text-xl font-bold transition-colors flex-shrink-0">
+          Крамничка
+        </Link>
+
+        {/* Navigation - в одну строку */}
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+          {navItems.map((item) => (
+            <NavItem
+              key={item.path}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              isActive={pathname === item.path}
+              badge={item.badge}
+              theme={theme}
+            />
+          ))}
+        </div>
+
+        {/* Search - компактный */}
+        <div className="relative w-64 flex-shrink-0" ref={searchRef}>
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Пошук..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyPress}
+                onFocus={() => setShowSuggestions(true)}
+                className="w-full px-4 py-2 pr-10 bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 rounded-full outline-none transition-colors text-sm"
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5"
+              >
+                <BiSearch className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+              </button>
+            </div>
+          </form>
+          
+          {/* Search Results Dropdown */}
+          {showSuggestions && searchQuery.trim() && (
+            <div className="absolute top-full left-0 right-0 mt-2 search-dropdown max-h-96 rounded-2xl shadow-xl border border-[var(--border)] overflow-hidden">
+              {isSearching ? (
+                <div className="p-6 text-center">
+                  <Spinner size="sm" className="mx-auto" />
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div className="py-2">
+                  {searchResults.map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        router.push(`/products/${product.id}`);
+                        setShowSuggestions(false);
+                        setSearchQuery("");
+                      }}
+                      className="search-result-item group hover:bg-[var(--hover-bg)] transition-colors"
+                    >
+                      <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--hover-bg)]">
+                        <ImageWithFallback
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          width={48}
+                          height={48}
+                        />
+                        {product.isDiscountActive && product.discountPrice && (
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                            -
+                            {Math.round(
+                              (1 - product.discountPrice / product.price) * 100
+                            )}
+                            %
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="font-semibold text-sm text-primary truncate mb-0.5"
+                          dangerouslySetInnerHTML={{
+                            __html: product.nameHighlight || product.name,
+                          }}
+                        />
+                        <div className="text-xs text-muted truncate">
+                          {product.brand}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        {product.isDiscountActive && product.discountPrice ? (
+                          <>
+                            <div className="text-red-500 font-bold text-sm">
+                              {Math.round(product.discountPrice)} ₴
+                            </div>
+                            <div className="text-xs text-muted line-through">
+                              {Math.round(product.price)} ₴
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-primary font-semibold text-sm">
+                            {Math.round(product.price)} ₴
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-muted text-sm">
+                  Нічого не знайдено
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* User Menu и Theme Toggle */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={handleUserButtonClick}
+              className="w-10 h-10 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+              title={user ? user.name : "Увійти"}
+            >
+              <Image
+                alt="Profile"
+                className={`object-contain ${theme === "light" ? "brightness-0" : ""}`}
+                src="/design-assets/e557ef12782f60ca73de9718c0fa6405053a8b26.png"
+                width={20}
+                height={20}
+              />
+            </button>
+
+            {/* User Dropdown Menu */}
+            {userMenuOpen && (
+              <div className="header-dropdown mt-2 right-0">
+                {user ? (
+                  <div className="py-2">
+                    <div className="px-4 py-2 border-b border-[var(--border)]">
+                      <p className="font-medium text-sm text-primary">
+                        {user.name}
+                      </p>
+                    </div>
+                    <Link
+                      href="/cabinet"
+                      className="header-dropdown-item"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Особистий кабінет
+                    </Link>
+                    {user.role?.toLowerCase() === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="header-dropdown-item"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <span className="flex items-center gap-2">
+                          Адмін панель
+                          <BiShield className="w-4 h-4" />
+                        </span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Вийти з аккаунту
+                    </button>
+                  </div>
+                ) : (
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        openAuthModal("login");
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Увійти
+                    </button>
+                    <button
+                      onClick={() => {
+                        openAuthModal("register");
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Зареєструватися
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+            title={theme === "light" ? "Темна тема" : "Світла тема"}
+          >
+            {theme === "light" ? (
+              <BiMoon className="w-4 h-4 text-zinc-900" />
+            ) : (
+              <BiSun className="w-4 h-4 text-white" />
+            )}
+          </button>
+        </div>
       </div>
 
-      <style jsx global>{`
-        @keyframes gradient-border-light {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
+      {/* Desktop Header (Full version для xl и больше) */}
+      <div className="hidden xl:flex fixed top-0 left-0 right-0 z-[100] flex-row items-center gap-6 px-8 py-6 bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 transition-colors duration-300 shadow-md">
+        {/* Logo and Navigation Menu */}
+        <div className="flex flex-row items-center gap-6 w-auto">
+          <Link href="/" className="text-zinc-900 dark:text-white text-2xl font-bold transition-colors flex-shrink-0">
+            Крамничка
+          </Link>
+          <div className="flex flex-wrap items-center gap-2 w-auto overflow-x-visible">
+            {navItems.map((item) => (
+              <NavItem
+                key={item.path}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                isActive={pathname === item.path}
+                badge={item.badge}
+                theme={theme}
+              />
+            ))}
+          </div>
+        </div>
 
-        @keyframes gradient-border-dark {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
+        {/* Search and User Actions */}
+        <div className="flex items-center gap-4 w-auto ml-auto">
+          {/* Advanced Search with Autocomplete */}
+          <div className="relative w-96" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit}>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Пошук товарів..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleKeyPress}
+                  onFocus={() => setShowSuggestions(true)}
+                  className="w-full max-w-full px-6 py-3 pr-12 bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 rounded-full outline-none transition-colors"
+                />
+                {inputSuggestion && searchQuery && (
+                  <div
+                    className="absolute top-0 left-0 w-full h-full px-6 py-3 pointer-events-none"
+                    style={{
+                      color: theme === "light" ? "#18181b" : "#ffffff",
+                      opacity: 0.3,
+                    }}
+                  >
+                    {searchQuery}
+                    <span>
+                      {inputSuggestion.slice(searchQuery.length)}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6"
+                >
+                  <Image
+                    alt="Search"
+                    className={`object-contain opacity-60 ${theme === "light" ? "brightness-0" : ""}`}
+                    src="/design-assets/140c5c170bd89ef7e788e13cc111db7097d13aba.png"
+                    width={24}
+                    height={24}
+                  />
+                </button>
+              </div>
+            </form>
+            
+            {/* Search Results Dropdown */}
+            {showSuggestions && searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 search-dropdown max-h-96 rounded-2xl shadow-xl border border-[var(--border)] overflow-hidden">
+                {isSearching ? (
+                  <div className="p-6 text-center">
+                    <Spinner size="sm" className="mx-auto" />
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div className="py-2">
+                    {searchResults.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => {
+                          router.push(`/products/${product.id}`);
+                          setShowSuggestions(false);
+                          setSearchQuery("");
+                        }}
+                        className="search-result-item gap-3 group hover:bg-[var(--hover-bg)] transition-colors"
+                      >
+                        <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--hover-bg)]">
+                          <ImageWithFallback
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            width={64}
+                            height={64}
+                          />
+                          {product.isDiscountActive && product.discountPrice && (
+                            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                              -
+                              {Math.round(
+                                (1 - product.discountPrice / product.price) *
+                                  100
+                              )}
+                              %
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className="font-semibold text-base text-primary truncate mb-1"
+                            dangerouslySetInnerHTML={{
+                              __html: product.nameHighlight || product.name,
+                            }}
+                          />
+                          <div className="text-sm text-muted truncate">
+                            {product.brand}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          {product.isDiscountActive && product.discountPrice ? (
+                            <>
+                              <div className="text-red-500 font-bold text-base">
+                                {Math.round(product.discountPrice)} ₴
+                              </div>
+                              <div className="text-sm text-muted line-through">
+                                {Math.round(product.price)} ₴
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-primary font-semibold text-base">
+                              {Math.round(product.price)} ₴
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-muted">
+                    Нічого не знайдено
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-        .animate-gradient-border {
-          position: relative;
-          border-radius: 0.5rem;
-          padding: 2px;
-        }
+          {/* User Menu */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={handleUserButtonClick}
+              className="w-12 h-12 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+              title={user ? user.name : "Увійти"}
+            >
+              <Image
+                alt="Profile"
+                className={`object-contain ${theme === "light" ? "brightness-0" : ""}`}
+                src="/design-assets/e557ef12782f60ca73de9718c0fa6405053a8b26.png"
+                width={24}
+                height={24}
+              />
+            </button>
 
-        .light .animate-gradient-border {
-          background: linear-gradient(
-            45deg,
-            var(--card-border),
-            var(--hover-bg),
-            var(--card-border),
-            var(--hover-bg)
-          );
-          background-size: 300% 300%;
-          animation: gradient-border-light 3s ease infinite;
-        }
+            {/* User Dropdown Menu */}
+            {userMenuOpen && (
+              <div className="header-dropdown mt-2 right-0">
+                {user ? (
+                  <div className="py-2">
+                    <div className="px-4 py-2 border-b border-[var(--border)]">
+                      <p className="font-medium text-primary">{user.name}</p>
+                    </div>
+                    <Link
+                      href="/cabinet"
+                      className="header-dropdown-item"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      Особистий кабінет
+                    </Link>
+                    {user.role?.toLowerCase() === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="header-dropdown-item"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <span className="flex items-center gap-2">
+                          Адмін панель
+                          <BiShield className="w-4 h-4" />
+                        </span>
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Вийти з аккаунту
+                    </button>
+                  </div>
+                ) : (
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        openAuthModal("login");
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Увійти
+                    </button>
+                    <button
+                      onClick={() => {
+                        openAuthModal("register");
+                        setUserMenuOpen(false);
+                      }}
+                      className="header-dropdown-item text-left w-full"
+                    >
+                      Зареєструватися
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-        .dark .animate-gradient-border {
-          background: linear-gradient(
-            45deg,
-            var(--card-border),
-            rgba(255, 255, 255, 0.1),
-            var(--card-border),
-            rgba(255, 255, 255, 0.1)
-          );
-          background-size: 300% 300%;
-          animation: gradient-border-dark 3s ease infinite;
-        }
-
-        .animate-gradient-border input {
-          border: none !important;
-        }
-
-        .light .animate-gradient-border input {
-          background-color: white;
-        }
-
-        .dark .animate-gradient-border input {
-          background-color: #1a1a1a;
-        }
-
-        /* Стили для подсветки совпадений в поиске */
-        mark {
-          background-color: rgba(128, 128, 128, 0.2);
-          color: inherit;
-          padding: 0 2px;
-          border-radius: 2px;
-        }
-
-        .light mark {
-          background-color: rgba(128, 128, 128, 0.15);
-        }
-
-        .dark mark {
-          background-color: rgba(128, 128, 128, 0.25);
-        }
-      `}</style>
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-12 h-12 flex items-center justify-center bg-zinc-200 dark:bg-zinc-600 rounded-full flex-shrink-0 hover:bg-zinc-300 dark:hover:bg-zinc-500 transition-colors"
+            title={theme === "light" ? "Темна тема" : "Світла тема"}
+          >
+            {theme === "light" ? (
+              <BiMoon className="w-5 h-5 text-zinc-900" />
+            ) : (
+              <BiSun className="w-5 h-5 text-white" />
+            )}
+          </button>
+        </div>
+      </div>
     </>
   );
 }

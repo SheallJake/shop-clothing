@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart } from "lucide-react";
+import { BiHeart } from "react-icons/bi";
 import { useWishlist } from "@/context/WishlistContext";
 
 export default function AddToWishlistButton({ product }) {
@@ -24,7 +24,7 @@ export default function AddToWishlistButton({ product }) {
           : "hover:bg-gray-50"
       }`}
     >
-      <Heart className={`h-5 w-5 ${inWishlist ? "fill-current" : ""}`} />
+      <BiHeart className={`h-5 w-5 ${inWishlist ? "fill-current" : ""}`} />
       {/* {inWishlist ? "Видалити з обраного" : "Додати до обраного"} */}
     </button>
   );

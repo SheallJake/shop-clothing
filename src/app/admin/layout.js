@@ -9,7 +9,10 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <div className="flex min-h-screen">
+      {/* Header рендерится в MainLayout, не дублируем здесь */}
+      
+      {/* Main content with sidebar - padding-top для учета fixed хедера */}
+      <div className="flex pt-[57px] md:pt-[120px]">
         <AdminSidebar />
         <motion.main
           key={pathname}
@@ -17,7 +20,7 @@ export default function AdminLayout({ children }) {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="flex-1 p-4 lg:p-8"
+          className="flex-1 p-4 lg:p-8 overflow-auto"
         >
           {children}
         </motion.main>

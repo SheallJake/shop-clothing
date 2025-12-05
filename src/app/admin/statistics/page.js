@@ -4,15 +4,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
-  ShoppingCart,
-  Users,
-  Star,
-  Banknote,
-  BarChart3,
-  TrendingUp,
-  Package,
-  Heart,
-} from "lucide-react";
+  BiShoppingBag,
+  BiUser,
+  BiStar,
+  BiBank,
+  BiBarChart,
+  BiTrendingUp,
+  BiPackage,
+  BiHeart,
+} from "react-icons/bi";
 
 const StatCard = ({ title, value, icon: Icon, trend }) => (
   <div className="bg-[var(--card-bg)] rounded-lg shadow-[0_0_2px_var(--glow-color)] p-6 hover:shadow-[0_0_8px_var(--glow-color)] transition-all duration-300">
@@ -142,25 +142,25 @@ export default function StatisticsPage() {
         <StatCard
           title="Всього замовлень"
           value={(statistics.totalOrders ?? 0).toString()}
-          icon={ShoppingCart}
+          icon={BiShoppingBag}
           trend={statistics.totalOrdersTrend}
         />
         <StatCard
           title="Клієнтів"
           value={(statistics.totalUsers ?? 0).toString()}
-          icon={Users}
+          icon={BiUser}
           trend={statistics.totalUsersTrend}
         />
         <StatCard
           title="Середня оцінка"
           value={(statistics.averageRating ?? 0).toString()}
-          icon={Star}
+          icon={BiStar}
           trend={statistics.averageRatingTrend}
         />
         <StatCard
           title="Дохід"
           value={(statistics.totalRevenue ?? 0).toString()}
-          icon={Banknote}
+          icon={BiBank}
           trend={statistics.totalRevenueTrend}
         />
       </div>
@@ -169,21 +169,21 @@ export default function StatisticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--card-bg)] rounded-lg shadow-[0_0_2px_var(--glow-color)] p-6">
           <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)] flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[var(--foreground)]" />
+            <BiBarChart className="w-5 h-5 text-[var(--foreground)]" />
             Графік продажів
           </h2>
           <div className="h-64 flex items-center justify-center text-[var(--foreground)] opacity-70">
-            <TrendingUp className="w-12 h-12 text-[var(--foreground)] opacity-50" />
+            <BiTrendingUp className="w-12 h-12 text-[var(--foreground)] opacity-50" />
           </div>
         </div>
 
         <div className="bg-[var(--card-bg)] rounded-lg shadow-[0_0_2px_var(--glow-color)] p-6">
           <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)] flex items-center gap-2">
-            <Package className="w-5 h-5 text-[var(--foreground)]" />
+            <BiPackage className="w-5 h-5 text-[var(--foreground)]" />
             Популярні товари
           </h2>
           <div className="h-64 flex items-center justify-center text-[var(--foreground)] opacity-70">
-            <Heart className="w-12 h-12 text-[var(--foreground)] opacity-50" />
+            <BiHeart className="w-12 h-12 text-[var(--foreground)] opacity-50" />
           </div>
         </div>
       </div>

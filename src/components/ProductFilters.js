@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, ChevronUp, ChevronDown } from "lucide-react";
+import { BiX, BiChevronUp, BiChevronDown } from "react-icons/bi";
 import { Range } from "react-range";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -120,6 +120,8 @@ export default function ProductFilters({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ type: "tween", duration: 0.2, ease: "easeInOut" }}
+            style={{ transition: "none" }}
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
             onClick={onCloseFilter}
           />
@@ -130,19 +132,25 @@ export default function ProductFilters({
       <motion.div
         initial={{ x: "100%" }}
         animate={{ x: isFilterOpen ? 0 : "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed right-0 top-0 h-screen w-80 bg-[var(--card-bg)] dark:bg-black shadow-[0_0_5px_var(--glow-color)] z-[100]"
+        transition={{ 
+          type: "spring", 
+          damping: 30, 
+          stiffness: 400,
+          mass: 0.5
+        }}
+        style={{ transition: "none" }}
+        className="fixed right-0 top-0 h-screen w-80 bg-[#2F2F2F] shadow-2xl z-[90]"
       >
-        <div className="h-full flex flex-col">
-          <div className="flex justify-between items-center p-4 border-b border-[var(--card-border)] sticky top-0 bg-[var(--card-bg)] dark:bg-black z-10">
-            <h2 className="text-xl font-bold text-[var(--text-color)] w-full text-center">
+        <div className="h-full flex flex-col pt-[57px] md:pt-[120px]">
+          <div className="flex justify-between items-center p-4 border-b border-[#4D4D4D] sticky top-0 bg-[#2F2F2F] z-10">
+            <h2 className="text-xl font-bold text-white w-full text-center">
               Фільтри
             </h2>
             <button
               onClick={onCloseFilter}
-              className="p-1 hover:bg-[var(--hover-bg)] rounded-full absolute right-4 transition-colors"
+              className="p-1 hover:bg-[#4D4D4D] rounded-full absolute right-4 transition-colors"
             >
-              <X size={24} className="text-[var(--text-color)]" />
+              <BiX size={24} className="text-white" />
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
@@ -150,15 +158,15 @@ export default function ProductFilters({
             <div className="mb-6">
               <button
                 onClick={() => toggleSection("categories")}
-                className="flex justify-between items-center w-full mb-3 hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                className="flex justify-between items-center w-full mb-3 hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
               >
-                <h3 className="font-semibold text-[var(--text-color)] text-base">
+                <h3 className="font-semibold text-white text-base">
                   Категорії
                 </h3>
                 {expandedSections.categories ? (
-                  <ChevronUp size={20} className="text-[var(--text-color)]" />
+                  <BiChevronUp size={20} className="text-white" />
                 ) : (
-                  <ChevronDown size={20} className="text-[var(--text-color)]" />
+                  <BiChevronDown size={20} className="text-white" />
                 )}
               </button>
               <AnimatePresence>
@@ -174,20 +182,20 @@ export default function ProductFilters({
                       {uniqueCategories.map((category) => (
                         <label
                           key={category}
-                          className="flex items-center gap-3 text-[var(--text-color)] cursor-pointer hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                          className="flex items-center gap-3 text-white cursor-pointer hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
                           onClick={() =>
                             handleFilterChange("categories", category)
                           }
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 border-[var(--card-border)] flex items-center justify-center transition-colors ${
+                            className={`w-4 h-4 rounded-full border-2 border-[#4D4D4D] flex items-center justify-center transition-colors ${
                               filters.categories.includes(category)
-                                ? "bg-[var(--accent)] border-[var(--accent)]"
-                                : "bg-[var(--card-bg)]"
+                                ? "bg-[#C4C4C4] border-[#C4C4C4]"
+                                : "bg-[#2F2F2F]"
                             }`}
                           >
                             {filters.categories.includes(category) && (
-                              <div className="w-2 h-2 rounded-full bg-[var(--card-bg)]" />
+                              <div className="w-2 h-2 rounded-full bg-[#2F2F2F]" />
                             )}
                           </div>
                           <span className="text-sm">{category}</span>
@@ -203,15 +211,15 @@ export default function ProductFilters({
             <div className="mb-6">
               <button
                 onClick={() => toggleSection("colors")}
-                className="flex justify-between items-center w-full mb-3 hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                className="flex justify-between items-center w-full mb-3 hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
               >
-                <h3 className="font-semibold text-[var(--text-color)] text-base">
+                <h3 className="font-semibold text-white text-base">
                   Кольори
                 </h3>
                 {expandedSections.colors ? (
-                  <ChevronUp size={20} className="text-[var(--text-color)]" />
+                  <BiChevronUp size={20} className="text-white" />
                 ) : (
-                  <ChevronDown size={20} className="text-[var(--text-color)]" />
+                  <BiChevronDown size={20} className="text-white" />
                 )}
               </button>
               <AnimatePresence>
@@ -227,13 +235,13 @@ export default function ProductFilters({
                       {uniqueColors.map((color) => (
                         <label
                           key={color}
-                          className="flex items-center gap-3 text-[var(--text-color)] hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                          className="flex items-center gap-3 text-white hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
                         >
                           <input
                             type="checkbox"
                             checked={filters.colors.includes(color)}
                             onChange={() => handleFilterChange("colors", color)}
-                            className="w-4 h-4 rounded border-[var(--card-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                            className="w-4 h-4 rounded border-[#4D4D4D] text-[#C4C4C4] focus:ring-[#C4C4C4] bg-[#2F2F2F]"
                           />
                           <span className="text-sm">{color}</span>
                         </label>
@@ -248,15 +256,15 @@ export default function ProductFilters({
             <div className="mb-6">
               <button
                 onClick={() => toggleSection("sizes")}
-                className="flex justify-between items-center w-full mb-3 hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                className="flex justify-between items-center w-full mb-3 hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
               >
-                <h3 className="font-semibold text-[var(--text-color)] text-base">
+                <h3 className="font-semibold text-white text-base">
                   Розміри
                 </h3>
                 {expandedSections.sizes ? (
-                  <ChevronUp size={20} className="text-[var(--text-color)]" />
+                  <BiChevronUp size={20} className="text-white" />
                 ) : (
-                  <ChevronDown size={20} className="text-[var(--text-color)]" />
+                  <BiChevronDown size={20} className="text-white" />
                 )}
               </button>
               <AnimatePresence>
@@ -272,13 +280,13 @@ export default function ProductFilters({
                       {uniqueSizes.map((size) => (
                         <label
                           key={size}
-                          className="flex items-center gap-3 text-[var(--text-color)] hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                          className="flex items-center gap-3 text-white hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
                         >
                           <input
                             type="checkbox"
                             checked={filters.sizes.includes(size)}
                             onChange={() => handleFilterChange("sizes", size)}
-                            className="w-4 h-4 rounded border-[var(--card-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                            className="w-4 h-4 rounded border-[#4D4D4D] text-[#C4C4C4] focus:ring-[#C4C4C4] bg-[#2F2F2F]"
                           />
                           <span className="text-sm">{size}</span>
                         </label>
@@ -293,15 +301,15 @@ export default function ProductFilters({
             <div className="mb-6">
               <button
                 onClick={() => toggleSection("brands")}
-                className="flex justify-between items-center w-full mb-3 hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                className="flex justify-between items-center w-full mb-3 hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
               >
-                <h3 className="font-semibold text-[var(--text-color)] text-base">
+                <h3 className="font-semibold text-white text-base">
                   Бренди
                 </h3>
                 {expandedSections.brands ? (
-                  <ChevronUp size={20} className="text-[var(--text-color)]" />
+                  <BiChevronUp size={20} className="text-white" />
                 ) : (
-                  <ChevronDown size={20} className="text-[var(--text-color)]" />
+                  <BiChevronDown size={20} className="text-white" />
                 )}
               </button>
               <AnimatePresence>
@@ -317,13 +325,13 @@ export default function ProductFilters({
                       {uniqueBrands.map((brand) => (
                         <label
                           key={brand}
-                          className="flex items-center gap-3 text-[var(--text-color)] hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                          className="flex items-center gap-3 text-white hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
                         >
                           <input
                             type="checkbox"
                             checked={filters.brands.includes(brand)}
                             onChange={() => handleFilterChange("brands", brand)}
-                            className="w-4 h-4 rounded border-[var(--card-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                            className="w-4 h-4 rounded border-[#4D4D4D] text-[#C4C4C4] focus:ring-[#C4C4C4] bg-[#2F2F2F]"
                           />
                           <span className="text-sm">{brand}</span>
                         </label>
@@ -338,15 +346,15 @@ export default function ProductFilters({
             <div className="mb-6">
               <button
                 onClick={() => toggleSection("price")}
-                className="flex justify-between items-center w-full mb-3 hover:bg-[var(--hover-bg)] p-2 rounded-lg transition-colors"
+                className="flex justify-between items-center w-full mb-3 hover:bg-[#4D4D4D] p-2 rounded-lg transition-colors"
               >
-                <h3 className="font-semibold text-[var(--text-color)] text-base">
+                <h3 className="font-semibold text-white text-base">
                   Ціна
                 </h3>
                 {expandedSections.price ? (
-                  <ChevronUp size={20} className="text-[var(--text-color)]" />
+                  <BiChevronUp size={20} className="text-white" />
                 ) : (
-                  <ChevronDown size={20} className="text-[var(--text-color)]" />
+                  <BiChevronDown size={20} className="text-white" />
                 )}
               </button>
               <AnimatePresence>
@@ -373,10 +381,10 @@ export default function ProductFilters({
                             <div
                               key={key}
                               {...trackProps}
-                              className="h-1 w-full bg-[var(--card-border)] rounded-full"
+                              className="h-1 w-full bg-[#4D4D4D] rounded-full"
                             >
                               <div
-                                className="h-1 bg-[var(--accent)] rounded-full"
+                                className="h-1 bg-[#C4C4C4] rounded-full"
                                 style={{
                                   width: `${
                                     ((priceRange[1] - priceRange[0]) /
@@ -401,14 +409,14 @@ export default function ProductFilters({
                             <div
                               key={key}
                               {...thumbProps}
-                              className="h-5 w-5 bg-[var(--card-bg)] border-2 border-[var(--accent)] rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-opacity-50"
+                              className="h-5 w-5 bg-[#2F2F2F] border-2 border-[#C4C4C4] rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-[#C4C4C4] focus:ring-opacity-50"
                             />
                           )}
                         />
                       </div>
                       <div className="flex justify-between items-center px-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-[var(--text-color)]">Від:</span>
+                          <span className="text-white">Від:</span>
                           <input
                             type="number"
                             value={priceRange[0]}
@@ -419,11 +427,11 @@ export default function ProductFilters({
                               );
                               handlePriceRangeChange([value, priceRange[1]]);
                             }}
-                            className="w-20 border border-[var(--card-border)] rounded px-2 py-1 text-[var(--text-color)] bg-[var(--card-bg)] focus:outline-none focus:border-[var(--accent)]"
+                            className="w-20 border border-[#4D4D4D] rounded-lg px-2 py-1 text-white bg-[#2F2F2F] focus:outline-none focus:border-[#C4C4C4]"
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[var(--text-color)]">До:</span>
+                          <span className="text-white">До:</span>
                           <input
                             type="number"
                             value={priceRange[1]}
@@ -434,7 +442,7 @@ export default function ProductFilters({
                               );
                               handlePriceRangeChange([priceRange[0], value]);
                             }}
-                            className="w-20 border border-[var(--card-border)] rounded px-2 py-1 text-[var(--text-color)] bg-[var(--card-bg)] focus:outline-none focus:border-[var(--accent)]"
+                            className="w-20 border border-[#4D4D4D] rounded-lg px-2 py-1 text-white bg-[#2F2F2F] focus:outline-none focus:border-[#C4C4C4]"
                           />
                         </div>
                       </div>
@@ -446,7 +454,7 @@ export default function ProductFilters({
 
             <button
               onClick={onClearFilters}
-              className="w-full bg-[var(--accent)] text-[var(--card-bg)] py-2 rounded-lg hover:bg-[var(--accent-hover)] transition-colors"
+              className="w-full bg-[#4D4D4D] text-white py-3 rounded-full hover:bg-[#5D5D5D] transition-colors font-semibold"
             >
               Очистити фільтри
             </button>

@@ -26,10 +26,6 @@ export default function OrderPage() {
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
   const [selectedCityName, setSelectedCityName] = useState("");
-  const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [promoCodeId, setPromoCodeId] = useState(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,19 +61,6 @@ export default function OrderPage() {
           }
         }
 
-        // Load promo code from localStorage
-        const savedPromoCode = localStorage.getItem("promoCode");
-        const savedDiscount = localStorage.getItem("discountPercent");
-        const savedPromoCodeId = localStorage.getItem("promoCodeId");
-        if (savedPromoCode) {
-          setPromoCode(savedPromoCode);
-        }
-        if (savedDiscount) {
-          setDiscount(Number(savedDiscount));
-        }
-        if (savedPromoCodeId) {
-          setPromoCodeId(savedPromoCodeId);
-        }
       } catch (error) {
         console.error("Error checking auth:", error);
         toast.error("Помилка при перевірці авторизації");
@@ -228,49 +211,16 @@ export default function OrderPage() {
     };
   }, []);
 
-  const handlePromoCodeSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/promo/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: promoCode }),
-      });
-      const data = await res.json();
-      if (data.valid) {
-        setDiscount(data.discountPercent);
-        setPromoCodeId(data.promoCodeId);
-        // Save to localStorage
-        localStorage.setItem("promoCode", promoCode);
-        localStorage.setItem("discountPercent", data.discountPercent);
-        localStorage.setItem("promoCodeId", data.promoCodeId);
-        toast.success("Промокод успішно застосовано!");
-      } else {
-        toast.error("Недійсний промокод");
-        // Clear from localStorage
-        localStorage.removeItem("promoCode");
-        localStorage.removeItem("discountPercent");
-        localStorage.removeItem("promoCodeId");
-        setDiscount(0);
-        setPromoCodeId(null);
-      }
-    } catch (error) {
-      toast.error("Помилка при перевірці промокоду");
-    }
-  };
-
   const calculateTotal = () => {
-    const subtotal = cart.reduce((sum, item) => {
-      const itemPrice =
-        item.isDiscountActive && item.discountPrice
-          ? item.discountPrice
-          : item.price;
-      return sum + itemPrice * item.quantity;
-    }, 0);
-    const discountAmount = (subtotal * discount) / 100;
-    return Math.round(subtotal - discountAmount);
+    return Math.round(
+      cart.reduce((sum, item) => {
+        const itemPrice =
+          item.isDiscountActive && item.discountPrice
+            ? item.discountPrice
+            : item.price;
+        return sum + itemPrice * item.quantity;
+      }, 0)
+    );
   };
 
   // Форматування ціни
@@ -324,7 +274,6 @@ export default function OrderPage() {
             name: item.name,
             image: item.image,
           })),
-          promoCode: promoCodeId,
         }),
       });
 
@@ -363,9 +312,11 @@ export default function OrderPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="md" />
-      </div>
+      <PageTransition>
+        <div className="loading-state">
+          <Spinner size="md" />
+        </div>
+      </PageTransition>
     );
   }
 
@@ -375,64 +326,83 @@ export default function OrderPage() {
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8 text-[var(--foreground)]">
-          Оформлення замовлення
-        </h1>
+      <div className="container-main">
+        {/* Заголовок и описание */}
+        <div className="page-section">
+          <h1 className="heading-1 mb-2">Оформлення замовлення</h1>
+          <p className="text-muted text-sm md:text-base">
+            Перевірте товари в кошику та заповніть інформацію для доставки.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-6">
           {/* Order Summary */}
-          <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
-            <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-              Ваше замовлення
-            </h2>
+          <div className="card shadow-card backdrop-blur-card rounded-3xl">
+            <h2 className="heading-2 mb-4">Ваше замовлення</h2>
             <div className="space-y-4">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-start gap-4">
-                  <div className="w-20 h-20 flex-shrink-0">
-                    <ImageWithFallback
-                      src={item.image}
-                      alt={item.name}
-                      width={80}
-                      height={80}
-                      className="w-full h-full object-cover rounded-md"
-                    />
+              {cart.map((item) => {
+                const unitPrice =
+                  item.isDiscountActive && item.discountPrice
+                    ? item.discountPrice
+                    : item.price;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-4 border-b last:border-b-0 pb-4 last:pb-0 border-[var(--border)]"
+                  >
+                    <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden product-card-image">
+                      <ImageWithFallback
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-primary truncate">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-muted">
+                        Кількість: {item.quantity}
+                      </p>
+                      <p className="text-sm text-primary mt-1">
+                        {formatPrice(unitPrice)} грн × {item.quantity} ={" "}
+                        <span className="font-semibold">
+                          {formatPrice(unitPrice * item.quantity)} грн
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-[var(--foreground)] truncate">
-                      {item.name}
-                    </h3>
-                    <p className="text-[var(--foreground)]">
-                      Кількість: {item.quantity}
-                    </p>
-                    <p className="text-[var(--foreground)]">
-                      Ціна: {item.price * item.quantity} грн
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-6 space-y-2">
-              <div className="flex justify-between mb-2 text-[var(--foreground)]">
-                <span>Проміжний підсумок:</span>
-                <span>
-                  {cart.reduce(
-                    (sum, item) => sum + item.price * item.quantity,
-                    0
+              <div className="flex justify-between text-sm text-secondary">
+                <span>Проміжний підсумок</span>
+                <span className="font-medium text-primary">
+                  {formatPrice(
+                    cart.reduce((sum, item) => {
+                      const unitPrice =
+                        item.isDiscountActive && item.discountPrice
+                          ? item.discountPrice
+                          : item.price;
+                      return sum + unitPrice * item.quantity;
+                    }, 0)
                   )}{" "}
                   грн
                 </span>
               </div>
-              {discount > 0 && (
-                <div className="flex justify-between mb-2 text-green-600">
-                  <span>Знижка:</span>
-                  <span>-{discount}%</span>
-                </div>
-              )}
-              <div className="flex justify-between font-bold text-lg text-[var(--foreground)]">
-                <span>Загальна сума:</span>
-                <span>{formatPrice(calculateTotal())} грн</span>
+              <p className="text-xs text-muted">
+                Вартість доставки буде розрахована при підтвердженні замовлення.
+              </p>
+              <div className="border-t border-[var(--border)] pt-3 mt-3 flex justify-between items-center">
+                <span className="font-semibold text-base sm:text-lg text-primary">
+                  Загальна сума
+                </span>
+                <span className="font-bold text-base sm:text-xl text-primary">
+                  {formatPrice(calculateTotal())} грн
+                </span>
               </div>
             </div>
           </div>
@@ -440,15 +410,11 @@ export default function OrderPage() {
           {/* Order Form */}
           <div className="space-y-6">
             {/* Delivery Information */}
-            <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
-              <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-                Інформація про доставку
-              </h2>
+            <div className="card shadow-card backdrop-blur-card rounded-3xl">
+              <h2 className="heading-2 mb-4">Інформація про доставку</h2>
               <form className="space-y-4">
-                <div className="my-4">
-                  <label className="block text-sm font-medium mb-1 text-[var(--foreground)]">
-                    Місто
-                  </label>
+                <div>
+                  <label className="form-label">Місто</label>
                   <div className="relative">
                     <input
                       ref={cityInputRef}
@@ -459,16 +425,16 @@ export default function OrderPage() {
                       onFocus={handleCityInputFocus}
                       onBlur={handleCityInputBlur}
                       placeholder="Введіть місто"
-                      className="w-full px-4 py-2 rounded-md bg-[var(--input-bg)] border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)]"
+                      className="form-input"
                     />
                     {showCityList && citySearch.length > 0 && (
                       <div
                         ref={cityListRef}
-                        className="absolute top-full left-0 right-0 mt-1 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-md shadow-lg z-50 max-h-60 overflow-y-auto"
+                        className="search-dropdown"
                       >
                         {isLoadingCities ? (
                           <div className="p-4 text-center">
-                            <Spinner size="sm" className="mx-auto" />
+                            <Spinner size="sm" />
                           </div>
                         ) : cities.length > 0 ? (
                           <div className="py-2">
@@ -479,14 +445,14 @@ export default function OrderPage() {
                                   e.preventDefault();
                                   handleCitySelect(city);
                                 }}
-                                className="w-full px-4 py-2 text-left hover:bg-[var(--hover-bg)] transition-colors"
+                                className="search-result-item"
                               >
                                 {city.Description}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <div className="p-4 text-center text-[var(--foreground)]">
+                          <div className="p-4 text-center text-primary">
                             Місто не знайдено
                           </div>
                         )}
@@ -497,10 +463,7 @@ export default function OrderPage() {
 
                 {/* Warehouse Selection */}
                 <div className="space-y-2">
-                  <label
-                    htmlFor="warehouse"
-                    className="block text-sm font-medium text-[var(--foreground)]"
-                  >
+                  <label htmlFor="warehouse" className="form-label">
                     Відділення
                   </label>
                   <div className="relative">
@@ -509,7 +472,7 @@ export default function OrderPage() {
                       value={selectedWarehouse}
                       onChange={(e) => setSelectedWarehouse(e.target.value)}
                       disabled={isLoadingWarehouses || !selectedCity}
-                      className="w-full px-4 py-2 rounded-md bg-[var(--input-bg)] border border-[var(--card-border)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50"
+                      className="form-input"
                     >
                       <option value="">Виберіть відділення</option>
                       {warehouses.map((warehouse) => (
@@ -528,40 +491,18 @@ export default function OrderPage() {
               </form>
             </div>
 
-            {/* Promo Code */}
-            <div className="bg-[var(--card-bg)] p-6 rounded-lg shadow-md border border-[var(--card-border)]">
-              <h2 className="text-xl font-semibold mb-4 text-[var(--foreground)]">
-                Промокод
-              </h2>
-              <form onSubmit={handlePromoCodeSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Введіть промокод"
-                  className="flex-1 p-2 border rounded-md text-[var(--foreground)] bg-[var(--input-bg)] border-[var(--border)]"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[var(--accent)] text-white rounded-md hover:bg-[var(--accent-hover)]"
-                >
-                  Застосувати
-                </button>
-              </form>
-            </div>
-
             {/* Submit Order */}
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className={`w-full py-3 bg-[var(--accent)] text-white rounded-md hover:bg-[var(--accent-hover)] transition-colors ${
-                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              className={`btn-success w-full py-3 text-sm sm:text-base rounded-full ${
+                isSubmitting ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <Spinner size="sm" className="mr-2" />
-                  Обробка платежу...
+                <div className="flex items-center justify-center gap-2">
+                  <Spinner size="sm" />
+                  <span>Обробка платежу...</span>
                 </div>
               ) : (
                 "Оплатити замовлення"

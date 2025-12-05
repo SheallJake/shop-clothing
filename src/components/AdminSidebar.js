@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import {
-  Package,
-  ShoppingCart,
-  MessageSquare,
-  BarChart2,
-  Tags,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
-} from "lucide-react";
+  BiPackage,
+  BiShoppingBag,
+  BiMessageSquare,
+  BiBarChart,
+  BiTag,
+  BiChevronLeft,
+  BiChevronRight,
+} from "react-icons/bi";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -62,46 +61,41 @@ export default function AdminSidebar() {
   const router = useRouter();
 
   const menuItems = [
-    {
-      title: "Товари",
-      icon: Package,
-      href: "/admin/products",
-    },
-    {
-      title: "Категорії",
-      icon: Tags,
-      href: "/admin/categories",
-    },
-    {
-      title: "Замовлення",
-      icon: ShoppingCart,
-      href: "/admin/orders",
-    },
-    {
-      title: "Відгуки",
-      icon: MessageSquare,
-      href: "/admin/reviews",
-    },
-    {
-      title: "Статистика",
-      icon: BarChart2,
-      href: "/admin/statistics",
-    },
-    {
-      title: "Чат",
-      icon: MessageSquare,
-      href: "/admin/chat",
-    },
-    {
-      title: "Промокоди",
-      icon: Tags,
-      href: "/admin/promocodes",
-    },
-  ];
+      {
+        title: "Товари",
+        icon: BiPackage,
+        href: "/admin/products",
+      },
+      {
+        title: "Категорії",
+        icon: BiTag,
+        href: "/admin/categories",
+      },
+      {
+        title: "Замовлення",
+        icon: BiShoppingBag,
+        href: "/admin/orders",
+      },
+      {
+        title: "Відгуки",
+        icon: BiMessageSquare,
+        href: "/admin/reviews",
+      },
+      {
+        title: "Статистика",
+        icon: BiBarChart,
+        href: "/admin/statistics",
+      },
+      {
+        title: "Чат",
+        icon: BiMessageSquare,
+        href: "/admin/chat",
+      },
+    ];
 
   return (
     <div
-      className={`bg-[var(--background)] border-r border-[var(--border)] h-screen sticky top-0 transition-all duration-300 ${
+      className={`bg-[var(--background)] border-r border-[var(--border)] h-full transition-all duration-300 ${
         isCollapsed ? "w-20" : "w-64"
       }`}
     >
@@ -119,9 +113,9 @@ export default function AdminSidebar() {
           className="p-2 rounded-lg hover:bg-gradient-to-r hover:from-zinc-300 hover:to-zinc-200 dark:hover:from-zinc-800 dark:hover:to-zinc-700 transition-all duration-200"
         >
           {isCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-[var(--foreground)]" />
+            <BiChevronRight className="w-5 h-5 text-[var(--foreground)]" />
           ) : (
-            <ChevronLeft className="w-5 h-5 text-[var(--foreground)]" />
+            <BiChevronLeft className="w-5 h-5 text-[var(--foreground)]" />
           )}
         </button>
       </div>

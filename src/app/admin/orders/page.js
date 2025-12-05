@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Trash2 } from "lucide-react";
+import { BiSearch, BiTrash } from "react-icons/bi";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -191,7 +191,7 @@ export default function OrdersManagement() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
+          <BiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--foreground)] opacity-50 w-5 h-5" />
         </div>
         <select
           value={statusFilter}
@@ -302,7 +302,7 @@ export default function OrdersManagement() {
                       onClick={() => handleDelete(order.id)}
                       className="text-red-500 hover:text-red-700"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <BiTrash className="w-5 h-5" />
                     </button>
                   </td>
                 </tr>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Star } from "lucide-react";
+import { BiStar } from "react-icons/bi";
 import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function ReviewForm({ productId, onReviewSubmitted }) {
@@ -91,7 +91,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
               onClick={() => setRating(star)}
               className="focus:outline-none p-1"
             >
-              <Star
+              <BiStar
                 className={`w-6 h-6 ${
                   star <= rating
                     ? "fill-yellow-400 text-yellow-400"

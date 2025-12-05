@@ -2,7 +2,6 @@
 import { useChat } from "@/context/ChatContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";

@@ -8,18 +8,17 @@ datasource db {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  name         String
-  email        String     @unique
-  phoneNumber  String?
-  passwordHash String
-  role         String
-  createdAt    DateTime   @default(now())
-  cart         Cart[]
-  orders       Order[]
-  reviews      Review[]
-  wishlists    Wishlist[]
-  gameAttempts GameAttempt[]
+  id                  Int      @id @default(autoincrement())
+  name                String
+  email               String   @unique
+  phoneNumber         String?
+  passwordHash        String
+  role                String
+  createdAt           DateTime @default(now())
+  cart                Cart[]
+  orders              Order[]
+  reviews             Review[]
+  wishlists           Wishlist[]
   passwordResetTokens PasswordResetToken[]
 }
 
@@ -59,18 +58,16 @@ model Product {
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   userId     Int
-  createdAt  DateTime    @default(now())
+  createdAt  DateTime  @default(now())
   status     String
   totalPrice Float
   paymentId  Int?
   deliveryId Int?
-  promoId    Int?
-  delivery   Delivery?   @relation(fields: [deliveryId], references: [id])
-  payment    Payment?    @relation(fields: [paymentId], references: [id])
-  promoCode  PromoCode?  @relation(fields: [promoId], references: [id])
-  user       User        @relation(fields: [userId], references: [id])
+  delivery   Delivery? @relation(fields: [deliveryId], references: [id])
+  payment    Payment?  @relation(fields: [paymentId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
 }
 
@@ -135,31 +132,6 @@ model Wishlist {
   addedAt   DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
-}
-
-model PromoCode {
-  id              Int      @id @default(autoincrement())
-  code            String   @unique
-  discountPercent Float
-  expirationDate  DateTime
-  isActive        Boolean  @default(true)
-  usageLimit      Int
-  usedCount       Int      @default(0)
-  createdAt       DateTime @default(now())
-  orders          Order[]
-  gameAttempts    GameAttempt[]
-}
-
-model GameAttempt {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  promoCodeId Int
-  success     Boolean
-  createdAt   DateTime  @default(now())
-  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
-
-  @@index([userId, createdAt])
 }
 
 model PasswordResetToken {

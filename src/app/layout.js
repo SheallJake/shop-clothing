@@ -1,6 +1,5 @@
 import "@/styles/globals.css";
-import Header from "@/components/header";
-import Footer from "@/components/footer";
+import MainLayout from "@/components/MainLayout";
 import { Toaster } from "react-hot-toast";
 import ClientLayout from "@/components/ClientLayout";
 import { WishlistProvider } from "@/context/WishlistContext";
@@ -11,6 +10,7 @@ import { ChatProvider } from "@/context/ChatContext";
 import ChatWidget from "@/components/ChatWidget";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthModalProvider } from "@/context/AuthModalContext";
+import BackgroundWrapper from "@/components/BackgroundWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,8 +21,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="uk" className="h-full">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+    <html lang="uk" className="h-full overflow-x-hidden">
+      <body className={`${inter.className} min-h-screen flex flex-col overflow-x-hidden`}>
         <ThemeProvider>
           <LoadingProvider>
             <AuthModalProvider>
@@ -30,14 +30,12 @@ export default function RootLayout({ children }) {
                 <WishlistProvider>
                   <ChatProvider>
                     <ClientLayout>
-                      <div className="flex flex-col min-h-[calc(100vh-64px)]">
-                        <Header />
-                        <main className="flex-1 py-6 relative max-w-[80%] mx-auto px-4 w-full mt-24">
+                      <BackgroundWrapper>
+                        <MainLayout>
                           {children}
-                        </main>
+                        </MainLayout>
                         <ChatWidget />
-                        <Footer />
-                      </div>
+                      </BackgroundWrapper>
                     </ClientLayout>
                   </ChatProvider>
                 </WishlistProvider>

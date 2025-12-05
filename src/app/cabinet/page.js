@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import ImageWithFallback from "@/components/imageWithFallback";
-import { Pencil, Check, X } from "lucide-react";
+import { BiPencil, BiCheck, BiX } from "react-icons/bi";
 import { motion, AnimatePresence } from "framer-motion";
 import { IMaskInput } from "react-imask";
 
@@ -128,9 +128,18 @@ export default function CabinetPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (e) => {
+    if (e) {
+      e.preventDefault();
+    }
     try {
-      setErrors({});
+      // Валидация устанавливает ошибки сама и возвращает true/false
+      if (!validateForm()) {
+        // Если валидация не прошла, ошибки уже установлены validateForm()
+        return;
+      }
+      
+      // Валидация прошла успешно - выполняем запрос
       const response = await fetch("/api/user/profile", {
         method: "PATCH",
         headers: {
@@ -149,12 +158,15 @@ export default function CabinetPage() {
         throw new Error(data.error || "Не вдалося оновити профіль");
       }
 
+      // Успешное обновление - очищаем ошибки только после успешного ответа
+      setErrors({});
       setUser(data.user);
       setIsEditing(false);
       toast.success("Профіль успішно оновлено");
     } catch (err) {
       console.error("Помилка оновлення профілю:", err);
       toast.error(err.message || "Помилка при оновленні профілю");
+      // В случае ошибки сети или другой ошибки, не трогаем ошибки валидации
     }
   };
 
@@ -165,37 +177,73 @@ export default function CabinetPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-4">Завантаження...</div>;
+    return (
+      <div className="loading-state">
+        <p className="text-primary">Завантаження...</p>
+      </div>
+    );
   }
 
   if (!user) {
     return (
-      <div className="text-center py-4">Будь ласка, увійдіть до системи</div>
+      <div className="empty-state">
+        <p className="empty-message">Будь ласка, увійдіть до системи</p>
+      </div>
     );
   }
 
+  // Функция для получения классов бейджа статуса
+  const getStatusBadgeClasses = (status) => {
+    const statusLower = status?.toLowerCase() || "";
+    if (statusLower.includes("pending") || statusLower.includes("очікує")) {
+      return "badge-status badge-pending";
+    }
+    if (statusLower.includes("processing") || statusLower.includes("оброб")) {
+      return "badge-status badge-processing";
+    }
+    if (statusLower.includes("shipped") || statusLower.includes("відправ")) {
+      return "badge-status badge-shipped";
+    }
+    if (statusLower.includes("delivered") || statusLower.includes("достав")) {
+      return "badge-status badge-delivered";
+    }
+    if (
+      statusLower.includes("cancelled") ||
+      statusLower.includes("скасова")
+    ) {
+      return "badge-status badge-cancelled";
+    }
+    return "badge-status";
+  };
+
   return (
-    <div className="flex justify-center items-start py-4 px-2 sm:py-6 sm:px-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div className="container-main">
+      {/* Заголовок сторінки */}
+      <div className="page-section">
+        <h1 className="heading-1 mb-2">Особистий кабінет</h1>
+        <p className="text-muted text-sm md:text-base">
+          Керуйте своїм профілем та переглядайте історію замовлень.
+        </p>
+      </div>
+
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Profile Block */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="lg:col-span-2 bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6 border border-zinc-200 dark:border-zinc-700 relative"
+          className="card shadow-card backdrop-blur-card rounded-3xl lg:col-span-2 relative"
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
-              Особистий кабінет
-            </h1>
+            <h2 className="heading-2">Профіль</h2>
             {!isEditing && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleEditClick}
-                className="w-full sm:w-auto px-4 py-2 bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                className="btn-primary w-full sm:w-auto"
               >
-                <Pencil size={16} />
+                <BiPencil size={16} />
                 Редагувати
               </motion.button>
             )}
@@ -210,22 +258,20 @@ export default function CabinetPage() {
               className="space-y-4"
             >
               <div>
-                <label className="text-sm font-medium">Ім'я</label>
+                <label className="form-label">Ім'я</label>
                 <input
                   type="text"
                   name="name"
                   value={editForm.name}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    errors.name ? "border-red-500" : "border-zinc-300"
-                  } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                  className={`form-input ${errors.name ? "error" : ""}`}
                 />
                 {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                  <p className="form-error">{errors.name}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Телефон</label>
+                <label className="form-label">Телефон</label>
                 <IMaskInput
                   mask={PHONE_MASK}
                   value={editForm.phoneNumber}
@@ -234,27 +280,30 @@ export default function CabinetPage() {
                       target: { name: "phoneNumber", value },
                     })
                   }
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    errors.phoneNumber ? "border-red-500" : "border-zinc-300"
-                  } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                  className={`form-input ${
+                    errors.phoneNumber ? "error" : ""
+                  }`}
                 />
                 {errors.phoneNumber && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.phoneNumber}
-                  </p>
+                  <p className="form-error">{errors.phoneNumber}</p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium">Email</label>
+                <label className="form-label">Email</label>
                 <input
                   type="email"
                   value={user.email}
                   disabled
-                  className="w-full px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                  className="form-input bg-[var(--hover-bg)] text-muted"
                 />
               </div>
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-semibold mb-4">Зміна паролю</h3>
+              <div className="border-t pt-4 border-[var(--border)]">
+                <h3
+                  className="text-lg font-semibold mb-4"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Зміна паролю
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <input
@@ -263,14 +312,12 @@ export default function CabinetPage() {
                       placeholder="Поточний пароль"
                       value={editForm.currentPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 rounded-lg border ${
-                        errors.currentPassword
-                          ? "border-red-500"
-                          : "border-zinc-300"
-                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                      className={`form-input ${
+                        errors.currentPassword ? "error" : ""
+                      }`}
                     />
                     {errors.currentPassword && (
-                      <p className="text-sm text-red-500 mt-1">
+                      <p className="form-error">
                         {errors.currentPassword}
                       </p>
                     )}
@@ -282,14 +329,12 @@ export default function CabinetPage() {
                       placeholder="Новий пароль"
                       value={editForm.newPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 rounded-lg border ${
-                        errors.newPassword
-                          ? "border-red-500"
-                          : "border-zinc-300"
-                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                      className={`form-input ${
+                        errors.newPassword ? "error" : ""
+                      }`}
                     />
                     {errors.newPassword && (
-                      <p className="text-sm text-red-500 mt-1">
+                      <p className="form-error">
                         {errors.newPassword}
                       </p>
                     )}
@@ -301,14 +346,12 @@ export default function CabinetPage() {
                       placeholder="Підтвердження паролю"
                       value={editForm.confirmPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 rounded-lg border ${
-                        errors.confirmPassword
-                          ? "border-red-500"
-                          : "border-zinc-300"
-                      } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white`}
+                      className={`form-input ${
+                        errors.confirmPassword ? "error" : ""
+                      }`}
                     />
                     {errors.confirmPassword && (
-                      <p className="text-sm text-red-500 mt-1">
+                      <p className="form-error">
                         {errors.confirmPassword}
                       </p>
                     )}
@@ -320,9 +363,9 @@ export default function CabinetPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors duration-200 flex items-center justify-center gap-2"
+                  className="btn-success w-full sm:w-auto"
                 >
-                  <Check size={16} />
+                  <BiCheck size={16} />
                   Зберегти
                 </motion.button>
                 <motion.button
@@ -330,9 +373,9 @@ export default function CabinetPage() {
                   whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={handleCancelEdit}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-200 flex items-center justify-center gap-2"
+                  className="btn-danger w-full sm:w-auto"
                 >
-                  <X size={16} />
+                  <BiX size={16} />
                   Скасувати
                 </motion.button>
               </div>
@@ -342,27 +385,23 @@ export default function CabinetPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className="space-y-4"
+            className="space-y-4"
             >
               <div>
-                <label className="font-medium text-zinc-700 dark:text-zinc-300">
-                  Ім'я:
-                </label>
-                <p className="text-zinc-900 dark:text-white">{user.name}</p>
+              <p className="text-sm font-medium text-secondary mb-1">Ім'я:</p>
+              <p className="text-primary">{user.name}</p>
               </div>
               <div>
-                <label className="font-medium text-zinc-700 dark:text-zinc-300">
-                  Email:
-                </label>
-                <p className="text-zinc-900 dark:text-white">{user.email}</p>
+              <p className="text-sm font-medium text-secondary mb-1">Email:</p>
+              <p className="text-primary">{user.email}</p>
               </div>
               <div>
-                <label className="font-medium text-zinc-700 dark:text-zinc-300">
-                  Телефон:
-                </label>
-                <p className="text-zinc-900 dark:text-white">
-                  {user.phoneNumber || "Не вказано"}
-                </p>
+              <p className="text-sm font-medium text-secondary mb-1">
+                Телефон:
+              </p>
+              <p className="text-primary">
+                {user.phoneNumber || "Не вказано"}
+              </p>
               </div>
             </motion.div>
           )}
@@ -373,28 +412,38 @@ export default function CabinetPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-white dark:bg-zinc-800 rounded-lg shadow p-4 sm:p-6 border border-zinc-200 dark:border-zinc-700"
+          className="card shadow-card backdrop-blur-card rounded-3xl p-4 sm:p-6"
         >
-          <h2 className="text-lg sm:text-xl font-bold mb-4 text-zinc-900 dark:text-white">
+          <h2 className="heading-2 mb-4">
             Мої замовлення
           </h2>
           {orders.length === 0 ? (
-            <p className="text-zinc-500">У вас поки немає замовлень</p>
+            <p className="text-muted">У вас поки немає замовлень</p>
           ) : (
             <div className="space-y-4 overflow-y-auto max-h-[50vh] sm:max-h-[70vh] pr-2">
               {orders.map((order) => (
                 <div
                   key={order.id}
-                  className="border p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900"
+                  className="card-hover rounded-2xl border p-3 transition-all duration-200 shadow-card"
+                  style={{
+                    backgroundColor: "var(--hover-bg)",
+                    borderColor: "var(--border)",
+                  }}
                 >
                   <div className="flex flex-col sm:flex-row justify-between mb-2 gap-2">
                     <div>
-                      <p className="text-sm text-zinc-500">#{order.id}</p>
-                      <p className="text-sm text-zinc-500">
-                        Статус: {order.status}
+                      <p className="text-sm font-medium text-secondary">
+                        #{order.id}
                       </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={getStatusBadgeClasses(order.status)}>
+                          {order.status}
+                        </span>
+                      </div>
                     </div>
-                    <p className="font-semibold">{order.totalPrice} грн</p>
+                    <p className="font-semibold text-lg text-primary">
+                      {order.totalPrice} грн
+                    </p>
                   </div>
                   <div className="space-y-2">
                     {order.orderItems.map((item) => (
@@ -405,10 +454,16 @@ export default function CabinetPage() {
                           className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">
+                          <p
+                            className="text-sm truncate font-medium"
+                            style={{ color: "var(--text-primary)" }}
+                          >
                             {item.product.name}
                           </p>
-                          <p className="text-xs text-zinc-500">
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--text-muted)" }}
+                          >
                             {item.quantity} шт × {item.pricePerUnit} грн
                           </p>
                         </div>

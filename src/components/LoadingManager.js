@@ -20,43 +20,68 @@ export function LoadingProvider({ children }) {
 
   // Add error boundary
   useEffect(() => {
+    let isHandlingError = false;
+
     const handleError = (event) => {
-      const error = event.error || event.reason || event;
-      const isScriptError =
-        error?.message === "Script error." || error?.message === "Script error";
+      // Предотвращаем рекурсивные вызовы
+      if (isHandlingError) return;
+      
+      try {
+        isHandlingError = true;
 
-      const errorContext = {
-        filename: event.filename || error?.fileName || "Unknown file",
-        lineno: event.lineno || error?.lineNumber || "Unknown line",
-        colno: event.colno || error?.columnNumber || "Unknown column",
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-      };
+        const error = event.error || event.reason || event;
+        const isScriptError =
+          error?.message === "Script error." || error?.message === "Script error";
 
-      const errorDetails = {
-        message: isScriptError
-          ? "Помилка завантаження скрипту. Перевірте підключення до інтернету та спробуйте оновити сторінку."
-          : error?.message || event?.message || "Невідома помилка",
-        stack: error?.stack || "Немає інформації про помилку",
-        type: error?.type || event?.type || "Unknown error type",
-        name: error?.name || event?.name || "Error",
-        context: errorContext,
-      };
+        const errorContext = {
+          filename: event.filename || error?.fileName || "Unknown file",
+          lineno: event.lineno || error?.lineNumber || "Unknown line",
+          colno: event.colno || error?.columnNumber || "Unknown column",
+          timestamp: new Date().toISOString(),
+          userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
+          url: typeof window !== "undefined" ? window.location.href : "Unknown",
+        };
 
-      console.error("[LoadingManager] Loading error:", errorDetails);
-      console.error("[LoadingManager] Error context:", errorContext);
+        const errorDetails = {
+          message: isScriptError
+            ? "Помилка завантаження скрипту. Перевірте підключення до інтернету та спробуйте оновити сторінку."
+            : error?.message || event?.message || "Невідома помилка",
+          stack: error?.stack || "Немає інформації про помилку",
+          type: error?.type || event?.type || "Unknown error type",
+          name: error?.name || event?.name || "Error",
+          context: errorContext,
+        };
 
-      setError(errorDetails);
-      setIsLoading(false);
+        // Не логируем в консоль, чтобы избежать рекурсивных вызовов в Next.js
+        setError(errorDetails);
+        setIsLoading(false);
+      } catch (err) {
+        // Тихая обработка ошибок в обработчике ошибок
+      } finally {
+        isHandlingError = false;
+      }
     };
 
     const handleUnhandledRejection = (event) => {
-      console.error(
-        "[LoadingManager] Unhandled promise rejection:",
-        event.reason
-      );
-      handleError(event);
+      // Предотвращаем рекурсивные вызовы
+      if (isHandlingError) return;
+
+      try {
+        isHandlingError = true;
+
+        // Создаем объект события, совместимый с handleError
+        const errorEvent = {
+          error: event.reason,
+          reason: event.reason,
+          message: event.reason?.message || "Unhandled promise rejection",
+          type: "unhandledrejection",
+        };
+        handleError(errorEvent);
+      } catch (err) {
+        // Тихая обработка ошибок в обработчике ошибок
+      } finally {
+        isHandlingError = false;
+      }
     };
 
     window.addEventListener("error", handleError, true);
